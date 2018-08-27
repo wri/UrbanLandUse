@@ -1,0 +1,48 @@
+# Mac / Local
+.DS_Store
+tmp/
+downloads/
+logs/
+
+# Python / Tests
+*.pyc
+pip-selfcheck.json
+man
+
+# Codebase
+playground.py
+playground.sh
+playground/
+
+# SUBLIME
+*sftp-config.json*
+
+
+# GITNB
+notebooks/
+nbpy/
+nbpy_nb/
+gitnb.config.yaml
+*.ipynb
+
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+MANIFEST
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+bin/
+include
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
