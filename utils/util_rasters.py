@@ -94,6 +94,13 @@ def window(x,j,i,r):
     w = x[:,j-r:j+r+1,i-r:i+r+1]
     return w
 
+def maxmin_info(img):
+    mns=np.min(img,axis=(0,1))
+    mxs=np.max(img,axis=(0,1))
+    print('band, min, max')
+    for i,(mn,mx) in enumerate(zip(mns,mxs)):
+        print(i,mn,mx)
+
 def stats_byte_raster(label_file, category_label, show=False):
     print label_file
     y, ygeo, yprj, ycols, yrows = bronco.load_geotiff(label_file,dtype='uint8')
@@ -167,6 +174,15 @@ def ls_haze_removal(img,nodata,thresh=2):
         print b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max() 
     #
     return corrected_img, refl_offsets
+
+
+# DRAWING
+
+def plot_image(array,figsize=(6,6)):
+    plt.imshow(array)
+    plt.show()
+
+
 
 
 # MASKING

@@ -110,3 +110,15 @@ def draw_tiled_area(shape, tiles, projection, lonlat_crs, highlights={0:'black'}
     ax.gridlines(crs=lonlat_crs)
     plt.show()
 
+def plot_place(pl,figsize=(6,6)):
+    albers = cartopy.crs.AlbersEqualArea(
+        central_latitude=pl.lat, central_longitude=pl.lon)
+    fig = plt.figure(figsize=figsize)
+    ax = plt.subplot(projection=albers)
+    crs=cartopy.crs.PlateCarree()
+    ax.add_geometries([pl.shape],crs)
+    ax.set_extent(
+        (pl.bounds[0], pl.bounds[2], pl.bounds[1], pl.bounds[3]), 
+        crs=crs)
+    ax.gridlines(crs=crs)
+    plt.show()

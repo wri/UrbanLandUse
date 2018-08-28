@@ -23,6 +23,9 @@ from osgeo import gdal
 
 # GENERAL
 
+def place_slug(*parts):
+    return "_".join(parts)
+
 def show_scene(ids, geom={}, resolution=60,
                bands=['red','green','blue','alpha'],
                scales=[[0,3000],[0,3000],[0,3000],None],

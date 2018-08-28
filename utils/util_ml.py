@@ -21,7 +21,7 @@ from osgeo import gdal
 #import descarteslabs as dl
 
 
-# GENERAL
+# DISPLAY
 
 # going forward, swap this out in favor of more mature scikit scoring
 def score(Yhat,Y,report=True):
@@ -73,8 +73,45 @@ def confusion_detail(Yhat,Y,categories):
     
     print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
     return confusion
-        
 
+def plot_confusion(categories,labels,trues,preds,title=None):
+    cm=confusion_matrix(trues,preds,categories)
+    df_cm=pd.DataFrame(cm,labels,labels)
+    ax=plt.axes()
+    sn.set(font_scale=1.4)
+    sn.heatmap(df_cm,annot=True,annot_kws={"size": 16},fmt='g',ax=ax)
+    if title: ax.set_title(title)
+    plt.show()
+    
+def print_metrics(trues,preds,title=None):
+    if title: print("\n{}:".format(title))
+    print("\taccuracy: ",accuracy_score(trues,preds))
+    print("\tprecision: ",precision_score(trues,preds,average='macro'))
+    print("\trecall: ",recall_score(trues,preds,average='macro'))
+    print("\tf2: ",fbeta_score(trues,preds,2,average='macro'))
+
+
+def print_results(
+        categories,
+        labels,
+        trues,
+        preds,
+        trues_valid=None,
+        preds_valid=None):
+    print_metrics(trues,preds,"TRAINING")
+    plot_confusion(categories,labels,trues,preds,"CONFUSION MATRIX: TRAINING")
+    if not ((trues_valid is None) or (preds_valid is None)):
+        print("\n\n---------------------------------------\n\n")
+        print_metrics(trues_valid,preds_valid,"VALIDATION")
+        plot_confusion(
+            categories,
+            labels,
+            trues_valid,
+            preds_valid,
+            "CONFUSION MATRIX: VALIDATION")
+
+
+# PREPROCESSING & TRAINING
 
 def scale_learning_data(X_train, X_valid):
     scaler = StandardScaler()
