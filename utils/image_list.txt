@@ -1,0 +1,458 @@
+### PHASE II
+
+# budapest vir
+
+s2_dict = {}
+s2_dict['A'] = [u'sentinel-2:L1C:2017-01-08_34TCT_82_S2A_v1'] # A #snowy
+s2_dict['B'] = [u'sentinel-2:L1C:2017-03-29_34TCT_81_S2A_v1'] # B
+s2_dict['C'] = [u'sentinel-2:L1C:2017-05-28_34TCT_80_S2A_v1'] # C #few clouds in far west
+s2_dict['D'] = [u'sentinel-2:L1C:2017-08-01_34TCT_79_S2B_v1'] # D
+s2_dict['E'] = [u'sentinel-2:L1C:2017-08-11_34TCT_80_S2B_v1'] # E
+s2_dict['F'] = [u'sentinel-2:L1C:2017-08-31_34TCT_80_S2B_v1'] # F
+s2_dict['G'] = [u'sentinel-2:L1C:2017-09-10_34TCT_80_S2B_v1'] # G #clouds east, haze west
+s2_dict['H'] = [u'sentinel-2:L1C:2017-10-12_34TCT_39_S2A_v1', u'sentinel-2:L1C:2017-10-12_34TCT_78_S2A_v1'] #H
+s2_dict['I'] = [u'sentinel-2:L1C:2017-10-15_34TCT_80_S2A_v1'] # I
+s2_dict['J'] = [u'sentinel-2:L1C:2017-11-04_34TCT_80_S2A_v1'] # J #clouds south
+s2_dict['K'] = [u'sentinel-2:L1C:2017-12-19_34TCT_80_S2B_v1'] # K #clouds north, haze everywhere
+s2_dict['L'] = [u'sentinel-2:L1C:2018-01-18_34TCT_81_S2B_v1'] # L #very snowy
+
+
+#vir_suffix = 'I'
+
+# budapest sar
+# sentinel-1:GRD:meta_2017-01-10_175A3421_S1A #A +2
+# sentinel-1:GRD:meta_2017-03-27_051D5349_S1A #B -2
+# sentinel-1:GRD:meta_2017-05-26_051D5339_S1A #C -2
+# sentinel-1:GRD:meta_2017-08-02_175A3428_S1A #D +1
+# sentinel-1:GRD:meta_2017-08-14_175A3428_S1A #E +3
+# sentinel-1:GRD:meta_2017-08-30_051D5345_S1A #F -1
+# sentinel-1:GRD:meta_2017-09-07_175A3429_S1A #G -3
+# sentinel-1:GRD:meta_2017-10-13_175A3430_S1A #H +1
+# sentinel-1:GRD:meta_2017-10-17_051D5346_S1A #I +2
+# sentinel-1:GRD:meta_2017-11-06_175A3430_S1A #J +2
+# sentinel-1:GRD:meta_2017-12-16_051D5345_S1A #K -3
+# sentinel-1:GRD:meta_2018-01-17_175A3428_S1A #L -1
+
+# jalna vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-07_43QEB_29_S2A_v1', u'sentinel-2:L1C:2017-01-07_43QEC_10_S2A_v1', u'sentinel-2:L1C:2017-01-07_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-01-07_43QFC_98_S2A_v1']; vir_suffix='A'
+#s2_ids = [u'sentinel-2:L1C:2017-02-16_43QEB_29_S2A_v1', u'sentinel-2:L1C:2017-02-16_43QEC_10_S2A_v1', u'sentinel-2:L1C:2017-02-16_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-02-16_43QFC_98_S2A_v1']; vir_suffix='B'
+#s2_ids = [u'sentinel-2:L1C:2017-03-08_43QEB_30_S2A_v1', u'sentinel-2:L1C:2017-03-08_43QEC_10_S2A_v1', u'sentinel-2:L1C:2017-03-08_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-03-08_43QFC_98_S2A_v1']; vir_suffix='C'
+#s2_ids = [u'sentinel-2:L1C:2017-03-28_43QEB_30_S2A_v1', u'sentinel-2:L1C:2017-03-28_43QEC_10_S2A_v1', u'sentinel-2:L1C:2017-03-28_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-03-28_43QFC_98_S2A_v1']; vir_suffix='D'
+#s2_ids = [u'sentinel-2:L1C:2017-04-17_43QEB_31_S2A_v1', u'sentinel-2:L1C:2017-04-17_43QEC_11_S2A_v1', u'sentinel-2:L1C:2017-04-17_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-04-17_43QFC_98_S2A_v1']; vir_suffix='E'
+#s2_ids = [u'sentinel-2:L1C:2017-05-07_43QEB_31_S2A_v1', u'sentinel-2:L1C:2017-05-07_43QEC_12_S2A_v1', u'sentinel-2:L1C:2017-05-07_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-05-07_43QFC_98_S2A_v1']; vir_suffix='F'
+#s2_ids = [u'sentinel-2:L1C:2017-10-29_43QEB_29_S2B_v1', u'sentinel-2:L1C:2017-10-29_43QEC_09_S2B_v1', u'sentinel-2:L1C:2017-10-29_43QFB_99_S2B_v1', u'sentinel-2:L1C:2017-10-29_43QFC_97_S2B_v1']; vir_suffix='G'
+#s2_ids = [u'sentinel-2:L1C:2017-11-03_43QEB_31_S2A_v1', u'sentinel-2:L1C:2017-11-03_43QEC_11_S2A_v1', u'sentinel-2:L1C:2017-11-03_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-11-03_43QFC_98_S2A_v1']; vir_suffix='H'
+#s2_ids = [u'sentinel-2:L1C:2017-11-28_43QEB_30_S2B_v1', u'sentinel-2:L1C:2017-11-28_43QEC_10_S2B_v1', u'sentinel-2:L1C:2017-11-28_43QFB_99_S2B_v1', u'sentinel-2:L1C:2017-11-28_43QFC_98_S2B_v1']; vir_suffix='I'
+#s2_ids = [u'sentinel-2:L1C:2017-12-13_43QEB_30_S2A_v1', u'sentinel-2:L1C:2017-12-13_43QEC_11_S2A_v1', u'sentinel-2:L1C:2017-12-13_43QFB_99_S2A_v1', u'sentinel-2:L1C:2017-12-13_43QFC_98_S2A_v1']; vir_suffix='J'
+#s2_imgs = s2_ids[:]
+
+# jalna sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-01-03_063D4608_S1A', u'sentinel-1:GRD:meta_2017-01-03_063D4633_S1A']; sar_suffix='A' #A -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-20_063D4606_S1A', u'sentinel-1:GRD:meta_2017-02-20_063D4631_S1A']; sar_suffix='B' #B +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-04_063D4606_S1A', u'sentinel-1:GRD:meta_2017-03-04_063D4631_S1A']; sar_suffix='C' #C -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-28_063D4606_S1A', u'sentinel-1:GRD:meta_2017-03-28_063D4631_S1A']; sar_suffix='D' #D +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-21_063D4607_S1A', u'sentinel-1:GRD:meta_2017-04-21_063D4632_S1A']; sar_suffix='E' #E +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-05-03_063D4608_S1A', u'sentinel-1:GRD:meta_2017-05-03_063D4633_S1A']; sar_suffix='F' #F -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4615_S1A', u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='G' #G +13
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4615_S1A', u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='H' #H +8
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-17_063D4614_S1A', u'sentinel-1:GRD:meta_2017-12-17_063D4639_S1A']; sar_suffix='I' #I +19
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-17_063D4614_S1A', u'sentinel-1:GRD:meta_2017-12-17_063D4639_S1A']; sar_suffix='J' #J +4
+
+
+# parbhani vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-07_43QFB_99_S2A_v1']; vir_suffix='A'
+#s2_ids = [u'sentinel-2:L1C:2017-02-16_43QFB_99_S2A_v1']; vir_suffix='B'
+#s2_ids = [u'sentinel-2:L1C:2017-03-08_43QFB_99_S2A_v1']; vir_suffix='C'
+#s2_ids = [u'sentinel-2:L1C:2017-03-28_43QFB_99_S2A_v1']; vir_suffix='D'
+#s2_ids = [u'sentinel-2:L1C:2017-04-17_43QFB_99_S2A_v1']; vir_suffix='E'
+#s2_ids = [u'sentinel-2:L1C:2017-05-07_43QFB_99_S2A_v1']; vir_suffix='F' # clouds and shadows
+#s2_ids = [u'sentinel-2:L1C:2017-10-29_43QFB_99_S2B_v1']; vir_suffix='G'
+#s2_ids = [u'sentinel-2:L1C:2017-11-03_43QFB_99_S2A_v1']; vir_suffix='H'
+#s2_ids = [u'sentinel-2:L1C:2017-11-23_43QFB_99_S2A_v1']; vir_suffix='I' # hazy
+#s2_ids = [u'sentinel-2:L1C:2017-11-28_43QFB_99_S2B_v1']; vir_suffix='J'
+#s2_ids = [u'sentinel-2:L1C:2017-12-08_43QFB_99_S2B_v1']; vir_suffix='K'
+#s2_ids = [u'sentinel-2:L1C:2017-12-13_43QFB_99_S2A_v1']; vir_suffix='L'
+#s2_ids = [u'sentinel-2:L1C:2017-12-18_43QFB_99_S2B_v1']; vir_suffix='M'
+#s2_imgs = s2_ids[:]
+
+# parbhani sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-01-03_063D4633_S1A']; sar_suffix='A' #A -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-20_063D4631_S1A']; sar_suffix='B' #B +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-04_063D4631_S1A']; sar_suffix='C' #C -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-28_063D4631_S1A']; sar_suffix='D' #D +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-21_063D4632_S1A']; sar_suffix='E' #E +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-05-03_063D4633_S1A']; sar_suffix='F' #F -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='G' #G +13
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='H' #H +8
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='I' #I -12
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-11_063D4640_S1A']; sar_suffix='J' #J -17
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-17_063D4639_S1A']; sar_suffix='K' #K +9
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-17_063D4639_S1A']; sar_suffix='L' #L +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-17_063D4639_S1A']; sar_suffix='M' #M -1
+
+
+# malegaon vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-30_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-01-30_43QDD_99_S2A_v1']; vir_suffix='A'
+#s2_ids = [u'sentinel-2:L1C:2017-02-09_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-02-09_43QDD_99_S2A_v1']; vir_suffix='B' #light haze
+#s2_ids = [u'sentinel-2:L1C:2017-03-01_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-03-01_43QDD_99_S2A_v1']; vir_suffix='C' 
+#s2_ids = [u'sentinel-2:L1C:2017-03-21_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-03-21_43QDD_99_S2A_v1']; vir_suffix='D' 
+#s2_ids = [u'sentinel-2:L1C:2017-04-10_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-04-10_43QDD_99_S2A_v1']; vir_suffix='E' 
+#s2_ids = [u'sentinel-2:L1C:2017-04-30_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-04-30_43QDD_99_S2A_v1']; vir_suffix='F' 
+#s2_ids = [u'sentinel-2:L1C:2017-05-20_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-05-20_43QDD_99_S2A_v1']; vir_suffix='G' 
+#s2_ids = [u'sentinel-2:L1C:2017-10-22_43QDC_99_S2B_v1', u'sentinel-2:L1C:2017-10-22_43QDD_99_S2B_v1']; vir_suffix='H' #light haze
+#s2_ids = [u'sentinel-2:L1C:2017-10-27_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-10-27_43QDD_99_S2A_v1']; vir_suffix='I' #minor clouds
+#s2_ids = [u'sentinel-2:L1C:2017-11-01_43QDC_99_S2B_v1', u'sentinel-2:L1C:2017-11-01_43QDD_99_S2B_v1']; vir_suffix='J' #light haze
+#s2_ids = [u'sentinel-2:L1C:2017-11-16_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-11-16_43QDD_99_S2A_v1']; vir_suffix='K' #substantial haze
+#s2_ids = [u'sentinel-2:L1C:2017-12-11_43QDC_99_S2B_v1', u'sentinel-2:L1C:2017-12-11_43QDD_99_S2B_v1']; vir_suffix='L' #haze
+#s2_ids = [u'sentinel-2:L1C:2017-12-26_43QDC_99_S2A_v1', u'sentinel-2:L1C:2017-12-26_43QDD_99_S2A_v1']; vir_suffix='M' 
+#s2_ids = [u'sentinel-2:L1C:2017-12-31_43QDC_99_S2B_v1', u'sentinel-2:L1C:2017-12-31_43QDD_99_S2B_v1']; vir_suffix='N' #light haze
+#s2_imgs = s2_ids[:]
+
+# malegaon sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-01_136D5405_S1A', u'sentinel-1:GRD:meta_2017-02-01_136D5430_S1A']; sar_suffix='A' #A +2
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-13_136D5405_S1A', u'sentinel-1:GRD:meta_2017-02-13_136D5430_S1A']; sar_suffix='B' #B +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-09_136D5406_S1A', u'sentinel-1:GRD:meta_2017-03-09_136D5431_S1A']; sar_suffix='C' #C +8
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-21_136D5406_S1A', u'sentinel-1:GRD:meta_2017-03-21_136D5431_S1A']; sar_suffix='D' #D +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-14_136D5407_S1A', u'sentinel-1:GRD:meta_2017-04-14_136D5432_S1A']; sar_suffix='E' #E +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-26_136D5428_S1A']; sar_suffix='F' #F -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-05-20_136D5409_S1A', u'sentinel-1:GRD:meta_2017-05-20_136D5434_S1A']; sar_suffix='G' #G +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-10-23_136D5416_S1A', u'sentinel-1:GRD:meta_2017-10-23_136D5441_S1A']; sar_suffix='H' #H +1
+#s1_ids = [u'sentinel-1:GRD:meta_2017-10-23_136D5416_S1A', u'sentinel-1:GRD:meta_2017-10-23_136D5441_S1A']; sar_suffix='I' #I -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-04_136D5416_S1A', u'sentinel-1:GRD:meta_2017-11-04_136D5441_S1A']; sar_suffix='J' #J +3
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-28_136D5416_S1A', u'sentinel-1:GRD:meta_2017-11-28_136D5441_S1A']; sar_suffix='K' #K +12
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-10_136D5415_S1A', u'sentinel-1:GRD:meta_2017-12-10_136D5440_S1A']; sar_suffix='L' #L -1
+#s1_ids = [u'sentinel-1:GRD:meta_2018-01-03_136D5414_S1A', u'sentinel-1:GRD:meta_2018-01-03_136D5439_S1A']; sar_suffix='M' #M +8
+#s1_ids = [u'sentinel-1:GRD:meta_2018-01-03_136D5414_S1A', u'sentinel-1:GRD:meta_2018-01-03_136D5439_S1A']; sar_suffix='N' #N +3
+
+
+# sitapur vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-24_44RMR_81_S2A_v1']; vir_suffix='A' #vir_A #hazy
+#s2_ids = [u'sentinel-2:L1C:2017-02-23_44RMR_82_S2A_v1']; vir_suffix='B' #vir_B
+#s2_ids = [u'sentinel-2:L1C:2017-04-04_44RMR_83_S2A_v1']; vir_suffix='C' #vir_C
+#s2_ids = [u'sentinel-2:L1C:2017-04-24_44RMR_84_S2A_v1']; vir_suffix='D' #vir_D
+#s2_ids = [u'sentinel-2:L1C:2017-05-14_44RMR_84_S2A_v1']; vir_suffix='E' #vir_E
+#s2_ids = [u'sentinel-2:L1C:2017-06-03_44RMR_83_S2A_v1']; vir_suffix='F' #vir_F
+#s2_ids = [u'sentinel-2:L1C:2017-10-16_44RMR_81_S2B_v1']; vir_suffix='G' #vir_G #hazy
+#s2_ids = [u'sentinel-2:L1C:2017-11-25_44RMR_82_S2B_v1']; vir_suffix='H' #vir_H #hazy
+#s2_ids = [u'sentinel-2:L1C:2017-12-15_44RMR_83_S2B_v1']; vir_suffix='I' #vir_I
+s2_dict = {}
+s2_dict['J'] = [u'sentinel-2:L1C:2015-10-02_44RMR_83_S2A_v1']
+s2_dict['K'] = [u'sentinel-2:L1C:2016-01-10_44RMR_83_S2A_v1']
+s2_dict['L'] = [u'sentinel-2:L1C:2016-02-09_44RMR_82_S2A_v1'] # hazy
+s2_dict['M'] = [u'sentinel-2:L1C:2016-03-10_44RMR_83_S2A_v1']
+s2_dict['N'] = [u'sentinel-2:L1C:2016-04-09_44RMR_82_S2A_v1']
+
+#s2_imgs = s2_ids[:]
+
+# sitapur sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-01-22_165D3541_S1A', u'sentinel-1:GRD:meta_2017-01-22_165D3606_S1A']; sar_suffix='A' # -2
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-19_056A3811_S1A', u'sentinel-1:GRD:meta_2017-02-19_056A3836_S1A']; sar_suffix='B' # -4 #no vh?
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-04_165D3543_S1A', u'sentinel-1:GRD:meta_2017-04-04_165D3608_S1A']; sar_suffix='C' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-20_056A3813_S1A', u'sentinel-1:GRD:meta_2017-04-20_056A3838_S1A']; sar_suffix='D' # -4 #no vh?
+#s1_ids = [u'sentinel-1:GRD:meta_2017-05-14_056A3814_S1A', u'sentinel-1:GRD:meta_2017-05-14_056A3839_S1A']; sar_suffix='E' # +0 #no vh?
+#s1_ids = [u'sentinel-1:GRD:meta_2017-06-03_165D3546_S1A', u'sentinel-1:GRD:meta_2017-06-03_165D3611_S1A']; sar_suffix='F' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-10-17_056A3821_S1A', u'sentinel-1:GRD:meta_2017-10-17_056A3846_S1A']; sar_suffix='G' # +1
+#s1_ids = [u'sentinel-1:GRD:meta_2017-11-22_056A3820_S1A', u'sentinel-1:GRD:meta_2017-11-22_056A3843_S1A']; sar_suffix='H' # -3
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-16_056A3820_S1A', u'sentinel-1:GRD:meta_2017-12-16_056A3845_S1A']; sar_suffix='I' # +1
+s1_dict = {}
+s1_dict['J'] = [u'sentinel-1:GRD:meta_2015-09-30_165D3540_S1A', u'sentinel-1:GRD:meta_2015-09-30_165D3604_S1A'] # no vh?
+s1_dict['K'] = [u'sentinel-1:GRD:meta_2016-01-08_056A3804_S1A', u'sentinel-1:GRD:meta_2016-01-08_056A3829_S1A'] # no vh?
+s1_dict['L'] = [u'sentinel-1:GRD:meta_2016-02-01_056A3803_S1A', u'sentinel-1:GRD:meta_2016-02-01_056A3828_S1A'] # no vh?
+s1_dict['M'] = [u'sentinel-1:GRD:meta_2016-03-16_165D3556_S1A'] # no vh?
+s1_dict['N'] = [u'sentinel-1:GRD:meta_2016-04-13_056A3804_S1A', u'sentinel-1:GRD:meta_2016-04-13_056A3829_S1A'] # no vh?
+
+
+# hindupur vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-24_43PGR_82_S2A_v1']; vir_suffix='A' #vir_A
+#s2_ids = [u'sentinel-2:L1C:2017-02-23_43PGR_83_S2A_v1']; vir_suffix='B' #vir_B
+#s2_ids = [u'sentinel-2:L1C:2017-04-04_43PGR_84_S2A_v1']; vir_suffix='C' #vir_C #slightly hazy
+#s2_ids = [u'sentinel-2:L1C:2017-04-24_43PGR_85_S2A_v1']; vir_suffix='D' #vir_D
+#s2_ids = [u'sentinel-2:L1C:2017-05-14_43PGR_85_S2A_v1']; vir_suffix='E' #vir_E
+#s2_ids = [u'sentinel-2:L1C:2017-12-20_43PGR_83_S2A_v1']; vir_suffix='F' #vir_F
+#s2_ids = [u'sentinel-2:L1C:2017-12-25_43PGR_84_S2B_v1']; vir_suffix='G' #vir_G
+
+#s2_imgs = s2_ids[:]
+
+# hindupur sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-01-22_165D3951_S1A']; sar_suffix='A' # -2
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-27_165D3949_S1A']; sar_suffix='B' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-04_165D3953_S1A']; sar_suffix='C' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-28_165D3954_S1A']; sar_suffix='D' # +8
+#s1_ids = [u'sentinel-1:GRD:meta_2017-05-10_165D3954_S1A']; sar_suffix='E' # -4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-24_165D4000_S1A']; sar_suffix='F' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-12-24_165D4000_S1A']; sar_suffix='G' # -1
+
+
+# coimbatore vir
+#s2_ids = [u'sentinel-2:L1C:2017-02-23_43PFN_49_S2A_v1', u'sentinel-2:L1C:2017-02-23_43PGM_99_S2A_v1', u'sentinel-2:L1C:2017-02-23_43PGN_99_S2A_v1']; vir_suffix='A' #
+#s2_ids = [u'sentinel-2:L1C:2017-01-24_43PFN_49_S2A_v1', u'sentinel-2:L1C:2017-01-24_43PGN_99_S2A_v1']; vir_suffix='B' # nonchronological!
+#s2_ids = [u'sentinel-2:L1C:2017-05-14_43PFN_51_S2A_v1', u'sentinel-2:L1C:2017-05-14_43PGN_99_S2A_v1']; vir_suffix='C' #
+#s2_ids = [u'sentinel-2:L1C:2018-01-14_43PFN_51_S2B_v1', u'sentinel-2:L1C:2018-01-14_43PGN_99_S2B_v1']; vir_suffix='D' #
+#s2_ids = [u'sentinel-2:L1C:2018-01-29_43PFN_51_S2A_v1', u'sentinel-2:L1C:2018-01-29_43PGN_99_S2A_v1']; vir_suffix='E' #
+#s2_ids = [u'sentinel-2:L1C:2018-02-03_43PFN_31_S2B_v1', u'sentinel-2:L1C:2018-02-03_43PGN_43_S2B_v1']; vir_suffix='F' #
+#s2_ids = [u'sentinel-2:L1C:2018-02-18_43PFN_51_S2A_v1', u'sentinel-2:L1C:2018-02-18_43PGN_99_S2A_v1']; vir_suffix='G' #
+#s2_ids = [u'sentinel-2:L1C:2018-02-23_43PFN_50_S2B_v1', u'sentinel-2:L1C:2018-02-23_43PGN_99_S2B_v1']; vir_suffix='H' #
+#s2_imgs = s2_ids[:]
+
+# coimbatore sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-27_165D4014_S1A', u'sentinel-1:GRD:meta_2017-02-27_165D4039_S1A']; sar_suffix='A' # +4
+s1_dict = {}
+s1_dict['B'] = [u'sentinel-1:GRD:meta_2017-01-22_165D4016_S1A', u'sentinel-1:GRD:meta_2017-01-22_165D4041_S1A']
+s1_dict['C'] = [u'sentinel-1:GRD:meta_2017-05-10_165D4019_S1A', u'sentinel-1:GRD:meta_2017-05-10_165D4044_S1A']
+s1_dict['D'] = [u'sentinel-1:GRD:meta_2018-01-17_165D4024_S1A', u'sentinel-1:GRD:meta_2018-01-17_165D4049_S1A']
+s1_dict['E'] = [u'sentinel-1:GRD:meta_2018-01-29_165D4024_S1A', u'sentinel-1:GRD:meta_2018-01-29_165D4049_S1A']
+s1_dict['F'] = [u'sentinel-1:GRD:meta_2018-01-29_165D4024_S1A', u'sentinel-1:GRD:meta_2018-01-29_165D4049_S1A']
+s1_dict['G'] = [u'sentinel-1:GRD:meta_2018-02-10_165D4024_S1A', u'sentinel-1:GRD:meta_2018-02-10_165D4049_S1A']
+s1_dict['H'] = [u'sentinel-1:GRD:meta_2018-02-22_165D4023_S1A', u'sentinel-1:GRD:meta_2018-02-22_165D4048_S1A']
+
+
+
+# belgaum vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-30_43PDT_99_S2A_v1']; vir_suffix='A' #
+#s2_ids = [u'sentinel-2:L1C:2017-02-09_43PDT_99_S2A_v1']; vir_suffix='B' #
+#s2_ids = [u'sentinel-2:L1C:2017-03-21_43PDT_99_S2A_v1']; vir_suffix='C' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-30_43PDT_99_S2A_v1']; vir_suffix='D' #
+s2_dict = {}
+s2_dict['E'] = [u'sentinel-2:L1C:2017-10-27_43PDT_99_S2A_v1']
+s2_dict['F'] = [u'sentinel-2:L1C:2017-11-01_43PDT_99_S2B_v1']
+s2_dict['G'] = [u'sentinel-2:L1C:2017-11-16_43PDT_99_S2A_v1']
+
+# belgaum sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-01_136D5520_S1A', u'sentinel-1:GRD:meta_2017-02-01_136D5545_S1A']; sar_suffix='A' # +1
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-13_136D5520_S1A', u'sentinel-1:GRD:meta_2017-02-13_136D5545_S1A']; sar_suffix='B' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-21_136D5521_S1A', u'sentinel-1:GRD:meta_2017-03-21_136D5546_S1A']; sar_suffix='C' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-26_136D5543_S1A']; sar_suffix='D' #-4
+s1_dict = {}
+s1_dict['E'] = [u'sentinel-1:GRD:meta_2017-10-23_136D5531_S1A', u'sentinel-1:GRD:meta_2017-10-23_136D5556_S1A']
+s1_dict['F'] = [u'sentinel-1:GRD:meta_2017-11-04_136D5531_S1A', u'sentinel-1:GRD:meta_2017-11-04_136D5556_S1A']
+s1_dict['G'] = [u'sentinel-1:GRD:meta_2017-11-28_136D5531_S1A', u'sentinel-1:GRD:meta_2017-11-28_136D5556_S1A']
+
+
+# vijayawada vir
+#s2_ids = [u'sentinel-2:L1C:2017-02-10_44QMD_91_S2A_v1']; vir_suffix='A' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-11_44QMD_92_S2A_v1']; vir_suffix='B' # uniform haze
+s2_dict = {}
+s2_dict['C'] = [u'sentinel-2:L1C:2017-10-23_44QMD_77_S2B_v1']
+s2_dict['D'] = [u'sentinel-2:L1C:2017-11-02_44QMD_90_S2B_v1']
+s2_dict['E'] = [u'sentinel-2:L1C:2018-01-31_44QMD_58_S2B_v1']
+s2_dict['F'] = [u'sentinel-2:L1C:2018-02-25_44QMD_92_S2A_v1']
+s2_dict['G'] = [u'sentinel-2:L1C:2018-04-11_44QMD_92_S2B_v1']
+
+# vijayawada sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-01-29_092D3030_S1A', u'sentinel-1:GRD:meta_2017-01-29_092D3055_S1A']; sar_suffix='A' # -12
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-11_092D3031_S1A', u'sentinel-1:GRD:meta_2017-04-11_092D3056_S1A']; sar_suffix='B' # +0
+s1_dict = {}
+s1_dict['C'] = [u'sentinel-1:GRD:meta_2017-10-20_092D3039_S1A', u'sentinel-1:GRD:meta_2017-10-20_092D3104_S1A']
+s1_dict['D'] = [u'sentinel-1:GRD:meta_2017-11-01_092D3040_S1A', u'sentinel-1:GRD:meta_2017-11-01_092D3105_S1A']
+s1_dict['E'] = [u'sentinel-1:GRD:meta_2018-02-05_092D3036_S1A', u'sentinel-1:GRD:meta_2018-02-05_092D3101_S1A']
+s1_dict['F'] = [u'sentinel-1:GRD:meta_2018-03-01_092D3036_S1A', u'sentinel-1:GRD:meta_2018-03-01_092D3101_S1A']
+s1_dict['G'] = [u'sentinel-1:GRD:meta_2018-04-06_092D3037_S1A', u'sentinel-1:GRD:meta_2018-04-06_092D3102_S1A']
+
+
+# pune vir
+#s2_ids = [u'sentinel-2:L1C:2017-01-30_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-01-30_43QDA_99_S2A_v1']; vir_suffix='A' #
+#s2_ids = [u'sentinel-2:L1C:2017-02-09_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-02-09_43QDA_99_S2A_v1']; vir_suffix='B' #
+#s2_ids = [u'sentinel-2:L1C:2017-03-01_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-03-01_43QDA_99_S2A_v1']; vir_suffix='C' #
+#s2_ids = [u'sentinel-2:L1C:2017-03-21_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-03-21_43QDA_99_S2A_v1']; vir_suffix='D' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-10_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-04-10_43QDA_99_S2A_v1']; vir_suffix='E' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-30_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-04-30_43QDA_99_S2A_v1']; vir_suffix='F' #
+s2_dict = {}
+s2_dict['G'] = [u'sentinel-2:L1C:2017-05-20_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-05-20_43QDA_99_S2A_v1']
+s2_dict['H'] = [u'sentinel-2:L1C:2017-11-01_43QCA_99_S2B_v1', u'sentinel-2:L1C:2017-11-01_43QDA_99_S2B_v1']
+s2_dict['I'] = [u'sentinel-2:L1C:2017-11-16_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-11-16_43QDA_99_S2A_v1']
+s2_dict['J'] = [u'sentinel-2:L1C:2017-12-11_43QCA_99_S2B_v1', u'sentinel-2:L1C:2017-12-11_43QDA_99_S2B_v1']
+s2_dict['K'] = [u'sentinel-2:L1C:2017-12-26_43QCA_99_S2A_v1', u'sentinel-2:L1C:2017-12-26_43QDA_99_S2A_v1']
+s2_dict['L'] = [u'sentinel-2:L1C:2017-12-31_43QCA_99_S2B_v1', u'sentinel-2:L1C:2017-12-31_43QDA_99_S2B_v1']
+
+# pune sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-01_136D5455_S1A']; sar_suffix='A' # +1
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-13_136D5455_S1A']; sar_suffix='B' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-09_136D5456_S1A']; sar_suffix='C' # +8
+#s1_ids = [u'sentinel-1:GRD:meta_2017-03-21_136D5456_S1A']; sar_suffix='D' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-14_136D5457_S1A']; sar_suffix='E' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-26_136D5453_S1A']; sar_suffix='F' # -4
+s1_dict = {}
+s1_dict['G'] = [u'sentinel-1:GRD:meta_2017-05-20_136D5459_S1A']
+s1_dict['H'] = [u'sentinel-1:GRD:meta_2017-11-04_136D5506_S1A']
+s1_dict['I'] = [u'sentinel-1:GRD:meta_2017-11-28_136D5506_S1A']
+s1_dict['J'] = [u'sentinel-1:GRD:meta_2017-12-10_136D5505_S1A']
+s1_dict['K'] = [u'sentinel-1:GRD:meta_2018-01-03_136D5504_S1A']
+s1_dict['L'] = [u'sentinel-1:GRD:meta_2018-01-03_136D5504_S1A']
+
+
+# hyderabad vir
+#s2_ids = [u'sentinel-2:L1C:2017-02-03_43QHV_97_S2A_v1']; vir_suffix='A' #
+#s2_ids = [u'sentinel-2:L1C:2017-02-23_43QHV_97_S2A_v1']; vir_suffix='B' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-04_43QHV_97_S2A_v1']; vir_suffix='C' #
+#s2_ids = [u'sentinel-2:L1C:2017-04-24_43QHV_97_S2A_v1']; vir_suffix='D' #
+s2_dict = {}
+s2_dict['E'] = [u'sentinel-2:L1C:2017-05-14_43QHV_98_S2A_v1']
+s2_dict['F'] = [u'sentinel-2:L1C:2017-11-30_43QHV_97_S2A_v1']
+s2_dict['G'] = [u'sentinel-2:L1C:2017-12-15_43QHV_97_S2B_v1']
+s2_dict['H'] = [u'sentinel-2:L1C:2017-12-20_43QHV_97_S2A_v1']
+s2_dict['I'] = [u'sentinel-2:L1C:2017-12-25_43QHV_97_S2B_v1']
+
+# hyderabad sar
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-03_165D3836_S1A']; sar_suffix='A' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-02-27_165D3834_S1A']; sar_suffix='B' # +4
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-04_165D3838_S1A']; sar_suffix='C' # +0
+#s1_ids = [u'sentinel-1:GRD:meta_2017-04-16_165D3838_S1A']; sar_suffix='D' # -8
+s1_dict = {}
+s1_dict['E'] = [u'sentinel-1:GRD:meta_2017-05-10_165D3839_S1A']
+s1_dict['F'] = [u'sentinel-1:GRD:meta_2017-11-30_165D3846_S1A']
+s1_dict['G'] = [u'sentinel-1:GRD:meta_2017-12-12_165D3846_S1A']
+s1_dict['H'] = [u'sentinel-1:GRD:meta_2017-12-24_165D3845_S1A']
+s1_dict['I'] = [u'sentinel-1:GRD:meta_2017-12-24_165D3845_S1A']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### PHASE I
+
+# 'official image' ids
+# budapest
+# S2, Q1 sentinel-2:L1C:2016-03-14_34TCT_81_S2A_v1
+# S2, Q2 sentinel-2:L1C:2016-06-22_34TCT_81_S2A_v1
+# S2, Q3 sentinel-2:L1C:2016-09-10_34TCT_80_S2A_v1
+# S2, Q4 sentinel-2:L1C:2016-12-29_34TCT_81_S2A_v1
+# S1, Q1 sentinel-1:GRD:meta_2016-03-16_175A3409_S1A
+# S1, Q2 sentinel-1:GRD:meta_2016-06-12_051D5347_S1A
+# S1, Q3 sentinel-1:GRD:meta_2016-09-12_175A3424_S1A
+# S1, Q4 sentinel-1:GRD:meta_2016-12-29_175A3423_S1A
+# L8, Q1 u'landsat:LC08:PRE:TOAR:meta_LC81880272016036_v1', u'landsat:LC08:PRE:TOAR:meta_LC81870272016077_v1'
+    # Q1 composite just okay
+# L8, Q2 u'landsat:LC08:PRE:TOAR:meta_LC81880272016148_v1', u'landsat:LC08:PRE:TOAR:meta_LC81870272016141_v1'
+    # Q2 somewhat cloudy
+# L8, Q3 u'landsat:LC08:PRE:TOAR:meta_LC81880272016244_v1'
+    # Q3 slightly cloudy
+# L8, Q4 u'landsat:LC08:PRE:TOAR:meta_LC81880272016308_v1', u'landsat:LC08:PRE:TOAR:meta_LC81870272016333_v1'
+    # Q4 really lousy composite
+
+# guadalajara
+# S2, Q2 u'sentinel-2:L1C:2016-06-07_13QFD_99_S2A_v1', u'sentinel-2:L1C:2016-06-07_13QFC_59_S2A_v1'
+# S2, Q3 u'sentinel-2:L1C:2016-09-15_13QFC_99_S2A_v1', u'sentinel-2:L1C:2016-09-15_13QFD_99_S2A_v1'
+# S2, Q4 u'sentinel-2:L1C:2016-12-14_13QFD_99_S2A_v1', u'sentinel-2:L1C:2016-12-14_13QFC_99_S2A_v1'
+# S2, Q1 u'sentinel-2:L1C:2017-02-12_13QFD_99_S2A_v1', u'sentinel-2:L1C:2017-02-12_13QFC_99_S2A_v1'
+# S1, Q2 DL API ERROR
+#
+# L8, Q1 u'landsat:LC08:PRE:TOAR:meta_LC80290462016010_v1'
+# L8, Q2 u'landsat:LC08:PRE:TOAR:meta_LC80290462016154_v1'
+    # Q2 couple clouds
+# L8, Q3 u'landsat:LC08:PRE:TOAR:meta_LC80290462016250_v1'
+# L8, Q4 u'landsat:LC08:PRE:TOAR:meta_LC80290462016330_v1'
+
+# kampala
+# S2, 16Q2 too cloudy!
+# S2, 16Q3 too cloudy!
+# S2, 16Q4 u'sentinel-2:L1C:2016-10-27_36NVF_99_S2A_v1' 
+    # Q4 slightly cloudy
+#   -> GatewayTimeoutError: Your request timed out on the server. Consider reducing the complexity of your request.
+# S2, 17Q1 u'sentinel-2:L1C:2017-01-05_36NVF_99_S2A_v1'
+# S1, Q2 DL API ERROR
+#   -> HTTPSConnectionPool(host='platform-services.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 500 error responses',))
+# L8, 16Q1 u'landsat:LC08:PRE:TOAR:meta_LC81710602016029_v1'
+    # Q1 no clouds but quite hazy
+#   -> GatewayTimeoutError: Your request timed out on the server. Consider reducing the complexity of your request.
+# L8, 16Q2 too cloudy
+# L8, 16Q3 u'landsat:LC08:PRE:TOAR:meta_LC81710602016253_v1'
+    # Q3 quite cloudy
+# L8, 16Q4 u'landsat:LC08:PRE:TOAR:meta_LC81710602016301_v1', u'landsat:LC08:PRE:TOAR:meta_LC81710592016349_v1'
+    # Q4 many little clouds
+# L8, 17Q1 too cloudy
+#
+# L8 2012-2014 u'landsat:LC08:PRE:TOAR:meta_LC81710602013292_v1'
+# L8 2016-2017 u'landsat:LC08:PRE:TOAR:meta_LC81710602016301_v1', u'landsat:LC08:PRE:TOAR:meta_LC81710592016061_v1'
+# L8 2016/7alt u'landsat:LC08:PRE:TOAR:meta_LC81710602016029_v1'
+    # a little haze but no popcorn
+
+# los-angeles
+# S2, 16Q1 u'sentinel-2:L1C:2016-02-09_11SMT_97_S2A_v1', u'sentinel-2:L1C:2016-02-09_11SLT_99_S2A_v1', u'sentinel-2:L1C:2016-02-09_11SLU_33_S2A_v1'
+#   -> GatewayTimeoutError: Your request timed out on the server. Consider reducing the complexity of your request.
+# S2, 16Q2 u'sentinel-2:L1C:2016-04-19_11SLU_99_S2A_v1', u'sentinel-2:L1C:2016-04-19_11SLT_99_S2A_v1', u'sentinel-2:L1C:2016-04-19_11SMT_99_S2A_v1'
+# S2, 16Q3 u'sentinel-2:L1C:2016-07-28_11SLU_99_S2A_v1', u'sentinel-2:L1C:2016-07-28_11SLT_99_S2A_v1', u'sentinel-2:L1C:2016-07-28_11SMT_99_S2A_v1'
+# S2, 16Q4 u'sentinel-2:L1C:2016-10-06_11SLU_99_S2A_v1', u'sentinel-2:L1C:2016-10-06_11SLT_99_S2A_v1', u'sentinel-2:L1C:2016-10-06_11SMT_99_S2A_v1'
+# S2, 17Q1 u'sentinel-2:L1C:2017-02-13_11SMT_99_S2A_v1', u'sentinel-2:L1C:2017-01-14_11SLT_80_S2A_v1', u'sentinel-2:L1C:2017-01-14_11SLU_99_S2A_v1'
+# S2, 17Q2 u'sentinel-2:L1C:2017-04-04_11SMT_99_S2A_v1', u'sentinel-2:L1C:2017-04-04_11SLT_99_S2A_v1', u'sentinel-2:L1C:2017-04-04_11SLU_99_S2A_v1'
+# L8, 16Q1 u'landsat:LC08:PRE:TOAR:meta_LC80400362016055_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400372016039_v1', u'landsat:LC08:PRE:TOAR:meta_LC80410362016046_v1'
+#   -> GatewayTimeoutError: Your request timed out on the server. Consider reducing the complexity of your request.
+# L8, 16Q2 u'landsat:LC08:PRE:TOAR:meta_LC80410362016110_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400372016103_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400362016103_v1'
+# L8, 16Q3 u'landsat:LC08:PRE:TOAR:meta_LC80400362016215_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400372016231_v1', u'landsat:LC08:PRE:TOAR:meta_LC80410362016270_v1'
+# L8, 16Q4 u'landsat:LC08:PRE:TOAR:meta_LC80400362016295_v1', u'landsat:LC08:PRE:TOAR:meta_LC80410362016334_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400372016295_v1'
+# L8, 17Q1 u'landsat:LC08:PRE:TOAR:meta_LC80410372017032_v1', u'landsat:LC08:PRE:TOAR:meta_LC80400362017073_v1', u'landsat:LC08:PRE:TOAR:meta_LC80410362017032_v1'
+# L8, 17Q2 u'landsat:LC08:01:T1:TOAR:meta_LC08_L1TP_040036_20170501_20170515_01_T1_v1', u'landsat:LC08:01:T1:TOAR:meta_LC08_L1TP_040037_20170501_20170515_01_T1_v1', u'landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_041036_20170609_20170609_01_RT_v1'
+    # different product!
+
+
+# pune
+# S2, 16Q1 u'sentinel-2:L1C:2016-02-05_43QCA_99_S2A_v1'
+# S2, 16Q2 too cloudy
+# S2, 16Q3 no imagery!
+# S2, 16Q4 u'sentinel-2:L1C:2016-11-21_43QCA_99_S2A_v1'
+# S2, 17Q1 u'sentinel-2:L1C:2017-03-01_43QCA_99_S2A_v1'
+# S2, 17Q2 u'sentinel-2:L1C:2017-05-20_43QCA_99_S2A_v1'
+# S2, 17Q3 no imagery!
+# S1, 16Q4 u'sentinel-1:GRD:meta_2016-11-21_136D5458_S1A'
+# S1, 17Q1 u'sentinel-1:GRD:meta_2017-03-09_136D5456_S1A'
+# S1, 17Q2 u'sentinel-1:GRD:meta_2017-05-20_136D5459_S1A'
+# L8, 16Q1 u'landsat:LC08:PRE:TOAR:meta_LC81470472016021_v1'
+# L8, 16Q2 u'landsat:LC08:PRE:TOAR:meta_LC81470472016117_v1'
+# L8, 16Q3 too cloudy
+# L8, 16Q4 u'landsat:LC08:PRE:TOAR:meta_LC81470472016309_v1'
+# L8, 17Q1 u'landsat:LC08:PRE:TOAR:meta_LC81470472017055_v1'
+# L8, 17Q2 u'landsat:LC08:PRE:TOAR:meta_LC81470472017103_v1'
+
+# sao paulo
+# S2, Q1 u'sentinel-2:L1C:2016-03-08_23KKQ_39_S2A_v1', u'sentinel-2:L1C:2016-01-08_23KKP_60_S2A_v1', u'sentinel-2:L1C:2016-01-08_23KLQ_99_S2A_v1', u'sentinel-2:L1C:2016-01-08_23KLP_99_S2A_v1'
+#     Q1 cloudy
+#   -> GatewayTimeoutError: Your request timed out on the server. Consider reducing the complexity of your request.
+# S2, Q2 u'sentinel-2:L1C:2016-04-07_23KLP_99_S2A_v1', u'sentinel-2:L1C:2016-04-07_23KLQ_99_S2A_v1', u'sentinel-2:L1C:2016-04-07_23KKQ_39_S2A_v1', u'sentinel-2:L1C:2016-04-07_23KKP_59_S2A_v1'
+# S2, Q3 u'sentinel-2:L1C:2016-07-26_23KKP_60_S2A_v1', u'sentinel-2:L1C:2016-07-26_23KKQ_40_S2A_v1', u'sentinel-2:L1C:2016-07-06_23KLQ_99_S2A_v1', u'sentinel-2:L1C:2016-07-06_23KLP_99_S2A_v1'
+#     Q3 slightly cloudy
+# S2, Q4 too cloudy
+# S1, Q1 u'sentinel-1:GRD:meta_2016-01-08_053D3053_S1A'
+# S1, Q2 u'sentinel-1:GRD:meta_2016-04-13_053D3054_S1A'
+# S1, Q3 u'sentinel-1:GRD:meta_2016-07-18_053D3101_S1A'
+# L8, 16Q1 too cloudy
+# L8, 16Q2 u'landsat:LC08:PRE:TOAR:meta_LC82190772016109_v1', u'landsat:LC08:PRE:TOAR:meta_LC82190762016109_v1'
+# L8, 16Q3 u'landsat:LC08:PRE:TOAR:meta_LC82190772016189_v1', u'landsat:LC08:PRE:TOAR:meta_LC82190762016189_v1'
+# L8, 16Q4 u'landsat:LC08:PRE:TOAR:meta_LC82190772016333_v1', u'landsat:LC08:PRE:TOAR:meta_LC82190762016333_v1'
+    # Q4 very cloudy, perhaps unusable
+
+# shenzhen
+# S2, 16Q1 insufficient imagery
+# S2, 16Q2 too cloudy! 
+# S2, 16Q3 u'sentinel-2:L1C:2016-09-27_49QHE_47_S2A_v1', u'sentinel-2:L1C:2016-09-17_49QHF_76_S2A_v1', u'sentinel-2:L1C:2016-09-17_49QGE_99_S2A_v1', u'sentinel-2:L1C:2016-09-17_49QGF_99_S2A_v1', u'sentinel-2:L1C:2016-07-29_49QHF_10_S2A_v1', u'sentinel-2:L1C:2016-07-29_49QGF_32_S2A_v1'
+# S2, 16Q4 
+# S2, 17Q1 u'sentinel-2:L1C:2017-02-14_49QHE_57_S2A_v1', u'sentinel-2:L1C:2017-02-14_49QGF_99_S2A_v1', u'sentinel-2:L1C:2017-01-02_50QKL_76_S2A_v1', u'sentinel-2:L1C:2017-02-04_49QHF_77_S2A_v1', u'sentinel-2:L1C:2017-01-02_49QHF_62_S2A_v1'
+#    partial and cloudy
+# S2, 17Q2 too cloudy!
+# L8, 16Q1 
+
+
+################
+
+# houston
+# L8 2017 (Q2) u'landsat:LC08:PRE:TOAR:meta_LC80260392017087_v1', u'landsat:LC08:01:T1:TOAR:meta_LC08_L1TP_025040_20170524_20170614_01_T1_v1', u'landsat:LC08:01:RT:TOAR:meta_LC08_L1TP_025039_20170524_20170524_01_RT_v1'
+# L8 2016 (Q2) u'landsat:LC08:PRE:TOAR:meta_LC80250392016094_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250402016126_v1', u'landsat:LC08:PRE:TOAR:meta_LC80260392016085_v1'
+# L8 2015 (Q1) u'landsat:LC08:PRE:TOAR:meta_LC80260392015082_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250402015027_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250392015027_v1'
+# L8 2014 (Q2) u'landsat:LC08:PRE:TOAR:meta_LC80260392014175_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250392014136_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250402014136_v1'
+# L8 2013 (Q2) u'landsat:LC08:PRE:TOAR:meta_LC80250402013101_v1', u'landsat:LC08:PRE:TOAR:meta_LC80250392013101_v1'
+
+# L5 1997 u'landsat:LT05:PRE:TOAR:meta_LT50260391997144_v1', u'landsat:LT05:PRE:TOAR:meta_LT50250401997361_v1', u'landsat:LT05:PRE:TOAR:meta_LT50250391997361_v1'
+# L5 1991 u'landsat:LT05:PRE:TOAR:meta_LT50250401991025_v1', u'landsat:LT05:PRE:TOAR:meta_LT50250391991025_v1', u'landsat:LT05:PRE:TOAR:meta_LT50260391991016_v1'
