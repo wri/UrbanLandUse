@@ -1,6 +1,6 @@
 # organized set of helper functions
 # drawn from bronco.py and bronco notebooks
-# topic: descartes labs api
+# topic: building training data
 
 import warnings
 warnings.filterwarnings('ignore')

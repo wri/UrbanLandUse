@@ -4,7 +4,8 @@
 cd /
 
 # stop jupyter server
-jupyter notebook stop
+# this no longer works -> jupyter notebook stop
+pkill jupyter
 
 # unmount data drive
 sudo umount /data

@@ -1,5 +1,7 @@
 # script for starting typical session
 
+# should all of this happen within tmux?
+
 # move to correct directory
 cd ~/UrbanLandUse
 

@@ -1,6 +1,6 @@
 # organized set of helper functions
 # drawn from bronco.py and bronco notebooks
-# topic: rasters
+# topic: vectors
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -13,12 +13,14 @@ warnings.filterwarnings('ignore')
 #from pprint import pprint
 #
 import numpy as np
-#import shapely
+import shapely
 #import cartopy
 from osgeo import gdal
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #
-#import descarteslabs as 
+#import descarteslabs as dl
+import subprocess
+import fiona
 
 
 # GENERAL

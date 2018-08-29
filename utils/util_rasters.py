@@ -6,7 +6,7 @@ import warnings
 warnings.filterwarnings('ignore')
 #
 #import os
-#import sys
+import sys
 #import json
 #import itertools
 #import pickle
@@ -16,9 +16,11 @@ import numpy as np
 #import shapely
 #import cartopy
 from osgeo import gdal
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #
-#import descarteslabs as dl
+import descarteslabs as dl
+sys.path.append('/home/Peter.Kerins/UrbanLandUse/utils')
+
 
 
 # FILE READ/WRITE
@@ -90,6 +92,7 @@ def spectral_index_tile(img,a,b,tol=1e-6):
     a_plus_b = None
     return y
 
+# assumes first dimension is bands
 def window(x,j,i,r):
     w = x[:,j-r:j+r+1,i-r:i+r+1]
     return w
@@ -103,7 +106,7 @@ def maxmin_info(img):
 
 def stats_byte_raster(label_file, category_label, show=False):
     print label_file
-    y, ygeo, yprj, ycols, yrows = bronco.load_geotiff(label_file,dtype='uint8')
+    y, ygeo, yprj, ycols, yrows = load_geotiff(label_file,dtype='uint8')
     yd = {}
     for c in range(256):
         if np.sum((y == c))>0:
@@ -427,6 +430,7 @@ def cloud_mask(X,T,get_rgb=False,
 # COMPOSITING
 
 # calculations from imagery dynamically acquired through dl api
+# references to this should be replaced with references to calc_index_minmax
 def calc_ndvi_minmax(s2_ids, tiles, shape):
     bands=['blue','green','red','nir','swir1','swir2','alpha'];
 
