@@ -9,7 +9,7 @@ warnings.filterwarnings('ignore')
 #import sys
 #import json
 #import itertools
-#import pickle
+import pickle
 #from pprint import pprint
 #
 import numpy as np
@@ -19,65 +19,53 @@ from osgeo import gdal
 #import matplotlib.pyplot as plt
 #
 #import descarteslabs as dl
+import util_rasters
 
 
 
 
-def build_stack_label(bands_vir, bands_sar, bands_ndvi_raw, bands_ndvi_min, bands_ndvi_max, 
-                      bands_ndbi_raw, bands_ndbi_min, bands_ndbi_max, bands_osm_roads,
-                     pair_vir=False, pair_sar=False, pair_ndvi_raw=False, pair_ndbi_raw=False):
+def build_stack_label(
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=['vv','vh'],
+        bands_ndvi=None,
+        bands_ndbi=None,
+        bands_osm=None,
+        ):
+    params = locals()
+    print params
+    for k,v in params.iteritems():
+        if type(v) is list:
+            for member in v:
+                assert (type(member) is str)
+        else:
+            assert (v is None)
     feature_count = 0
     stack_label = ''
     if bands_vir is not None:
-        if pair_vir:
-            feature_count += 12
-            stack_label += '2vir+'
-        else:
-            feature_count += 6
-            stack_label += 'vir+'
+        feature_count += len(bands_vir)
+        stack_label += 'vir+'
     if bands_sar is not None:
-        if pair_sar:
-            feature_count += 4
-            stack_label += '2sar+'
-        else:
-            feature_count += len(bands_sar)
-            stack_label += 'sar+'
-    if bands_ndvi_raw is not None:
-        if pair_ndvi_raw:
-            feature_count += 2
-            stack_label += '2ndvir+'
-        else:
-            feature_count += 1
-            stack_label += 'ndvir+'
-    if bands_ndvi_min is not None:
-        feature_count += 1
-        stack_label += 'ndvin+'
-    if bands_ndvi_max is not None:
-        feature_count += 1
-        stack_label += 'ndvix+'
-    if bands_ndbi_raw is not None:
-        if pair_ndbi_raw:
-            feature_count += 2
-            stack_label += '2ndbir+'
-        else:
-            feature_count += 1
-            stack_label += 'ndbir+'
-    if bands_ndbi_min is not None:
-        feature_count += 1
-        stack_label += 'ndbin+'
-    if bands_ndbi_max is not None:
-        feature_count += 1
-        stack_label += 'ndbix+'
-    if bands_osm_roads is not None:
-        feature_count += 1
+        feature_count += len(bands_sar)
+        stack_label += 'sar+'
+    if bands_ndvi is not None:
+        feature_count += len(bands_ndvi)
+        stack_label += 'ndvi+'
+    if bands_ndbi is not None:
+        feature_count += len(bands_ndbi)
+        stack_label += 'ndbi+'
+    if bands_osm is not None:
+        feature_count += len(bands_osm)
         stack_label += 'osm+'
+
     if stack_label.endswith('+'):
         stack_label = stack_label[:-1]
     return stack_label, feature_count
 
 def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
-        bands_vir, bands_sar, bands_ndvi_raw, bands_ndvi_min, bands_ndvi_max, bands_osm_roads,
-        d, stack_label, feature_count, haze_removal=False,
+		d, stack_label, feature_count,
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        haze_removal=False,
         label_suffix='labels', categories=[0,1,4,6], 
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
@@ -86,10 +74,13 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
     
     r = d/2
 
+    # note that method does not consistently utilize individual bands in the various lists
+    # in order to construct data cube
+
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
-    # eg 'vir', 'vir_sar', 'vir_ndvir', 'vir&sar&ndvirnx', 'vir&sar&ndvir', 'vir&sar&ndvirnx&osm', 'vir&ndvirnx&osm', 'vir&dem'
-    # for tile_id in [19]:
+    
+    # fundamentally a tile-by-tile process
     for tile_id in range(len(tiles['features'])):
         # skip tiles without labels
         # HARDCODED THRESHOLD
@@ -104,7 +95,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
         print 'tile', tile_id, 'load VIR image'
         vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
-        vir, virgeo, virprj, vircols, virrows = bronco.load_geotiff(vir_file,dtype='uint16')
+        vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
         print 'vir shape:',vir.shape
         vir = vir.astype('float32')
         vir = vir/10000.
@@ -115,8 +106,8 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         print np.sum(mask), "study area within image"
         print mask.shape[0] * mask.shape[1], "full extent of image"
         # haze removal
-        if(haze_removal):
-            virc, virc_ro = bronco.ls_haze_removal(vir[:-1],nodata)
+        if haze_removal:
+            virc, virc_ro = util_rasters.ls_haze_removal(vir[:-1],nodata)
             print virc_ro
             vir[:-1] = virc[:]
 
@@ -130,7 +121,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         if bands_sar is not None:
             print 'tile', tile_id, 'load SAR image'
             sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
-            sar, sargeo, sarprj, sarcols, sarrows = bronco.load_geotiff(sar_file,dtype='uint16')
+            sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
             print 'sar shape:',sar.shape
             sar = sar.astype('float32')
             sar = sar/255.
@@ -140,62 +131,101 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
                 imn[b_start+b][:,:] = sar[b][:,:]
             b_start += sar.shape[0]
 
-        if bands_ndvi_raw is not None:
-            #print 'tile', tile_id, 'calculate NDVI raw'
-            # returns (a - b)/(a + b)
-            tol=1e-6
-            a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
-            a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
-            y = np.divide(a_minus_b,a_plus_b)
-            y = np.clip(y,-1.0,1.0)
-            a_minus_b = None
-            a_plus_b = None
-            ndvi_raw = y #nir, red
-            print 'ndvi_raw shape:', ndvi_raw.shape
-            print 'ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')'
-            imn[b_start] = ndvi_raw
-            b_start += 1   
+        if bands_ndvi is not None:
+            if 'raw' in bands_ndvi:
+                #print 'tile', tile_id, 'calculate NDVI raw'
+                # returns (a - b)/(a + b)
+                tol=1e-6
+                a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
+                a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
+                y = np.divide(a_minus_b,a_plus_b)
+                y = np.clip(y,-1.0,1.0)
+                a_minus_b = None
+                a_plus_b = None
+                ndvi_raw = y #nir, red
+                print 'ndvi_raw shape:', ndvi_raw.shape
+                print 'ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')'
+                imn[b_start] = ndvi_raw
+                b_start += 1
+            if 'min' in bands_ndvi:
+                print 'tile', tile_id, 'load NDVI min'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
+                ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
+                if(np.sum(np.isnan(ndvimin)) > 0):
+                    ndvi_nan = np.isnan(ndvimin)
+                    print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                    ndvimin[ndvi_nan]=0
+                print 'ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')'
+                imn[b_start] = ndvimin
+                b_start += 1
+            if 'max' in bands_ndvi:
+                print 'tile', tile_id, 'load NDVI max'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
+                ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
+                if(np.sum(np.isnan(ndvimax)) > 0):
+                    ndvi_nan = np.isnan(ndvimax)
+                    print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                    ndvimax[ndvi_nan]=0
+                print 'ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')'
+                imn[b_start] = ndvimax
+                b_start += 1
 
-        if bands_ndvi_min is not None:
-            print 'tile', tile_id, 'load NDVI min'
-            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
-            ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = bronco.load_geotiff(ndvi_file,dtype='float32')
-            if(np.sum(np.isnan(ndvimin)) > 0):
-                ndvi_nan = np.isnan(ndvimin)
-                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
-                ndvimin[ndvi_nan]=0
-            print 'ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')'
-            imn[b_start] = ndvimin
-            b_start += 1
+        if bands_ndbi is not None:
+            if 'raw' in bands_ndbi:
+                #print 'tile', tile_id, 'calculate ndbi raw'
+                # returns (a - b)/(a + b)
+                tol=1e-6
+                a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
+                a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
+                y = np.divide(a_minus_b,a_plus_b)
+                y = np.clip(y,-1.0,1.0)
+                a_minus_b = None
+                a_plus_b = None
+                ndbi_raw = y #nir, red
+                print 'ndbi_raw shape:', ndbi_raw.shape
+                print 'ndbi raw into imn band',b_start,'(',np.min(ndbi_raw),'-',np.max(ndbi_raw),')'
+                imn[b_start] = ndbi_raw
+                b_start += 1
+            if 'min' in bands_ndbi:
+                print 'tile', tile_id, 'load ndbi min'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin.tif'
+                ndbimin, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
+                if(np.sum(np.isnan(ndbimin)) > 0):
+                    ndbi_nan = np.isnan(ndbimin)
+                    print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
+                    ndbimin[ndbi_nan]=0
+                print 'ndbi min into imn band',b_start,'(',np.min(ndbimin),'-',np.max(ndbimin),')'
+                imn[b_start] = ndbimin
+                b_start += 1
+            if 'max' in bands_ndbi:
+                print 'tile', tile_id, 'load ndbi max'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax.tif'
+                ndbimax, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
+                if(np.sum(np.isnan(ndbimax)) > 0):
+                    ndbi_nan = np.isnan(ndbimax)
+                    print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
+                    ndbimax[ndbi_nan]=0
+                print 'ndbi max into imn band',b_start,'(',np.min(ndbimax),'-',np.max(ndbimax),')'
+                imn[b_start] = ndbimax
+                b_start += 1
 
-        if bands_ndvi_max is not None:
-            print 'tile', tile_id, 'load NDVI max'
-            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
-            ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = bronco.load_geotiff(ndvi_file,dtype='float32')
-            if(np.sum(np.isnan(ndvimax)) > 0):
-                ndvi_nan = np.isnan(ndvimax)
-                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
-                ndvimax[ndvi_nan]=0
-            print 'ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')'
-            imn[b_start] = ndvimax
-            b_start += 1
-
-        if bands_osm_roads is not None:
-            print 'tile', tile_id, 'load OSM roads'
-            osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
-            osm, osmgeo, osmprj, osmcols, osmrows = bronco.load_geotiff(osm_file,dtype='uint8')
-            osm[osm==255] = 0
-            osm = osm.astype('float32')
-            osm = np.clip(osm,0.0,1.0)
-            print 'osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')'
-            imn[b_start] = osm
-            b_start += 1
+        if bands_osm is not None:
+            if 'roads' in bands_osm:
+                print 'tile', tile_id, 'load OSM roads'
+                osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
+                osm, osmgeo, osmprj, osmcols, osmrows = util_rasters.load_geotiff(osm_file,dtype='uint8')
+                osm[osm==255] = 0
+                osm = osm.astype('float32')
+                osm = np.clip(osm,0.0,1.0)
+                print 'osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')'
+                imn[b_start] = osm
+                b_start += 1
 
         print 'imn', imn.shape, n_features
         print 'tile', tile_id, 'load labels'
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
         print label_file
-        lb, lbgeo, lbprj, lbcols, lbrows = bronco.load_geotiff(label_file,dtype='uint8')
+        lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
         #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
         # delete training points close to edge
         lb[0:r,:] = 255; lb[-r-1:,:] = 255
@@ -213,6 +243,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         y[7] = (mask==1)
         y[8] = (lb!=255)
         print 'y.shape', y.shape
+        # remember that output here represents the consolidated categories (ie y[4] is more than just cat4)
         for i in range(9):
             print i, np.sum(y[i]), category_label[i] 
         print 'tile', tile_id, 'collect data,label samples'
@@ -228,36 +259,33 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         print "X,Y shapes", X_data.shape, Y_data.shape
         index = 0
         for ki in range(len(categories)):
-            try:
-                k = categories[ki]
-                n_k = np.sum((y[k] == 1))
-                if (n_k==0):
-                    print 'WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing'
-                    continue
-                print k, categories[ki], n_k
-                z_k = np.where((y[k]==1))
-                n_k = len(z_k[0])
-                if n_k != n_samples[k]:
-                    print "error! mismatch",n_k, n_samples[k] 
-                X_k = np.zeros((d*d*n_features,n_k),imn.dtype)  # imn2
-                for s in range(n_k):
-                    w = bronco.window(imn,z_k[0][s],z_k[1][s],r) # imn2
-                    X_k[:,s] = w.flatten()
-                X_k = X_k.T
+            k = categories[ki]
+            n_k = np.sum((y[k] == 1))
+            if (n_k==0):
+                print 'WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing'
+                continue
+            print k, categories[ki], n_k
+            z_k = np.where((y[k]==1))
+            n_k = len(z_k[0])
+            if n_k != n_samples[k]:
+                print "error! mismatch",n_k, n_samples[k] 
+            X_k = np.zeros((d*d*n_features,n_k),imn.dtype)  # imn2
+            for s in range(n_k):
+                w = util_rasters.window(imn,z_k[0][s],z_k[1][s],r) # imn2
+                X_k[:,s] = w.flatten()
+            X_k = X_k.T
 
-                X_k_nan = np.isnan(X_k)
-                if(np.sum(X_k_nan) > 0):
-                    print 'NaN in training data'
-                    print np.where(X_k_nan)
-                #perm = np.random.permutation(X_k.shape[0])
-                #X_k = X_k[perm[:],:]
-                Y_k = np.full((n_samples[k]), fill_value=k, dtype='uint8')
-                X_data[index:index+n_samples[k],:] = X_k[:,:]
-                Y_data[index:index+n_samples[k]] = Y_k[:]
-                index = index + n_samples[k]
-                print k, index, X_k.shape, Y_k.shape
-            except:
-                print 'ERROR: tile', tile_id, 'category', ki,'error, continuing'
+            X_k_nan = np.isnan(X_k)
+            if(np.sum(X_k_nan) > 0):
+                print 'NaN in training data'
+                print np.where(X_k_nan)
+            #perm = np.random.permutation(X_k.shape[0])
+            #X_k = X_k[perm[:],:]
+            Y_k = np.full((n_samples[k]), fill_value=k, dtype='uint8')
+            X_data[index:index+n_samples[k],:] = X_k[:,:]
+            Y_data[index:index+n_samples[k]] = Y_k[:]
+            index = index + n_samples[k]
+            print k, index, X_k.shape, Y_k.shape
         print X_data.shape, Y_data.shape, X_data.dtype
         if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
             label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
