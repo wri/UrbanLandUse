@@ -6,5 +6,8 @@
 # start vm
 gcloud compute instances start "bronco-03-gpu" --project "bronco-gfw" --zone "us-central1-c"
 
+# wait for vm to be ready to accept connections
+sleep 15
+
 # connect to vm
 gcloud compute --project "bronco-gfw" ssh --zone "us-central1-c" "bronco-03-gpu"

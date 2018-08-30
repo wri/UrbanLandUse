@@ -8,7 +8,7 @@ warnings.filterwarnings('ignore')
 #import os
 #import sys
 #import json
-#import itertools
+import itertools
 import pickle
 #from pprint import pprint
 #
@@ -17,6 +17,7 @@ import numpy as np
 #import cartopy
 from osgeo import gdal
 #import matplotlib.pyplot as plt
+import math
 #
 #import descarteslabs as dl
 import util_rasters
@@ -62,7 +63,7 @@ def build_stack_label(
     return stack_label, feature_count
 
 def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
-		d, stack_label, feature_count,
+		window, stack_label, feature_count,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,
@@ -72,7 +73,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
     
-    r = d/2
+    r = window/2
 
     # note that method does not consistently utilize individual bands in the various lists
     # in order to construct data cube
@@ -254,7 +255,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             n_samples[c] = np.sum(y[c])
             n_all_samples = n_all_samples + n_samples[c]
         print "n_samples, sum", n_samples, n_all_samples
-        X_data = np.zeros((n_all_samples,d*d*n_features),dtype=imn.dtype)  # imn2
+        X_data = np.zeros((n_all_samples,window*window*n_features),dtype=imn.dtype)  # imn2
         Y_data = np.zeros((n_all_samples),dtype='uint8')
         print "X,Y shapes", X_data.shape, Y_data.shape
         index = 0
@@ -269,7 +270,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             n_k = len(z_k[0])
             if n_k != n_samples[k]:
                 print "error! mismatch",n_k, n_samples[k] 
-            X_k = np.zeros((d*d*n_features,n_k),imn.dtype)  # imn2
+            X_k = np.zeros((window*window*n_features,n_k),imn.dtype)  # imn2
             for s in range(n_k):
                 w = util_rasters.window(imn,z_k[0][s],z_k[1][s],r) # imn2
                 X_k[:,s] = w.flatten()
@@ -288,7 +289,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             print k, index, X_k.shape, Y_k.shape
         print X_data.shape, Y_data.shape, X_data.dtype
         if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
             print label_file
             pickle.dump((X_data,Y_data), open(label_file, 'wb'))
         else:
@@ -298,13 +299,13 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         print 'tile', tile_id, 'done'
         print '' #line between tiles in output for readability
 
-def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label):
+def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
     n_samples = 0
     n_features = 0
     n_dtype = 'none'
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         #print label_file
 
         try:
@@ -333,7 +334,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
     n_start = 0
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         # print label_file
 
         try:
@@ -352,10 +353,14 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         print n_start, n_end
         n_start = n_end
     print X_data.shape, Y_data.shape
+    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    #print 'Write complete datasets to file:', data_file
+    pickle.dump((X_data,Y_data), open(data_file, 'wb'))
+
     return X_data, Y_data
 
-def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window):
+    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
@@ -402,7 +407,67 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
     print X_train.shape, Y_train.shape
     print X_valid.shape, Y_valid.shape
 
-    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
     pickle.dump((X_train,Y_train), open(train_file, 'wb'))
-    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
+    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
+
+
+def load_datasets(source_dict, data_root, label_suffix, stack_label, window):
+    print 'calculate total size of training and validation supersets'
+    t_total = 0
+    v_total = 0
+    for city, suffixes in source_dict.iteritems():
+        for suffix in suffixes:
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            t_sub = X_train_sub.shape[0]
+            v_sub = X_valid_sub.shape[0]
+            #print t_sub, v_sub
+            t_total += t_sub
+            v_total += v_sub
+    print t_total, v_total
+
+    print 'construct np arrays for supersets'
+    X_train = np.zeros((t_total, X_train_sub.shape[1]), dtype=X_train_sub.dtype)
+    Y_train = np.zeros((t_total), dtype=Y_train_sub.dtype)
+    X_valid = np.zeros((v_total, X_valid_sub.shape[1]), dtype=X_valid_sub.dtype)
+    Y_valid = np.zeros((v_total), dtype=Y_valid_sub.dtype)
+
+    print 'populate superset np arrays'
+    v_start = 0
+    t_start = 0
+    for city, suffixes in source_dict.iteritems():
+        for suffix in suffixes:
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            t_sub = X_train_sub.shape[0]
+            v_sub = X_valid_sub.shape[0]
+            
+            X_train[t_start:t_start+t_sub,:] = X_train_sub[:,:]
+            Y_train[t_start:t_start+t_sub] = Y_train_sub[:]
+            X_valid[v_start:v_start+v_sub,:] = X_valid_sub[:,:]
+            Y_valid[v_start:v_start+v_sub] = Y_valid_sub[:]
+
+            t_start = t_start + t_sub
+            v_start = v_start + v_sub
+    print X_train.shape, Y_train.shape
+    return X_train, Y_train, X_valid, Y_valid

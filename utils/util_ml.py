@@ -19,6 +19,10 @@ from osgeo import gdal
 #import matplotlib.pyplot as plt
 #
 #import descarteslabs as dl
+import sklearn
+from sklearn.preprocessing import StandardScaler 
+from sklearn.linear_model import SGDClassifier
+
 
 
 # DISPLAY
@@ -36,7 +40,7 @@ def score(Yhat,Y,report=True):
     totals[3] += tn
     if report==True:
         print "input shapes", Yhat.shape, Y.shape
-        print "scores [tp, fp, fn, tn]", tp, fp, fn, tn, 
+        print "scores [tp, fp, fn, tn]", tp, fp, fn, tn, \
         	"accuracy", round(100*((tp + tn)/float(tp + fp + fn + tn)),1),"%"
 
 def confusion(Yhat,Y,categories):
@@ -124,14 +128,14 @@ def scale_learning_data(X_train, X_valid):
     return X_train_scaled, X_valid_scaled, scaler
     
     
-def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories, alpha=0.003,penalty='l2'):
+def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories=[0,1,4,6], alpha=0.003,penalty='l2'):
     model = SGDClassifier(alpha=alpha,penalty=penalty) 
     model.fit(X_train_scaled, Y_train)
     ## evaluate model
     print "evaluate training"
     Yhat_train = model.predict(X_train_scaled)
-    confusion = bronco.confusion(Yhat_train,Y_train,categories)
+    conf = confusion(Yhat_train,Y_train,categories)
     print "evaluate validation"
     Yhat_valid = model.predict(X_valid_scaled)
-    confusion = bronco.confusion(Yhat_valid,Y_valid,categories)
+    conf = confusion(Yhat_valid,Y_valid,categories)
     return Yhat_train, Yhat_valid, model
