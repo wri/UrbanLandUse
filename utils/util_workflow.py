@@ -62,6 +62,148 @@ def build_stack_label(
         stack_label = stack_label[:-1]
     return stack_label, feature_count
 
+def build_input_stack(data_path, place, tiles, stack_label, feature_count, 
+        image_suffix, window, tile_id, 
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        haze_removal=False,):
+    tile = tiles['features'][tile_id]
+    side_length = tile['properties']['tilesize'] + tile['properties']['pad']*2
+
+    imn = np.zeros((feature_count,side_length,side_length),dtype='float32')
+    n_features = imn.shape[0] 
+
+    print 'tile', tile_id, 'load VIR image'
+    vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+    vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
+    print 'vir shape:',vir.shape
+    vir = vir.astype('float32')
+    vir = vir/10000.
+    vir = np.clip(vir,0.0,1.0)
+    #print 'tile', tile_id, 'make data mask from vir alpha'
+    mask = (vir[6][:,:] > 0)  # vir[6] is the alpha band in the image, takes values 0 and 65535
+    nodata = (vir[6][:,:]==0)
+    print np.sum(mask), "study area within image"
+    print mask.shape[0] * mask.shape[1], "full extent of image"
+    # haze removal
+    if haze_removal:
+        virc, virc_ro = util_rasters.ls_haze_removal(vir[:-1],nodata)
+        print virc_ro
+        vir[:-1] = virc[:]
+
+    b_start = 0
+    if bands_vir is not None:
+        for b in range(vir.shape[0]-1):
+            print 'vir band',b,'into imn band',b_start+b,'(',np.min(vir[b,:,:]),'-',np.max(vir[b,:,:]),')'
+            imn[b_start+b][:,:] = vir[b][:,:]
+        b_start += vir.shape[0]-1
+
+    if bands_sar is not None:
+        print 'tile', tile_id, 'load SAR image'
+        sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
+        sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
+        print 'sar shape:',sar.shape
+        sar = sar.astype('float32')
+        sar = sar/255.
+        sar = np.clip(sar,0.0,1.0)
+        for b in range(sar.shape[0]):
+            print 'sar band',b,'into imn band',b_start+b,'(',np.min(sar[b,:,:]),'-',np.max(sar[b,:,:]),')'
+            imn[b_start+b][:,:] = sar[b][:,:]
+        b_start += sar.shape[0]
+
+    if bands_ndvi is not None:
+        if 'raw' in bands_ndvi:
+            #print 'tile', tile_id, 'calculate NDVI raw'
+            # returns (a - b)/(a + b)
+            tol=1e-6
+            a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
+            a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
+            y = np.divide(a_minus_b,a_plus_b)
+            y = np.clip(y,-1.0,1.0)
+            a_minus_b = None
+            a_plus_b = None
+            ndvi_raw = y #nir, red
+            print 'ndvi_raw shape:', ndvi_raw.shape
+            print 'ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')'
+            imn[b_start] = ndvi_raw
+            b_start += 1
+        if 'min' in bands_ndvi:
+            print 'tile', tile_id, 'load NDVI min'
+            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
+            ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
+            if(np.sum(np.isnan(ndvimin)) > 0):
+                ndvi_nan = np.isnan(ndvimin)
+                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                ndvimin[ndvi_nan]=0
+            print 'ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')'
+            imn[b_start] = ndvimin
+            b_start += 1
+        if 'max' in bands_ndvi:
+            print 'tile', tile_id, 'load NDVI max'
+            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
+            ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
+            if(np.sum(np.isnan(ndvimax)) > 0):
+                ndvi_nan = np.isnan(ndvimax)
+                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                ndvimax[ndvi_nan]=0
+            print 'ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')'
+            imn[b_start] = ndvimax
+            b_start += 1
+
+    if bands_ndbi is not None:
+        if 'raw' in bands_ndbi:
+            #print 'tile', tile_id, 'calculate ndbi raw'
+            # returns (a - b)/(a + b)
+            tol=1e-6
+            a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
+            a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
+            y = np.divide(a_minus_b,a_plus_b)
+            y = np.clip(y,-1.0,1.0)
+            a_minus_b = None
+            a_plus_b = None
+            ndbi_raw = y #nir, red
+            print 'ndbi_raw shape:', ndbi_raw.shape
+            print 'ndbi raw into imn band',b_start,'(',np.min(ndbi_raw),'-',np.max(ndbi_raw),')'
+            imn[b_start] = ndbi_raw
+            b_start += 1
+        if 'min' in bands_ndbi:
+            print 'tile', tile_id, 'load ndbi min'
+            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin.tif'
+            ndbimin, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
+            if(np.sum(np.isnan(ndbimin)) > 0):
+                ndbi_nan = np.isnan(ndbimin)
+                print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
+                ndbimin[ndbi_nan]=0
+            print 'ndbi min into imn band',b_start,'(',np.min(ndbimin),'-',np.max(ndbimin),')'
+            imn[b_start] = ndbimin
+            b_start += 1
+        if 'max' in bands_ndbi:
+            print 'tile', tile_id, 'load ndbi max'
+            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax.tif'
+            ndbimax, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
+            if(np.sum(np.isnan(ndbimax)) > 0):
+                ndbi_nan = np.isnan(ndbimax)
+                print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
+                ndbimax[ndbi_nan]=0
+            print 'ndbi max into imn band',b_start,'(',np.min(ndbimax),'-',np.max(ndbimax),')'
+            imn[b_start] = ndbimax
+            b_start += 1
+
+    if bands_osm is not None:
+        if 'roads' in bands_osm:
+            print 'tile', tile_id, 'load OSM roads'
+            osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
+            osm, osmgeo, osmprj, osmcols, osmrows = util_rasters.load_geotiff(osm_file,dtype='uint8')
+            osm[osm==255] = 0
+            osm = osm.astype('float32')
+            osm = np.clip(osm,0.0,1.0)
+            print 'osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')'
+            imn[b_start] = osm
+            b_start += 1
+
+    print 'imn', imn.shape, n_features
+    return mask, imn
+
 def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 		window, stack_label, feature_count,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
@@ -88,141 +230,14 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         if (len(label_stats[tile_id].keys())==1) or (label_stats[tile_id][255]<40000):
             # print 'WARNING: tile', tile_id, ' has no labels'
             continue
-        tile = tiles['features'][tile_id]
-        side_length = tile['properties']['tilesize'] + tile['properties']['pad']*2
+        
+        mask, imn = build_input_stack(data_path, place, tiles, stack_label, feature_count, 
+            image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
+            bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
+            haze_removal=False)
 
-        imn = np.zeros((feature_count,side_length,side_length),dtype='float32')
         n_features = imn.shape[0] 
 
-        print 'tile', tile_id, 'load VIR image'
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
-        vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
-        print 'vir shape:',vir.shape
-        vir = vir.astype('float32')
-        vir = vir/10000.
-        vir = np.clip(vir,0.0,1.0)
-        #print 'tile', tile_id, 'make data mask from vir alpha'
-        mask = (vir[6][:,:] > 0)  # vir[6] is the alpha band in the image, takes values 0 and 65535
-        nodata = (vir[6][:,:]==0)
-        print np.sum(mask), "study area within image"
-        print mask.shape[0] * mask.shape[1], "full extent of image"
-        # haze removal
-        if haze_removal:
-            virc, virc_ro = util_rasters.ls_haze_removal(vir[:-1],nodata)
-            print virc_ro
-            vir[:-1] = virc[:]
-
-        b_start = 0
-        if bands_vir is not None:
-            for b in range(vir.shape[0]-1):
-                print 'vir band',b,'into imn band',b_start+b,'(',np.min(vir[b,:,:]),'-',np.max(vir[b,:,:]),')'
-                imn[b_start+b][:,:] = vir[b][:,:]
-            b_start += vir.shape[0]-1
-
-        if bands_sar is not None:
-            print 'tile', tile_id, 'load SAR image'
-            sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
-            sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
-            print 'sar shape:',sar.shape
-            sar = sar.astype('float32')
-            sar = sar/255.
-            sar = np.clip(sar,0.0,1.0)
-            for b in range(sar.shape[0]):
-                print 'sar band',b,'into imn band',b_start+b,'(',np.min(sar[b,:,:]),'-',np.max(sar[b,:,:]),')'
-                imn[b_start+b][:,:] = sar[b][:,:]
-            b_start += sar.shape[0]
-
-        if bands_ndvi is not None:
-            if 'raw' in bands_ndvi:
-                #print 'tile', tile_id, 'calculate NDVI raw'
-                # returns (a - b)/(a + b)
-                tol=1e-6
-                a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
-                a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
-                y = np.divide(a_minus_b,a_plus_b)
-                y = np.clip(y,-1.0,1.0)
-                a_minus_b = None
-                a_plus_b = None
-                ndvi_raw = y #nir, red
-                print 'ndvi_raw shape:', ndvi_raw.shape
-                print 'ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')'
-                imn[b_start] = ndvi_raw
-                b_start += 1
-            if 'min' in bands_ndvi:
-                print 'tile', tile_id, 'load NDVI min'
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
-                ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
-                if(np.sum(np.isnan(ndvimin)) > 0):
-                    ndvi_nan = np.isnan(ndvimin)
-                    print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
-                    ndvimin[ndvi_nan]=0
-                print 'ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')'
-                imn[b_start] = ndvimin
-                b_start += 1
-            if 'max' in bands_ndvi:
-                print 'tile', tile_id, 'load NDVI max'
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
-                ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
-                if(np.sum(np.isnan(ndvimax)) > 0):
-                    ndvi_nan = np.isnan(ndvimax)
-                    print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
-                    ndvimax[ndvi_nan]=0
-                print 'ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')'
-                imn[b_start] = ndvimax
-                b_start += 1
-
-        if bands_ndbi is not None:
-            if 'raw' in bands_ndbi:
-                #print 'tile', tile_id, 'calculate ndbi raw'
-                # returns (a - b)/(a + b)
-                tol=1e-6
-                a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
-                a_plus_b = np.add(np.add(vir[3,:,:],vir[2,:,:]),tol)
-                y = np.divide(a_minus_b,a_plus_b)
-                y = np.clip(y,-1.0,1.0)
-                a_minus_b = None
-                a_plus_b = None
-                ndbi_raw = y #nir, red
-                print 'ndbi_raw shape:', ndbi_raw.shape
-                print 'ndbi raw into imn band',b_start,'(',np.min(ndbi_raw),'-',np.max(ndbi_raw),')'
-                imn[b_start] = ndbi_raw
-                b_start += 1
-            if 'min' in bands_ndbi:
-                print 'tile', tile_id, 'load ndbi min'
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin.tif'
-                ndbimin, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
-                if(np.sum(np.isnan(ndbimin)) > 0):
-                    ndbi_nan = np.isnan(ndbimin)
-                    print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
-                    ndbimin[ndbi_nan]=0
-                print 'ndbi min into imn band',b_start,'(',np.min(ndbimin),'-',np.max(ndbimin),')'
-                imn[b_start] = ndbimin
-                b_start += 1
-            if 'max' in bands_ndbi:
-                print 'tile', tile_id, 'load ndbi max'
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax.tif'
-                ndbimax, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
-                if(np.sum(np.isnan(ndbimax)) > 0):
-                    ndbi_nan = np.isnan(ndbimax)
-                    print 'nan ndbi inside study area:',np.sum(np.logical_and(ndbi_nan, mask))
-                    ndbimax[ndbi_nan]=0
-                print 'ndbi max into imn band',b_start,'(',np.min(ndbimax),'-',np.max(ndbimax),')'
-                imn[b_start] = ndbimax
-                b_start += 1
-
-        if bands_osm is not None:
-            if 'roads' in bands_osm:
-                print 'tile', tile_id, 'load OSM roads'
-                osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
-                osm, osmgeo, osmprj, osmcols, osmrows = util_rasters.load_geotiff(osm_file,dtype='uint8')
-                osm[osm==255] = 0
-                osm = osm.astype('float32')
-                osm = np.clip(osm,0.0,1.0)
-                print 'osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')'
-                imn[b_start] = osm
-                b_start += 1
-
-        print 'imn', imn.shape, n_features
         print 'tile', tile_id, 'load labels'
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
         print label_file
