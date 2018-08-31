@@ -62,7 +62,7 @@ def build_stack_label(
         stack_label = stack_label[:-1]
     return stack_label, feature_count
 
-def build_input_stack(data_path, place, tiles, stack_label, feature_count, 
+def prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
         image_suffix, window, tile_id, 
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
@@ -204,8 +204,38 @@ def build_input_stack(data_path, place, tiles, stack_label, feature_count,
     print 'imn', imn.shape, n_features
     return mask, imn
 
+def prepare_output_stack(data_path, place, tiles, 
+        label_suffix, mask, category_label, window, tile_id):
+    r = window/2
+    print 'tile', tile_id, 'load labels'
+    label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+    print label_file
+    lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
+    #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
+    # delete training points close to edge
+    lb[0:r,:] = 255; lb[-r-1:,:] = 255
+    lb[:,0:r] = 255; lb[:,-r-1:] = 255
+    y = np.zeros((9,mask.shape[0],mask.shape[1]),dtype='byte')
+    y[0] = (mask==1); y[0] &= (lb==0)
+    y[1] = (lb==1)
+    y[2] = (lb==2)
+    y[3] = (lb==3)#; y[3] |= (lb==2)  # merge categories 2 and 3
+    #y[4] = (lb==4); y[4] |= (lb==5)  # merge categories 4 and 5
+    #change for 4-category typology that consolidates all residential types
+    y[4] = (lb==4); y[4] |= (lb==5); y[4] |= (lb==2); y[4] |= (lb==3) # merge categories 2,3,4,5
+    y[5] = (lb==5)
+    y[6] = (lb==6)
+    y[7] = (mask==1)
+    y[8] = (lb!=255)
+    print 'y.shape', y.shape
+    # remember that output here represents the consolidated categories (ie y[4] is more than just cat4)
+    for i in range(9):
+        print i, np.sum(y[i]), category_label[i] 
+    print 'tile', tile_id, 'collect data,label samples'
+    return y
+
 def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
-		window, stack_label, feature_count,
+        window, stack_label, feature_count,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,
@@ -231,38 +261,16 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             # print 'WARNING: tile', tile_id, ' has no labels'
             continue
         
-        mask, imn = build_input_stack(data_path, place, tiles, stack_label, feature_count, 
+        mask, imn = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
             image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
 
         n_features = imn.shape[0] 
 
-        print 'tile', tile_id, 'load labels'
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
-        print label_file
-        lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
-        #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
-        # delete training points close to edge
-        lb[0:r,:] = 255; lb[-r-1:,:] = 255
-        lb[:,0:r] = 255; lb[:,-r-1:] = 255
-        y = np.zeros((9,mask.shape[0],mask.shape[1]),dtype='byte')
-        y[0] = (mask==1); y[0] &= (lb==0)
-        y[1] = (lb==1)
-        y[2] = (lb==2)
-        y[3] = (lb==3)#; y[3] |= (lb==2)  # merge categories 2 and 3
-        #y[4] = (lb==4); y[4] |= (lb==5)  # merge categories 4 and 5
-        #change for 4-category typology that consolidates all residential types
-        y[4] = (lb==4); y[4] |= (lb==5); y[4] |= (lb==2); y[4] |= (lb==3) # merge categories 2,3,4,5
-        y[5] = (lb==5)
-        y[6] = (lb==6)
-        y[7] = (mask==1)
-        y[8] = (lb!=255)
-        print 'y.shape', y.shape
-        # remember that output here represents the consolidated categories (ie y[4] is more than just cat4)
-        for i in range(9):
-            print i, np.sum(y[i]), category_label[i] 
-        print 'tile', tile_id, 'collect data,label samples'
+        y = prepare_output_stack(data_path, place, tiles, 
+            label_suffix, mask, category_label, window, tile_id)
+        
         ## unbalanced training
         n_samples = {}
         n_all_samples = 0
@@ -313,6 +321,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         # del imn, X_data, Y_data
         print 'tile', tile_id, 'done'
         print '' #line between tiles in output for readability
+
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
     n_samples = 0
