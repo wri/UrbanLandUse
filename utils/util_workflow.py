@@ -499,3 +499,120 @@ def load_datasets(source_dict, data_root, label_suffix, stack_label, window):
             v_start = v_start + v_sub
     print X_train.shape, Y_train.shape
     return X_train, Y_train, X_valid, Y_valid
+
+def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
+        window, stack_label, feature_count, model,
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        haze_removal=False,
+        label_suffix='labels', categories=[0,1,4,6], 
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+            
+    print "Feature count:", feature_count
+    print "Stack label: ", stack_label
+    
+    # eg 'vir', 'vir_sar', 'vir_ndvir', 'vir&sar&ndvirnx', 'vir&sar&ndvir', 'vir&sar&ndvirnx&osm', 'vir&ndvirnx&osm', 'vir&dem'
+    #for tile_id in [single_tile_id]:
+    for tile_id in range(len(tiles['features'])):
+        
+        mask, imn = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
+            image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
+            bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
+            haze_removal=False)
+
+        Y = np.zeros((imn.shape[1],imn.shape[2]),dtype='uint8')
+        Y_deep = np.empty((imn.shape[1],imn.shape[2],n_categories),dtype='float32')
+        Y_deep[:] = np.nan
+        Y_max = np.empty((imn.shape[1],imn.shape[2]),dtype='float32')
+        Y_max[:] = np.nan
+        print "imn.shape, Y.shape", imn.shape, Y.shape
+        Y[:,:] = 255  # inside study area
+        #Y_deep[:,:,:] = -1.0
+        # buffer edge
+        Y[0:r,:]=254; Y[-r:,:]=254; Y[:,0:r]=254; Y[:,-r:]=254
+        z = np.where((Y==255))
+        Y_deep[z[0][:],z[1][:],:] = 0.0
+        Y_max[z[0][:],z[1][:]] = 0.0
+        nz = len(z[0])
+        print "nz", nz
+        cmax = 20
+        nc = nz/cmax
+        for c in range(cmax):
+            j_c = z[0][c*nc:(c+1)*nc]
+            i_c = z[1][c*nc:(c+1)*nc]
+            X_c = np.zeros((d*d*n_features,nc),imn.dtype)  # imn2
+            for b in range(n_features):
+                for j in range(d):
+                    for i in range(d):
+                        X_c[d*d*b + d*j + i,:] = imn[b,j_c[:]+j-r,i_c[:]+i-r]  # imn2
+            X_c = X_c.T
+            X_c = X_c/data_scale
+            # X_c_scaled = X_c  
+            X_c_scaled = scaler.transform(X_c)
+            Yhat_c_prob = network.predict(X_c_scaled)
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+            #set_trace()
+            sys.stdout.write('.')
+            Y[j_c[:],i_c[:]] = Yhat_c[:]
+            Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
+            Y_max[j_c[:],i_c[:]] = Yhat_max[:]
+            #print 'Category', Yhat_c
+            #print 'Probability',Yhat_c_prob
+            #print 'Maximum',Yhat_max
+            #print
+        for c in range(cmax,cmax+1):
+            j_c = z[0][c*nc:]
+            i_c = z[1][c*nc:]
+            remainder = nz - c*nc
+            X_c = np.zeros((d*d*n_features,remainder),imn.dtype)  # imn2
+            for b in range(n_features):
+                for j in range(d):
+                    for i in range(d):
+                        X_c[d*d*b + d*j + i,:] = imn[b,j_c[:]+j-r,i_c[:]+i-r]  # imn2
+            X_c = X_c.T
+            X_c = X_c/data_scale
+            # X_c_scaled = X_c  
+            X_c_scaled = scaler.transform(X_c)
+            Yhat_c_prob = network.predict(X_c_scaled)
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+            #set_trace()
+            sys.stdout.write('.')
+            Y[j_c[:],i_c[:]] = Yhat_c[:]
+            Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
+            Y_max[j_c[:],i_c[:]] = Yhat_max[:]
+        if(apply_water_mask):
+            full_mask = np.logical_and(water_mask, (Y!=254))
+            Y[full_mask] = 7
+        
+        print "done"
+        for k in range(255):
+            if np.sum((Y==k))>0:
+                print k, np.sum((Y==k))
+        result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_DL_result_'+image_suffix+'.tif'
+        print result_file
+        bronco.write_1band_geotiff(result_file, Y, virgeo, virprj, data_type=gdal.GDT_Byte)
+        if np.sum(Y==255) != 0:
+            print 'unclassified pixels in Y:', np.sum(Y==255)
+        Y_deep = np.transpose(Y_deep, (2,0,1))
+        #print 'Y_deep shape', Y_deep.shape
+        #deep_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_DL_result_'+image_suffix+'_deep.tif'
+        #bronco_candidates.write_multiband_geotiff(deep_result_file, Y_deep, virgeo, virprj, data_type=gdal.GDT_Float32)
+        
+        Y_full = np.zeros((Y_deep.shape[0]+2, Y_deep.shape[1], Y_deep.shape[2]),dtype='float32')
+        for b in range(Y_deep.shape[0]):
+            Y_full[b] = Y_deep[b]
+        b+=1
+        Y_full[b][:,:] = Y[:,:]
+        b+=1
+        Y_full[b][:,:] = Y_max[:,:]
+        print 'Y_full sample', Y_full[:,100,100]
+        full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_DL_result_'+image_suffix+'_full.tif'
+        bronco_candidates.write_multiband_geotiff(full_result_file, Y_full, virgeo, virprj, data_type=gdal.GDT_Float32)
+        
+        del imn, Y
+        print 'tile', tile_id, 'done'
