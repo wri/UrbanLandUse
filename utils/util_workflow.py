@@ -234,6 +234,61 @@ def prepare_output_stack(data_path, place, tiles,
     print 'tile', tile_id, 'collect data,label samples'
     return y
 
+def build_training_samples(data_path, place, stack_label, 
+        image_suffix, label_suffix, window, categories, imn, y, tile_id):
+    r = window/2
+    n_features = imn.shape[0] 
+
+    n_samples = {}
+    n_all_samples = 0
+    for c in categories:
+        n_samples[c] = np.sum(y[c])
+        n_all_samples = n_all_samples + n_samples[c]
+    print "n_samples, sum", n_samples, n_all_samples
+    X_data = np.zeros((n_all_samples,window*window*n_features),dtype=imn.dtype)  # imn2
+    Y_data = np.zeros((n_all_samples),dtype='uint8')
+    print "X,Y shapes", X_data.shape, Y_data.shape
+    index = 0
+    for ki in range(len(categories)):
+        k = categories[ki]
+        n_k = np.sum((y[k] == 1))
+        if (n_k==0):
+            print 'WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing'
+            continue
+        print k, categories[ki], n_k
+        z_k = np.where((y[k]==1))
+        n_k = len(z_k[0])
+        if n_k != n_samples[k]:
+            print "error! mismatch",n_k, n_samples[k] 
+        X_k = np.zeros((window*window*n_features,n_k),imn.dtype)  # imn2
+        for s in range(n_k):
+            w = util_rasters.window(imn,z_k[0][s],z_k[1][s],r) # imn2
+            X_k[:,s] = w.flatten()
+        X_k = X_k.T
+
+        X_k_nan = np.isnan(X_k)
+        if(np.sum(X_k_nan) > 0):
+            print 'NaN in training data'
+            print np.where(X_k_nan)
+        #perm = np.random.permutation(X_k.shape[0])
+        #X_k = X_k[perm[:],:]
+        Y_k = np.full((n_samples[k]), fill_value=k, dtype='uint8')
+        X_data[index:index+n_samples[k],:] = X_k[:,:]
+        Y_data[index:index+n_samples[k]] = Y_k[:]
+        index = index + n_samples[k]
+        print k, index, X_k.shape, Y_k.shape
+    print X_data.shape, Y_data.shape, X_data.dtype
+    if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        print label_file
+        pickle.dump((X_data,Y_data), open(label_file, 'wb'))
+    else:
+        print 'n_all_samples:', n_all_samples, 'mask true:', np.sum((y[0]==1))
+        print 'WARNING: tile', tile_id, ' defective tile', n_all_samples, np.sum((y[0] == 1)) 
+    # del imn, X_data, Y_data
+    print 'tile', tile_id, 'done'
+    print '' #line between tiles in output for readability
+
 def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         window, stack_label, feature_count,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
@@ -245,8 +300,6 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
     
-    r = window/2
-
     # note that method does not consistently utilize individual bands in the various lists
     # in order to construct data cube
 
@@ -266,62 +319,13 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
 
-        n_features = imn.shape[0] 
 
         y = prepare_output_stack(data_path, place, tiles, 
             label_suffix, mask, category_label, window, tile_id)
         
-        ## unbalanced training
-        n_samples = {}
-        n_all_samples = 0
-        for c in categories:
-            n_samples[c] = np.sum(y[c])
-            n_all_samples = n_all_samples + n_samples[c]
-        print "n_samples, sum", n_samples, n_all_samples
-        X_data = np.zeros((n_all_samples,window*window*n_features),dtype=imn.dtype)  # imn2
-        Y_data = np.zeros((n_all_samples),dtype='uint8')
-        print "X,Y shapes", X_data.shape, Y_data.shape
-        index = 0
-        for ki in range(len(categories)):
-            k = categories[ki]
-            n_k = np.sum((y[k] == 1))
-            if (n_k==0):
-                print 'WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing'
-                continue
-            print k, categories[ki], n_k
-            z_k = np.where((y[k]==1))
-            n_k = len(z_k[0])
-            if n_k != n_samples[k]:
-                print "error! mismatch",n_k, n_samples[k] 
-            X_k = np.zeros((window*window*n_features,n_k),imn.dtype)  # imn2
-            for s in range(n_k):
-                w = util_rasters.window(imn,z_k[0][s],z_k[1][s],r) # imn2
-                X_k[:,s] = w.flatten()
-            X_k = X_k.T
-
-            X_k_nan = np.isnan(X_k)
-            if(np.sum(X_k_nan) > 0):
-                print 'NaN in training data'
-                print np.where(X_k_nan)
-            #perm = np.random.permutation(X_k.shape[0])
-            #X_k = X_k[perm[:],:]
-            Y_k = np.full((n_samples[k]), fill_value=k, dtype='uint8')
-            X_data[index:index+n_samples[k],:] = X_k[:,:]
-            Y_data[index:index+n_samples[k]] = Y_k[:]
-            index = index + n_samples[k]
-            print k, index, X_k.shape, Y_k.shape
-        print X_data.shape, Y_data.shape, X_data.dtype
-        if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
-            print label_file
-            pickle.dump((X_data,Y_data), open(label_file, 'wb'))
-        else:
-            print 'n_all_samples:', n_all_samples, 'mask true:', np.sum((y[0]==1))
-            print 'WARNING: tile', tile_id, ' defective tile', n_all_samples, np.sum((y[0] == 1)) 
-        # del imn, X_data, Y_data
-        print 'tile', tile_id, 'done'
-        print '' #line between tiles in output for readability
-
+        build_training_samples(data_path, place, stack_label, 
+            image_suffix, label_suffix, window, categories, imn, y, tile_id)
+        
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
     n_samples = 0
