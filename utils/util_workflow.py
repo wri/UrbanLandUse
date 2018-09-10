@@ -511,7 +511,7 @@ def create_classification_arrays(window, categories, imn, pad):
     Y[:,:] = 255  # inside study area
     #Y_deep[:,:,:] = -1.0
     # buffer edge
-    buff = max(r, )
+    buff = max(r, pad)
     Y[0:buff,:]=254; Y[-buff:,:]=254; Y[:,0:buff]=254; Y[:,-buff:]=254
     z = np.where((Y==255))
     Y_deep[z[0][:],z[1][:],:] = 0.0
@@ -600,15 +600,8 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
 
-        Y = np.zeros((imn.shape[1],imn.shape[2]),dtype='uint8')
-        Y_deep = np.empty((imn.shape[1],imn.shape[2],len(categories)),dtype='float32')
-        Y_deep[:] = np.nan
-        Y_max = np.empty((imn.shape[1],imn.shape[2]),dtype='float32')
-        Y_max[:] = np.nan
-        print "imn.shape, Y.shape", imn.shape, Y.shape
-        Y[:,:] = 255  # inside study area
-        #Y_deep[:,:,:] = -1.0
-        # buffer edge
+        Y, Y_deep, Y_max = create_classification_arrays(window, categories, imn, tiles['features'][tile_id]['properties']['pad'])
+
         d=window
         r=window/2
         n_features = feature_count
@@ -671,7 +664,7 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         for k in range(255):
             if np.sum((Y==k))>0:
                 print k, np.sum((Y==k))
-        result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+image_suffix+'LULC.tif'
+        result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULC.tif'
         print result_file
         util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
         if np.sum(Y==255) != 0:
@@ -689,7 +682,7 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         b+=1
         Y_full[b][:,:] = Y_max[:,:]
         print 'Y_full sample', Y_full[:,100,100]
-        full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+image_suffix+'_LULCfull.tif'
+        full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULCfull.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
         
         del imn, Y

@@ -137,5 +137,5 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
     conf = confusion(Yhat_train,Y_train,categories)
     print "evaluate validation"
     Yhat_valid = model.predict(X_valid_scaled)
-    conf = confusion(Yhat_valid,Y_valid,categories)
+    confusion = confusion(Yhat_valid,Y_valid,categories)
     return Yhat_train, Yhat_valid, model
