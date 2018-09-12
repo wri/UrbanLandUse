@@ -19,7 +19,6 @@ from osgeo import gdal
 import matplotlib.pyplot as plt
 #
 import descarteslabs as dl
-sys.path.append('/home/Peter.Kerins/UrbanLandUse/utils')
 
 
 

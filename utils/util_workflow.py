@@ -314,7 +314,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             # print 'WARNING: tile', tile_id, ' has no labels'
             continue
         
-        mask, imn = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
+        mask, imn, geo, prj = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
             image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
