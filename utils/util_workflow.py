@@ -33,7 +33,7 @@ def build_stack_label(
         bands_osm=None,
         ):
     params = locals()
-    print params
+    #print params
     for k,v in params.iteritems():
         if type(v) is list:
             for member in v:
