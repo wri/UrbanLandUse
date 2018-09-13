@@ -19,7 +19,8 @@ from osgeo import gdal
 #import matplotlib.pyplot as plt
 import math
 #
-#import descarteslabs as dl
+import descarteslabs as dl
+import util_vectors
 import util_rasters
 
 
@@ -33,7 +34,7 @@ def build_stack_label(
         bands_osm=None,
         ):
     params = locals()
-    print params
+    #print params
     for k,v in params.iteritems():
         if type(v) is list:
             for member in v:
@@ -576,6 +577,53 @@ def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_d
     for k in range(255):
         if np.sum((Y==k))>0:
             print k, np.sum((Y==k))
+
+def create_training_data(data_root, place_images, tile_resolution, tile_size, tile_pad, window, 
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        haze_removal=False,
+        label_suffix='labels', categories=[0,1,4,6], 
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+    stack_label, feature_count = build_stack_label(
+            bands_vir=bands_vir,
+            bands_sar=bands_sar,
+            bands_ndvi=bands_ndvi,
+            bands_ndbi=bands_ndbi,
+            bands_osm=bands_osm,)
+    for place, image_suffix_list in place_images.iteritems():
+        data_path = data_root + place + '/'
+        place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
+        shape = util_vectors.load_shape(place_shapefile)
+        tiles = dl.raster.dltiles_from_shape(10.0, 256, 8, shape)
+        label_stats = {}
+        for tile_id in range(len(tiles['features'])):
+            tile = tiles['features'][tile_id]
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+            label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
+
+        for image_suffix in image_suffix_list:
+            print 'Constructing dataset tiles for ' + place.title() + ' image ' + image_suffix + ' using ground-truth \'' + label_suffix + '\' and input stack \'' + stack_label + '\''
+            print ''
+            construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
+                window, stack_label, feature_count,
+                bands_vir=bands_vir,
+                bands_sar=bands_sar,
+                bands_ndvi=bands_ndvi,
+                bands_ndbi=bands_ndbi,
+                bands_osm=bands_osm,
+                haze_removal=False,
+                label_suffix=label_suffix, categories=categories, 
+                category_label=category_label )
+
+            print 'Combine dataset tiles into complete data arrays'
+            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window)
+
+            print 'Write complete datasets to file'
+            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
+            print ''
 
 def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model,
