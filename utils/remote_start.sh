@@ -4,7 +4,7 @@
 # want a pure code solution to start and connect to virtual machine
 
 # start vm
-gcloud compute instances start "bronco-03-gpu" --project "bronco-gfw" --zone "us-central1-c"
+gcloud compute instances start "bronco-03-gpu-restored" --project "bronco-gfw" --zone "us-central1-c"
 
 # wait for vm to be ready to accept connections
 sleep 10

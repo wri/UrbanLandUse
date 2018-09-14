@@ -43,7 +43,7 @@ def score(Yhat,Y,report=True):
         print "scores [tp, fp, fn, tn]", tp, fp, fn, tn, \
         	"accuracy", round(100*((tp + tn)/float(tp + fp + fn + tn)),1),"%"
 
-def confusion(Yhat,Y,categories):
+def calc_confusion(Yhat,Y,categories):
     n_categories = len(categories)
     confusion = np.zeros((n_categories,n_categories),dtype='uint32')
     for j in range(n_categories):
@@ -55,7 +55,7 @@ def confusion(Yhat,Y,categories):
     print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
     return confusion
 
-def confusion_detail(Yhat,Y,categories):
+def calc_confusion_detail(Yhat,Y,categories):
     n_categories = len(categories)
     confusion = np.zeros((n_categories,n_categories),dtype='uint32')
     for j in range(n_categories):
@@ -134,8 +134,8 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
     ## evaluate model
     print "evaluate training"
     Yhat_train = model.predict(X_train_scaled)
-    conf = confusion(Yhat_train,Y_train,categories)
+    conf = calc_confusion(Yhat_train,Y_train,categories)
     print "evaluate validation"
     Yhat_valid = model.predict(X_valid_scaled)
-    confusion = confusion(Yhat_valid,Y_valid,categories)
+    conf = calc_confusion(Yhat_valid,Y_valid,categories)
     return Yhat_train, Yhat_valid, model
