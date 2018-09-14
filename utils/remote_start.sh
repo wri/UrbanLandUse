@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # these commands are to be run on the client/remote computer
 # (ie NOT the virtual machine)
 
@@ -11,5 +12,4 @@ sleep 10
 sleep 10
 sleep 10
 
-# connect to vm
-gcloud compute --project "bronco-gfw" ssh --zone "us-central1-c" "bronco-03-gpu"
+gcloud compute --project "bronco-gfw" ssh --zone "us-central1-c" "bronco-03-gpu-restored"

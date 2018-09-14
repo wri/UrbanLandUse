@@ -442,11 +442,11 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
-def load_datasets(source_dict, data_root, label_suffix, stack_label, window):
+def load_datasets(place_images, data_root, label_suffix, stack_label, window):
     print 'calculate total size of training and validation supersets'
     t_total = 0
     v_total = 0
-    for city, suffixes in source_dict.iteritems():
+    for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
             train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print train_file
@@ -475,7 +475,7 @@ def load_datasets(source_dict, data_root, label_suffix, stack_label, window):
     print 'populate superset np arrays'
     v_start = 0
     t_start = 0
-    for city, suffixes in source_dict.iteritems():
+    for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
             train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print train_file
