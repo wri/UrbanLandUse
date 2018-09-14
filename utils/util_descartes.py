@@ -152,9 +152,9 @@ def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satel
 # creating new rasters from tiles and vector info
 # for Landsat or S2A (aka SENTINEL-2) scenes
 def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
-                  bands=['alpha'], vector_format='geojson'):
+                  bands=['alpha'], label_suffix='aue', vector_format='geojson'):
     #
-    imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_labels'
+    imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix
     print 'imgfile', imgfile
     
     ret = dl.raster.raster(
