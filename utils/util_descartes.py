@@ -5,7 +5,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 #
-#import os
+import os
 #import sys
 #import json
 #import itertools
@@ -18,8 +18,8 @@ import numpy as np
 from osgeo import gdal
 #import matplotlib.pyplot as plt
 #
-#import descarteslabs as dl
-
+import descarteslabs as dl
+import subprocess
 
 # GENERAL
 
@@ -161,7 +161,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
         vir_ids,
         bands=bands,
         dltile=tile,
-        #cutline=shape['geometry'],
+        cutline=shape['geometry'],
         output_format='GTiff',
         data_type='Byte',
         save=True,
