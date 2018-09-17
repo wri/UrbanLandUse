@@ -519,7 +519,7 @@ def create_classification_arrays(window, categories, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -539,7 +539,7 @@ def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_d
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = model.predict(X_c_scaled)
+        Yhat_c_prob = network.predict(X_c_scaled)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
@@ -564,7 +564,7 @@ def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_d
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = model.predict(X_c_scaled)
+        Yhat_c_prob = network.predict(X_c_scaled)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
@@ -625,16 +625,11 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
             print ''
 
-def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
+def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False,
-        label_suffix='labels', categories=[0,1,4,6], 
-        category_label={0:'Open Space',1:'Non-Residential',\
-                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
-                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+        haze_removal=False, categories=[0,1,4,6]):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -671,5 +666,5 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULCfull.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
         
-        del mark, imn, geo, prj, Y, Y_deep, Y_max, Y_full
+        del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
