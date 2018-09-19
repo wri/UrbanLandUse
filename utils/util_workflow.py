@@ -650,7 +650,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
 
         fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max)
         
-        result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULC.tif'
+        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
         print result_file
         util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
         if np.sum(Y==255) != 0:
@@ -666,11 +666,39 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         b+=1
         Y_full[b][:,:] = Y_max[:,:]
         print 'Y_full sample', Y_full[:,100,100]
-        full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULCfull.tif'
+        full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
         
         del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
+
+def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+        show_vir=True):
+    tile_id = 67
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULC.tif'
+
+    util_rasters.stats_byte_raster(result_file, category_label)
+
+    result, geo, prj, cols, rows = util_rasters.load_geotiff(result_file)
+    result[result==0] = 0
+    result[result==1] = 1
+    result[result==2] = 4
+    result[result==3] = 6
+
+    rgb = util_rasters.rgb_lulc_result(result)
+    fig = plt.figure(figsize=(16,16))
+    plt.imshow(rgb)
+    print
+
+    if show_vir:
+        img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+        print img_file
+        util_rasters.show_vir_s2(img_file)
+    return
 
 def record_model_creation(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
