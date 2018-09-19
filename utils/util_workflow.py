@@ -678,7 +678,6 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
         show_vir=True):
-    tile_id = 67
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
