@@ -18,6 +18,9 @@ import numpy as np
 from osgeo import gdal
 #import matplotlib.pyplot as plt
 import math
+
+import datetime
+import csv
 #
 import descarteslabs as dl
 import util_vectors
@@ -668,3 +671,26 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         
         del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
+
+def record_model_creation(
+        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+        model_summary, epochs, batch_size,
+        train_confusion, train_recalls, train_precisions, train_accuracy, 
+        valid_confusion, valid_recalls, valid_precisions, valid_accuracy, 
+        datetime=datetime.datetime.now(),
+        scorecard_file='/data/phase_iii/models/scorecard_phase_iii.csv'):
+    
+    with open(scorecard_file, mode='a') as scorecard:
+        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        score_writer.writerow([
+            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+            model_summary, epochs, batch_size,
+            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
+            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
+            ])
+    return
+
+def record_model_application(
+        ):
+    return
