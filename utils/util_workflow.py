@@ -671,9 +671,79 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         print 'Y_full sample', Y_full[:,100,100]
         full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
-        
-        del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
+
+        del mark, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
+
+def class_balancing(Y_t, X_train, Y_train):
+    # create variables to hold the count of each categories
+    n_OpnSp = np.sum(Y_t==0)
+    n_NRes = np.sum(Y_t==1)
+    n_Res = np.sum(Y_t==4) 
+    n_Rd = np.sum(Y_t==6)
+        
+    print "No of open space = ", n_OpnSp
+    print "No of non residential = ", n_NRes
+    print "No of residential = ", n_Res
+    print "No of roads = ", n_Rd
+
+    # create a list containing total count of each categories
+    tot_cnt = [n_OpnSp, n_NRes, n_Res, n_Rd]
+
+    # get the least representative class
+    LRC = min(tot_cnt)
+    print "least representative class = ", LRC
+
+    # use the least representative class to match other, remove extra samples
+    #Return a new array of given shape and type, filled with zeros
+    Y_balanced = np.zeros((LRC*4),dtype=Y_t.dtype)
+    X_balanced = np.zeros((LRC*4,X_train.shape[1]),dtype=X_train.dtype)
+
+    # create four numpy arrays to hold values from each category
+    where_OpnSp = np.where(Y_t==0)
+    where_NRes = np.where(Y_t==1)
+    where_Res = np.where(Y_t==4)
+    where_Rd = np.where(Y_t==6) 
+
+    # Remove extra samples using random permutation from each category
+    where_OpnSp_array = where_OpnSp[0]
+    perm = np.random.permutation(len(where_OpnSp_array))
+    where_OpnSp_array = where_OpnSp_array[perm[:]]
+    where_OpnSp_trunc = (where_OpnSp_array[:LRC],)
+
+    Y_balanced[:LRC] = Y_t[where_OpnSp_trunc]
+    X_balanced[:LRC] = X_train[where_OpnSp_trunc]
+
+    where_NRes_array = where_NRes[0]
+    perm = np.random.permutation(len(where_NRes_array))
+    where_NRes_array = where_NRes_array[perm[:]]
+    where_NRes_trunc = (where_NRes_array[:LRC],)
+
+    Y_balanced[LRC:(LRC*2)] = Y_t[where_NRes_trunc]
+    X_balanced[(LRC):(LRC*2)] = X_train[where_NRes_trunc]
+
+    where_Res_array = where_Res[0]
+    perm = np.random.permutation(len(where_Res_array))
+    where_Res_array = where_Res_array[perm[:]]
+    where_Res_trunc = (where_Res_array[:LRC],)
+
+    Y_balanced[(LRC*2):(LRC*3)] = Y_t[where_Res_trunc]
+    X_balanced[(LRC*2):(LRC*3)] = X_train[where_Res_trunc]
+
+    where_Rd_array = where_Rd[0]
+    perm = np.random.permutation(len(where_Rd_array))
+    where_Rd_array = where_Rd_array[perm[:]]
+    where_Rd_trunc = (where_Rd_array[:LRC],)
+
+    Y_balanced[(LRC*3):(LRC*4)] = Y_t[where_Rd_trunc]
+    X_balanced[(LRC*3):(LRC*4)] = X_train[where_Rd_trunc]
+
+    perm = np.random.permutation(LRC*4)
+    Y_balanced = Y_balanced[perm[:]]
+    X_balanced = X_balanced[perm[:],:]
+
+    print "Sum of each categories after balancing = ", np.sum(Y_balanced==0),np.sum(Y_balanced==1),np.sum(Y_balanced==4),np.sum(Y_balanced==6)
+    print Y_balanced.shape
 
 def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
@@ -724,3 +794,4 @@ def record_model_creation(
 def record_model_application(
         ):
     return
+
