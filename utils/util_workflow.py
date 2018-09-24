@@ -673,3 +673,124 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         
         del mark, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
+
+def class_balancing(Y_t):
+    # create variables to hold the count of each categories
+    n_OpnSp = 0
+    n_NRes = 0
+    n_Res = 0 
+    n_Rd = 0
+
+    #count the distribution of each categories
+    for cat in Y_t:
+        if cat == 0:
+            n_OpnSp += 1
+        elif cat == 1:
+            n_NRes += 1
+        elif cat == 4:
+            n_Res += 1
+        else:
+            n_Rd += 1
+        
+    print "No of open space = ", n_OpnSp
+    print "No of non residential = ", n_NRes
+    print "No of residential = ", n_Res
+    print "No of roads = ", n_Rd
+
+    # create a dictionary containing total count of each categories
+    #tot_cnt = {'open space': n_OpnSp, 'non residential': n_NRes, 'residential': 'n_Res', 'roads': n_Rd}
+
+    # create a list containing total count of each categories
+    tot_cnt = [n_OpnSp, n_NRes, n_Res, n_Rd]
+
+    # get the least representative class
+    LRC = min(tot_cnt)
+    print "least representative class = ", LRC
+
+    # use the least representative class to match other, remove extra samples
+
+    # Remove extra samples using first LRC amount from each category
+    #Return a new array of given shape and type, filled with zeros
+    Y_balanced = np.zeros((LRC*4),dtype=Y_t.dtype)
+    X_balanced = np.zeros((LRC*4,X_train.shape[1]),dtype=X_train.dtype)
+
+    # create four numpy arrays to hold values from each category
+    where_OpnSp = np.where(Y_t==0)
+    where_NRes = np.where(Y_t==1)
+    where_Res = np.where(Y_t==4)
+    where_Rd = np.where(Y_t==6) 
+    print 'where_OpnSp', where_OpnSp[0]
+    print 'where_NRes', where_NRes[0]
+
+    where_OpnSp_array = where_OpnSp[0]
+    where_OpnSp_trunc = (where_OpnSp_array[:LRC],) #truncate the array to include only LRC amount of values
+
+    Y_balanced[:LRC] = Y_t[where_OpnSp_trunc]
+    X_balanced[:LRC] = X_train[where_OpnSp_trunc]
+
+    where_NRes_array = where_NRes[0]
+    where_NRes_trunc = (where_NRes_array[:LRC],)
+
+    Y_balanced[LRC:(LRC*2)] = Y_t[where_NRes_trunc]
+    X_balanced[(LRC):(LRC*2)] = X_train[where_NRes_trunc]
+
+    where_Res_array = where_Res[0]
+    where_Res_trunc = (where_Res_array[:LRC],)
+
+    Y_balanced[(LRC*2):(LRC*3)] = Y_t[where_Res_trunc]
+    X_balanced[(LRC*2):(LRC*3)] = X_train[where_Res_trunc]
+
+    where_Rd_array = where_Rd[0]
+    where_Rd_trunc = (where_Rd_array[:LRC],)
+
+    Y_balanced[(LRC*3):(LRC*4)] = Y_t[where_Rd_trunc]
+    X_balanced[(LRC*3):(LRC*4)] = X_train[where_Rd_trunc]
+
+    print np.sum(Y_balanced==0),np.sum(Y_balanced==1),np.sum(Y_balanced==4),np.sum(Y_balanced==6)
+    print Y_balanced.shape
+    print Y_balanced[0:10]
+    #print Y_balanced
+    #print X_balanced
+
+    # Remove extra samples using random permutation from each category
+    where_OpnSp_array = where_OpnSp[0]
+    perm = np.random.permutation(len(where_OpnSp_array))
+    where_OpnSp_array = where_OpnSp_array[perm[:]]
+    where_OpnSp_trunc = (where_OpnSp_array[:LRC],)
+
+    Y_balanced[:LRC] = Y_t[where_OpnSp_trunc]
+    X_balanced[:LRC] = X_train[where_OpnSp_trunc]
+
+    where_NRes_array = where_NRes[0]
+    perm = np.random.permutation(len(where_NRes_array))
+    where_NRes_array = where_NRes_array[perm[:]]
+    where_NRes_trunc = (where_NRes_array[:LRC],)
+
+    Y_balanced[LRC:(LRC*2)] = Y_t[where_NRes_trunc]
+    X_balanced[(LRC):(LRC*2)] = X_train[where_NRes_trunc]
+
+    where_Res_array = where_Res[0]
+    perm = np.random.permutation(len(where_Res_array))
+    where_Res_array = where_Res_array[perm[:]]
+    where_Res_trunc = (where_Res_array[:LRC],)
+
+    Y_balanced[(LRC*2):(LRC*3)] = Y_t[where_Res_trunc]
+    X_balanced[(LRC*2):(LRC*3)] = X_train[where_Res_trunc]
+
+    where_Rd_array = where_Rd[0]
+    perm = np.random.permutation(len(where_Rd_array))
+    where_Rd_array = where_Rd_array[perm[:]]
+    where_Rd_trunc = (where_Rd_array[:LRC],)
+
+    Y_balanced[(LRC*3):(LRC*4)] = Y_t[where_Rd_trunc]
+    X_balanced[(LRC*3):(LRC*4)] = X_train[where_Rd_trunc]
+
+    perm = np.random.permutation(LRC*4)
+    Y_balanced = Y_balanced[perm[:]]
+    X_balanced = X_balanced[perm[:],:]
+
+    print np.sum(Y_balanced==0),np.sum(Y_balanced==1),np.sum(Y_balanced==4),np.sum(Y_balanced==6)
+    print Y_balanced.shape
+    #print Y_balanced
+    #print X_balanced
+
