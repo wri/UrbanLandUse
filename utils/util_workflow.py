@@ -16,8 +16,11 @@ import numpy as np
 #import shapely
 #import cartopy
 from osgeo import gdal
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import math
+
+import datetime
+import csv
 #
 import descarteslabs as dl
 import util_vectors
@@ -519,7 +522,7 @@ def create_classification_arrays(window, categories, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -539,7 +542,7 @@ def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_d
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = model.predict(X_c_scaled)
+        Yhat_c_prob = network.predict(X_c_scaled)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
@@ -564,7 +567,7 @@ def fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_d
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = model.predict(X_c_scaled)
+        Yhat_c_prob = network.predict(X_c_scaled)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
@@ -625,16 +628,11 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
             print ''
 
-def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
+def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False,
-        label_suffix='labels', categories=[0,1,4,6], 
-        category_label={0:'Open Space',1:'Non-Residential',\
-                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
-                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+        haze_removal=False, categories=[0,1,4,6]):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -652,7 +650,7 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
         fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max)
         
-        result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULC.tif'
+        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
         print result_file
         util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
         if np.sum(Y==255) != 0:
@@ -668,9 +666,9 @@ def classify_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         b+=1
         Y_full[b][:,:] = Y_max[:,:]
         print 'Y_full sample', Y_full[:,100,100]
-        full_result_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_'+image_suffix+'_LULCfull.tif'
+        full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
-        
+
         del mark, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
 
@@ -793,4 +791,54 @@ def class_balancing(Y_t):
     print Y_balanced.shape
     #print Y_balanced
     #print X_balanced
+
+def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+        show_vir=True):
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+
+    util_rasters.stats_byte_raster(result_file, category_label)
+
+    result, geo, prj, cols, rows = util_rasters.load_geotiff(result_file)
+    result[result==0] = 0
+    result[result==1] = 1
+    result[result==2] = 4
+    result[result==3] = 6
+
+    rgb = util_rasters.rgb_lulc_result(result)
+    fig = plt.figure(figsize=(16,16))
+    plt.imshow(rgb)
+    print
+
+    if show_vir:
+        img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+        print img_file
+        util_rasters.show_vir_s2(img_file)
+    return
+
+def record_model_creation(
+        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+        model_summary, epochs, batch_size,
+        train_confusion, train_recalls, train_precisions, train_accuracy, 
+        valid_confusion, valid_recalls, valid_precisions, valid_accuracy, 
+        datetime=datetime.datetime.now(),
+        scorecard_file='/data/phase_iii/models/scorecard_phase_iii.csv'):
+    
+    with open(scorecard_file, mode='a') as scorecard:
+        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        score_writer.writerow([
+            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+            model_summary, epochs, batch_size,
+            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
+            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
+            ])
+    return
+
+def record_model_application(
+        ):
+    return
 

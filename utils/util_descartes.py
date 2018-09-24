@@ -5,7 +5,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 #
-#import os
+import os
 #import sys
 #import json
 #import itertools
@@ -18,8 +18,8 @@ import numpy as np
 from osgeo import gdal
 #import matplotlib.pyplot as plt
 #
-#import descarteslabs as dl
-
+import descarteslabs as dl
+import subprocess
 
 # GENERAL
 
