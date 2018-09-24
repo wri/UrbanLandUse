@@ -226,7 +226,7 @@ def prepare_output_stack(data_path, place, tiles,
     y[3] = (lb==3)#; y[3] |= (lb==2)  # merge categories 2 and 3
     #y[4] = (lb==4); y[4] |= (lb==5)  # merge categories 4 and 5
     #change for 4-category typology that consolidates all residential types
-    y[4] = (lb==4); y[4] |= (lb==5); y[4] |= (lb==2); y[4] |= (lb==3) # merge categories 2,3,4,5
+    y[4] = (lb==4) #unmerging; can merge in memory once loaded     ; y[4] |= (lb==5); y[4] |= (lb==2); y[4] |= (lb==3) # merge categories 2,3,4,5
     y[5] = (lb==5)
     y[6] = (lb==6)
     y[7] = (mask==1)
@@ -239,7 +239,8 @@ def prepare_output_stack(data_path, place, tiles,
     return y
 
 def build_training_samples(data_path, place, stack_label, 
-        image_suffix, label_suffix, window, categories, imn, y, tile_id):
+        image_suffix, label_suffix, window, imn, y, tile_id,
+        categories=[0,1,2,3,4,5,6]):
     r = window/2
     n_features = imn.shape[0] 
 
@@ -298,7 +299,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,
-        label_suffix='labels', categories=[0,1,4,6], 
+        label_suffix='labels', 
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
@@ -328,7 +329,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             label_suffix, mask, category_label, window, tile_id)
         
         build_training_samples(data_path, place, stack_label, 
-            image_suffix, label_suffix, window, categories, imn, y, tile_id)
+            image_suffix, label_suffix, window, imn, y, tile_id)
         
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
@@ -504,10 +505,10 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window):
     print X_train.shape, Y_train.shape
     return X_train, Y_train, X_valid, Y_valid
 
-def create_classification_arrays(window, categories, imn, pad):
+def create_classification_arrays(window, n_cats, imn, pad):
     r = window/2
     Y = np.zeros((imn.shape[1],imn.shape[2]),dtype='uint8')
-    Y_deep = np.empty((imn.shape[1],imn.shape[2],len(categories)),dtype='float32')
+    Y_deep = np.empty((imn.shape[1],imn.shape[2],n_cats),dtype='float32')
     Y_deep[:] = np.nan
     Y_max = np.empty((imn.shape[1],imn.shape[2]),dtype='float32')
     Y_max[:] = np.nan
@@ -585,7 +586,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,
-        label_suffix='labels', categories=[0,1,4,6], 
+        label_suffix='labels', 
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
@@ -618,7 +619,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
                 bands_ndbi=bands_ndbi,
                 bands_osm=bands_osm,
                 haze_removal=False,
-                label_suffix=label_suffix, categories=categories, 
+                label_suffix=label_suffix, 
                 category_label=category_label )
 
             print 'Combine dataset tiles into complete data arrays'
@@ -632,7 +633,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False, categories=[0,1,4,6]):
+        haze_removal=False):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -646,7 +647,9 @@ def classify_tiles(data_path, place, tiles, image_suffix,
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
 
-        Y, Y_deep, Y_max = create_classification_arrays(window, categories, imn, tiles['features'][tile_id]['properties']['pad'])
+        n_cats = model.get_layer(index=len(model.layers)).output_shape[1]
+
+        Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
         fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max)
         
@@ -700,7 +703,7 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
     return
 
 def record_model_creation(
-        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
         model_summary, epochs, batch_size,
         train_confusion, train_recalls, train_precisions, train_accuracy, 
         valid_confusion, valid_recalls, valid_precisions, valid_accuracy, 
@@ -711,7 +714,7 @@ def record_model_creation(
         score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         score_writer.writerow([
-            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, categories, balancing, 
+            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
             model_summary, epochs, batch_size,
             train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
             valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
