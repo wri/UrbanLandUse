@@ -772,6 +772,58 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
         util_rasters.show_vir_s2(img_file)
     return
 
+def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+         show_vir=True, show_lulc=True):
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+
+    util_rasters.stats_byte_raster(result_file, category_label)
+
+    result, geo, prj, cols, rows = util_rasters.load_geotiff(result_file)
+    result[result==0] = 0
+    result[result==1] = 1
+    result[result==2] = 4
+    result[result==3] = 6
+
+    rgb = util_rasters.rgb_lulc_result(result)
+
+    img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+    img, geo, prj, cols, rows = util_rasters.load_geotiff(img_file)
+
+    img = np.transpose(img, (1,2,0))
+    img = img[:,:,0:3]
+    img = np.flip(img, axis=-1)
+
+    viz = img.astype('float32')
+    viz = viz/3000
+    viz = 255.*viz
+    viz = np.clip(viz,0,255)
+    viz = viz.astype('uint8')
+    for b in range(img.shape[2]):
+        print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
+
+    plt.figure(figsize=[16,16])
+    plt.imshow(viz, interpolation='none')
+    plt.imshow(rgb, interpolation='none', alpha=0.3)
+    plt.show()
+
+    if show_vir:
+        plt.figure(figsize=[16,16])
+        plt.imshow(viz, interpolation='none')
+        plt.show()
+    if show_lulc:
+        plt.figure(figsize=[16,16])
+        plt.imshow(rgb, interpolation='none')
+        plt.show()
+
+    return
+
+
+
+
 def record_model_creation(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
         model_summary, epochs, batch_size,
