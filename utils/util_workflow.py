@@ -672,7 +672,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
         util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
 
-        del mark, imn, geo, prj, Y, Y_deep, Y_max, Y_full
+        del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
         print 'tile', tile_id, 'done'
 
 def class_balancing(Y_t, X_train, Y_train):
