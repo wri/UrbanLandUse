@@ -830,7 +830,7 @@ def record_model_creation(
         train_confusion, train_recalls, train_precisions, train_accuracy, 
         valid_confusion, valid_recalls, valid_precisions, valid_accuracy, 
         datetime=datetime.datetime.now(),
-        scorecard_file='/data/phase_iii/models/scorecard_phase_iii.csv'):
+        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_models.csv'):
     
     with open(scorecard_file, mode='a') as scorecard:
         score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -844,6 +844,18 @@ def record_model_creation(
     return
 
 def record_model_application(
-        ):
+        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, 
+        train_confusion, train_recalls, train_precisions, train_accuracy, 
+        valid_confusion, valid_recalls, valid_precisions, valid_accuracy, 
+        datetime=datetime.datetime.now(),
+        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_runs.csv'):
+    with open(scorecard_file, mode='a') as scorecard:
+        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        score_writer.writerow([
+            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map,
+            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
+            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
+            ])
     return
 
