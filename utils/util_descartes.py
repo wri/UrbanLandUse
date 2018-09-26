@@ -16,7 +16,7 @@ import numpy as np
 #import shapely
 #import cartopy
 from osgeo import gdal
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #
 import descarteslabs as dl
 import subprocess
