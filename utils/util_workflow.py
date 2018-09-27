@@ -212,7 +212,6 @@ def prepare_output_stack(data_path, place, tiles,
         label_suffix, mask, category_label, tile_id):
     
     b= tiles['features'][tile_id]['properties']['pad']
-    for tile_id in range(len(tiles['features'])):
     print 'tile', tile_id, 'load labels'
     label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
     print label_file
@@ -313,7 +312,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
 
-    if window/2 > tiles['features'][tile_id]['properties']['pad']:
+    if window/2 > tiles['features'][0]['properties']['pad']:
         raise ValueError("trying to use look window that exceeds size of available imagery tiles")
     
     # fundamentally a tile-by-tile process
