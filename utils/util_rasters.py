@@ -117,6 +117,43 @@ def stats_byte_raster(label_file, category_label, show=False):
         plt.imshow(y)
     return yd
 
+def stats_byte_tiles(data_path, place, tiles, label_suffix, 
+        no_data=255,
+        categories=[0,1,2,3,4,5,6],
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'}):
+
+    tile_size = tiles['features'][0]['properties']['tilesize']
+    tile_pad = tiles['features'][0]['properties']['pad']
+    tile_pixels = (tile_size + tile_pad*2)**2
+
+    tile_stats = {}
+    for tile_id in range(len(tiles['features'])):
+        tile = tiles['features'][tile_id]
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+        tile_stats[tile_id] = stats_byte_raster(label_file, category_label, show=False)
+
+    categories = [0,1,2,3,4,5,6]
+
+    agg_stats = {}
+    for c in categories:
+        agg_stats[c] = 0
+
+    for tile_id in tile_stats.keys():
+        if tile_stats[tile_id][no_data] != tile_pixels:
+            print tile_id, tile_stats[tile_id]
+        for c in categories:
+            try:
+                agg_stats[c] = agg_stats[c] + tile_stats[tile_id][c]
+            except:
+                continue
+
+    print agg_stats
+
+    return tile_stats, agg_stats
+
 def ls_haze_removal(img,nodata,thresh=2):
     #
     # based on https://github.com/descarteslabs/hedj/blob/master/crops/ml_exp/lacid.py
