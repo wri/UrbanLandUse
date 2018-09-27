@@ -209,16 +209,18 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
     return mask, imn, virgeo, virprj
 
 def prepare_output_stack(data_path, place, tiles, 
-        label_suffix, mask, category_label, window, tile_id):
-    r = window/2
+        label_suffix, mask, category_label, tile_id):
+    
+    b= tiles['features'][tile_id]['properties']['pad']
+    for tile_id in range(len(tiles['features'])):
     print 'tile', tile_id, 'load labels'
     label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
     print label_file
     lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
     #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
     # delete training points close to edge
-    lb[0:r,:] = 255; lb[-r-1:,:] = 255
-    lb[:,0:r] = 255; lb[:,-r-1:] = 255
+    lb[0:b,:] = 255; lb[-b:,:] = 255
+    lb[:,0:b] = 255; lb[:,-b:] = 255
     y = np.zeros((9,mask.shape[0],mask.shape[1]),dtype='byte')
     y[0] = (mask==1); y[0] &= (lb==0)
     y[1] = (lb==1)
@@ -310,6 +312,9 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
+
+    if window/2 > tiles['features'][tile_id]['properties']['pad']:
+        raise ValueError("trying to use look window that exceeds size of available imagery tiles")
     
     # fundamentally a tile-by-tile process
     for tile_id in range(len(tiles['features'])):
@@ -326,7 +331,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
 
         y = prepare_output_stack(data_path, place, tiles, 
-            label_suffix, mask, category_label, window, tile_id)
+            label_suffix, mask, category_label, tile_id)
         
         build_training_samples(data_path, place, stack_label, 
             image_suffix, label_suffix, window, imn, y, tile_id)
