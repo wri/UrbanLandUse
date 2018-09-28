@@ -642,10 +642,10 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             print ''
 
 def classify_tiles(data_path, place, tiles, image_suffix,
-        window, stack_label, feature_count, model_id, scaler, model,
+        window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False):
+        haze_removal=False, unflatten_input=False):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -659,11 +659,9 @@ def classify_tiles(data_path, place, tiles, image_suffix,
             bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
             haze_removal=False)
 
-        n_cats = model.get_layer(index=len(model.layers)).output_shape[1]
-
         Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
-        fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max)
+        fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input)
         
         result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
         print result_file
