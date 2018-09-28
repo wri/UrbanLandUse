@@ -527,7 +527,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -547,7 +547,11 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = network.predict(X_c_scaled)
+        if unflatten_input:
+            X_c_final = X_c_scaled.reshape((X_c_scaled.shape[0],feature_count,window,window))
+        else:
+            X_c_final = X_c_scaled
+        Yhat_c_prob = network.predict(X_c_final)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
@@ -572,7 +576,11 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         X_c = X_c/data_scale
         # X_c_scaled = X_c  
         X_c_scaled = scaler.transform(X_c)
-        Yhat_c_prob = network.predict(X_c_scaled)
+        if unflatten_input:
+            X_c_final = X_c_scaled.reshape((X_c_scaled.shape[0],feature_count,window,window))
+        else:
+            X_c_final = X_c_scaled
+        Yhat_c_prob = network.predict(X_c_final)
         Yhat_c = Yhat_c_prob.argmax(axis=-1)
         Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
