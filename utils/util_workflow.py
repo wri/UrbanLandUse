@@ -527,7 +527,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_mask=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -588,6 +588,15 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         Y[j_c[:],i_c[:]] = Yhat_c[:]
         Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
         Y_max[j_c[:],i_c[:]] = Yhat_max[:]
+
+    if water_mask:
+        # for the moment hardcoding values
+        band_a = 1 # green
+        band_b = 3 # nir
+        cat_water = 7 # addition to 0-6 AUE taxonomy
+        threshold = 0.5 # water = ndwi > threshold 
+        ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
+        Y[ndwi > 0.5] == cat_water
     
     print "done"
     for k in range(255):
@@ -645,7 +654,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False, unflatten_input=False):
+        haze_removal=False, unflatten_input=False, water_mask=False):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -661,7 +670,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
 
         Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
-        fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input)
+        fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_mask=water_mask)
         
         result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
         print result_file
@@ -788,6 +797,8 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
          show_vir=True, show_lulc=True):
+    # remapping parameter
+
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
