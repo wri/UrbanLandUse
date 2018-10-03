@@ -594,22 +594,9 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         band_a = 1 # green
         band_b = 3 # nir
         cat_water = 9 # addition to 0-6 AUE taxonomy
-        threshold = 0 # water = ndwi > threshold 
+        threshold = 0.0 # water = ndwi > threshold 
         ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
-        #print imn[band_a, 125, 125]
-        #print imn[band_b, 125, 125]
-        #print ndwi.shape
-        #print ndwi
-        print np.sum(ndwi > 0)
-        print np.sum(ndwi > 0.5)
         water = ndwi > threshold
-        print water.shape
-        print water
-        if np.sum(water) > 0:
-            print "ndwi:"
-            print ndwi
-            print "water mask:"
-            print water
         Y[water] = cat_water
     
     print "done"
