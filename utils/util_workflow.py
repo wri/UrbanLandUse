@@ -593,10 +593,24 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         # for the moment hardcoding values
         band_a = 1 # green
         band_b = 3 # nir
-        cat_water = 7 # addition to 0-6 AUE taxonomy
-        threshold = 0.5 # water = ndwi > threshold 
+        cat_water = 9 # addition to 0-6 AUE taxonomy
+        threshold = 0 # water = ndwi > threshold 
         ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
-        Y[ndwi > 0.5] == cat_water
+        #print imn[band_a, 125, 125]
+        #print imn[band_b, 125, 125]
+        #print ndwi.shape
+        #print ndwi
+        print np.sum(ndwi > 0)
+        print np.sum(ndwi > 0.5)
+        water = ndwi > threshold
+        print water.shape
+        print water
+        if np.sum(water) > 0:
+            print "ndwi:"
+            print ndwi
+            print "water mask:"
+            print water
+        Y[water] = cat_water
     
     print "done"
     for k in range(255):
@@ -768,7 +782,7 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
         show_vir=True):
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
@@ -795,7 +809,7 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
          show_vir=True, show_lulc=True):
     # remapping parameter
 

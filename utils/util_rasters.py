@@ -631,9 +631,9 @@ def rgb_lulc_result(Y,BIP=True):
     rgb[1][(Y==6)] = int("1a", 16)
     rgb[2][(Y==6)] = int("1c", 16)
     # water
-    #rgb[0][(Y==6)] = int("e3", 16)
-    #rgb[1][(Y==6)] = int("1a", 16)
-    #rgb[2][(Y==6)] = int("1c", 16)
+    rgb[0][(Y==9)] = int("00", 16)
+    rgb[1][(Y==9)] = int("33", 16)
+    rgb[2][(Y==9)] = int("66", 16)
     # outside study area
     rgb[0][(Y==254)] = int("00", 16)
     rgb[1][(Y==254)] = int("00", 16)
