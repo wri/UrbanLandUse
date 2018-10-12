@@ -19,7 +19,7 @@ from osgeo import gdal
 import matplotlib.pyplot as plt
 #
 import descarteslabs as dl
-
+import bronco
 
 
 # FILE READ/WRITE
@@ -483,34 +483,42 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                print '    tile', tile_id
             tile = tiles['features'][tile_id]
 
-            vir, vir_meta = dl.raster.ndarray(
-                s2_ids[j],
-                bands=bands,
-                data_type='UInt16',
-                dltile=tile,
-                #cutline=shape['geometry'] # removing to try to sidestep nan issue
-            )
+            try:
+                vir, vir_meta = dl.raster.ndarray(
+                    s2_ids[j],
+                    bands=bands,
+                    data_type='UInt16',
+                    dltile=tile,
+                    #cutline=shape['geometry'] # removing to try to sidestep nan issue
+                )
+            except ProtocolError as e:
+                print 'ProtocolError when acquiring tile #'+str(tile_id)+' for image #'+str(j)+' ('+str(s2_ids[j])+'):'
+                print e
+                import time
+                time.sleep(10)
+                tile_id-=1
+                continue
             #print vir.shape
             vir = vir.astype('float32')
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
 
-            ndvi_j = bronco.spectral_index(vir,3,2)
-            bronco_masking, key = bronco.cloud_mask_S2(vir)
+            ndvi_j = spectral_index(vir,3,2)
+            util_rasters_masking, key = cloud_mask_S2(vir)
 
             if (j==0):
                 ndvi_max = np.full([ndvi_j.shape[0], ndvi_j.shape[1] ], np.nan, dtype=vir.dtype)
                 ndvi_min = np.full([ndvi_j.shape[0], ndvi_j.shape[1] ], np.nan, dtype=vir.dtype)
 
             alpha_j = vir[:,:,-1]
-            cloudfree_j = (bronco_masking != 4)
+            cloudfree_j = (util_rasters_masking != 4)
             goodpixels_j = np.logical_and(alpha_j, cloudfree_j)
 
             np.fmax(ndvi_j, max_tiles[tile_id], out=max_tiles[tile_id], where=goodpixels_j)
             np.fmin(ndvi_j, min_tiles[tile_id], out=min_tiles[tile_id], where=goodpixels_j)
-
     print 'done'
     return min_tiles, max_tiles
+
 
 def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
     bands=['blue','green','red','nir','swir1','swir2','alpha'];

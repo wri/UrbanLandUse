@@ -140,3 +140,5 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
     Yhat_valid = model.predict(X_valid_scaled)
     conf = calc_confusion(Yhat_valid,Y_valid,categories)
     return Yhat_train, Yhat_valid, model
+
+
