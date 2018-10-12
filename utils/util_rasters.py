@@ -483,13 +483,22 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                print '    tile', tile_id
             tile = tiles['features'][tile_id]
 
-            vir, vir_meta = dl.raster.ndarray(
-                s2_ids[j],
-                bands=bands,
-                data_type='UInt16',
-                dltile=tile,
-                #cutline=shape['geometry'] # removing to try to sidestep nan issue
-            )
+            try:
+                vir, vir_meta = dl.raster.ndarray(
+                    s2_ids[j],
+                    bands=bands,
+                    data_type='UInt16',
+                    dltile=tile,
+                    #cutline=shape['geometry'] # removing to try to sidestep nan issue
+                )
+            except ProtocolError as e:
+                print 'ProtocolError when acquiring tile #'+str(tile_id)+' for image #'+str(j)+' ('+str(s2_ids[j])+'):'
+                print e
+                import time
+                time.sleep(10)
+                tile_id-=1
+                continue
+
             #print vir.shape
             vir = vir.astype('float32')
             vir = vir/10000.
