@@ -527,7 +527,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_mask=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -588,6 +588,16 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         Y[j_c[:],i_c[:]] = Yhat_c[:]
         Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
         Y_max[j_c[:],i_c[:]] = Yhat_max[:]
+
+    if water_mask:
+        # for the moment hardcoding values
+        band_a = 1 # green
+        band_b = 3 # nir
+        cat_water = 9 # addition to 0-6 AUE taxonomy
+        threshold = 0.0 # water = ndwi > threshold 
+        ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
+        water = ndwi > threshold
+        Y[water] = cat_water
     
     print "done"
     for k in range(255):
@@ -641,11 +651,58 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
             print ''
 
+def classify_tile(tile_id, 
+        data_path, place, tiles, image_suffix,
+        window, stack_label, feature_count, model_id, scaler, model, n_cats,
+        bands_vir,
+        bands_sar, bands_ndvi, bands_ndbi, bands_osm,
+        haze_removal, unflatten_input, water_mask):
+        
+    mask, imn, geo, prj = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
+        image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
+        bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
+        haze_removal=False)
+
+    Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
+
+    fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_mask=water_mask)
+    
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    print result_file
+    util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
+    if np.sum(Y==255) != 0:
+        print 'unclassified pixels in Y:', np.sum(Y==255)
+
+    Y_deep = np.transpose(Y_deep, (2,0,1))
+    
+    Y_full = np.zeros((Y_deep.shape[0]+2, Y_deep.shape[1], Y_deep.shape[2]),dtype='float32')
+    for b in range(Y_deep.shape[0]):
+        Y_full[b] = Y_deep[b]
+    b+=1
+    Y_full[b][:,:] = Y[:,:]
+    b+=1
+    Y_full[b][:,:] = Y_max[:,:]
+    print 'Y_full sample', Y_full[:,100,100]
+    full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
+    util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
+
+    del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
+    print 'tile', tile_id, 'done'
+    
+    return
+
+def map_classify_tile(args):
+    try:
+        return classify_tile(*args)
+    except Exception as e:
+        raise e
+    return
+
 def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False, unflatten_input=False):
+        haze_removal=False, unflatten_input=False, water_mask=False):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -654,36 +711,13 @@ def classify_tiles(data_path, place, tiles, image_suffix,
     #for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
         
-        mask, imn, geo, prj = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
-            image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
-            bands_ndvi=bands_ndvi, bands_ndbi=bands_ndbi, bands_osm=bands_osm,
-            haze_removal=False)
-
-        Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
-
-        fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input)
+        classify_tile(tile_id, 
+            data_path, place, tiles, image_suffix,
+            window, stack_label, feature_count, model_id, scaler, model, n_cats,
+            bands_vir,
+            bands_sar, bands_ndvi, bands_ndbi, bands_osm,
+            haze_removal, unflatten_input, water_mask)
         
-        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
-        print result_file
-        util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
-        if np.sum(Y==255) != 0:
-            print 'unclassified pixels in Y:', np.sum(Y==255)
-
-        Y_deep = np.transpose(Y_deep, (2,0,1))
-        
-        Y_full = np.zeros((Y_deep.shape[0]+2, Y_deep.shape[1], Y_deep.shape[2]),dtype='float32')
-        for b in range(Y_deep.shape[0]):
-            Y_full[b] = Y_deep[b]
-        b+=1
-        Y_full[b][:,:] = Y[:,:]
-        b+=1
-        Y_full[b][:,:] = Y_max[:,:]
-        print 'Y_full sample', Y_full[:,100,100]
-        full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
-        util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
-
-        del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
-        print 'tile', tile_id, 'done'
 
 def class_balancing(Y_t, X_train, Y_train):
     # create variables to hold the count of each categories
@@ -759,7 +793,7 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
         show_vir=True):
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
@@ -786,8 +820,10 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ,
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
          show_vir=True, show_lulc=True):
+    # remapping parameter
+
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
