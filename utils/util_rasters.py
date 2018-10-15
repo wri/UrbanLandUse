@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import descarteslabs as dl
 import bronco
 
-import urllib3, urllib3.exceptions
+from urllib3.exceptions import ProtocolError
 
 
 # FILE READ/WRITE
