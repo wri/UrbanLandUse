@@ -21,6 +21,10 @@ import matplotlib.pyplot as plt
 import descarteslabs as dl
 import bronco
 
+import urllib
+import urllib2
+import urllib3, urllib3.exceptions
+
 
 # FILE READ/WRITE
 
