@@ -493,7 +493,7 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                     dltile=tile,
                     #cutline=shape['geometry'] # removing to try to sidestep nan issue
                 )
-            except ProtocolError as e:
+            except Exception as e:
                 print 'ProtocolError when acquiring tile #'+str(tile_id)+' for image #'+str(j)+' ('+str(s2_ids[j])+'):'
                 print e
                 import time
