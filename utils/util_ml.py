@@ -142,57 +142,53 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
     return Yhat_train, Yhat_valid, model
 
 
-# KERAS BUILDING BLOCKS
+# from class weightings development
 
-def pool_dropout(x):
-    x=MaxPooling2D(pool_size=(2, 2))(x)
-    return Dropout(0.25)(x)
+def load_training_data(city, suffix, label_suffix, stack_label, window,data_root, typ='train'):
+    train_file = data_root+city+'/'+city+'_'+typ+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+    with open(train_file, 'rb') as f:
+        X_train, Y_train = pickle.load(f)
+    return X_train, Y_train
 
-def denselayers(x,output_nodes=4):
-    x=Dense(512)(x)
-    x=Activation('relu')(x)
-    x=Dropout(0.5)(x)
-    x=Dense(output_nodes)(x)
-    return Activation('softmax')(x)
+def get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root):
+    image_names=[]
+    category_counts={category_label[c]: [] for c in range(7) }
+    for city, suffixes in place_images.iteritems():
+        for suffix in suffixes:
+            image_names.append("{}_{}".format(city,suffix))
+            _,Y_train=load_training_data(city,suffix,label_suffix, stack_label, window,data_root)
+            categories,counts=np.unique(Y_train,return_counts=True)
+            for c,cnt in zip(categories,counts):
+                category_counts[category_label[c]].append(cnt)
+    df=pd.DataFrame()
+    df['image_name']=image_names
+    for cat,cnt in category_counts.iteritems():
+        df[cat]=cnt
+    return df
 
-def conv_block(filters,x,kernel_size=3):
-    x=Conv2D(filters, kernel_size, padding='same')(x)
-    x=Activation('relu')(x)
-    x=Conv2D(filters, kernel_size, padding='same')(x)
-    x=Activation('relu')(x)
-    return x
-
-def resnet_block(filters,x,weights=None):
-    x_3=conv_block(filters,x)
-    x_1=Conv2D(filters, (1, 1))(x)
-    if weights:
-        x_3=Lambda(lambda y: y*weights[0])(x_3)
-        x_1=Lambda(lambda y: y*weights[1])(x_1)
-    x=keras.layers.Add()([x_3,x_1])
-    return x
-
-def doubleres_block(filters,x,weights=[0.9,1.0,1.1]):
-    x_5=conv_block(filters,x, kernel_size=5)
-    x_3=conv_block(filters,x)
-    x_1=Conv2D(filters, (1, 1))(x)
-    if weights:
-        x_5=Lambda(lambda y: y*weights[0])(x_5)
-        x_3=Lambda(lambda y: y*weights[1])(x_3)
-        x_1=Lambda(lambda y: y*weights[2])(x_1)
-    x=keras.layers.Add()([x_5,x_3,x_1])
-    return x
+def normalize_weights(weights,max_score=None):
+    mx=min(weights)
+    weights=[ w/mx for w in weights ]
+    if max_score:
+        weights=[ min(max_score,w) for w in weights ]
+    return weights
 
 
-def build_model(cblock,filters1,filters2,print_summary=True,input_shape=(8,17,17)):
-    inputs=Input(shape=input_shape) 
-    x=cblock(filters1,inputs)
-    x=pool_dropout(x)
-    x=cblock(filters2,x)
-    x=pool_dropout(x)
-    x=Flatten()(x)
-    x=denselayers(x)
-    m=Model(inputs=inputs, outputs=x)
-    if print_summary:
-        m.summary()
-    return m
+def category_weights(category_counts,mu=1.0,use_log=False,max_score=None):
+    weights=[]
+    total=np.sum(category_counts)
+    for count in category_counts:
+        if not count:
+            count=EPS
+        score=total/float(count)
+        if use_log:
+            score = math.log(mu*score)
+        weights.append(score)
+    return normalize_weights(weights,max_score)
 
+def image_names(place_images):
+    names=[]
+    for city, suffixes in place_images.iteritems():
+        for suffix in suffixes:
+            names.append("{}_{}".format(city,suffix))
+    return names    
