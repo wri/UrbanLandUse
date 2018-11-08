@@ -12,11 +12,6 @@ from keras.layers import Input, Add, Lambda
 from keras.callbacks import EarlyStopping, ModelCheckpoint, History
 
 
-
-
-
-
-
 # KERAS BUILDING BLOCKS
 
 def pool_dropout(x):
@@ -58,14 +53,14 @@ def doubleres_block(filters,x,weights=[0.9,1.0,1.1]):
     return x
 
 
-def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8,17,17)):
+def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8,17,17),output_nodes=4):
     inputs=Input(shape=input_shape) 
     x=cblock(filters1,inputs)
     x=pool_dropout(x)
     x=cblock(filters2,x)
     x=pool_dropout(x)
     x=Flatten()(x)
-    x=denselayers(x)
+    x=denselayers(x,output_nodes)
     m=Model(inputs=inputs, outputs=x)
     if print_summary:
         m.summary()
