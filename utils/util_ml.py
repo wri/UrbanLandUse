@@ -9,7 +9,8 @@ warnings.filterwarnings('ignore')
 #import sys
 #import json
 #import itertools
-#import pickle
+import pickle
+import pandas as pd
 #from pprint import pprint
 #
 import numpy as np
@@ -22,6 +23,8 @@ from osgeo import gdal
 import sklearn
 from sklearn.preprocessing import StandardScaler 
 from sklearn.linear_model import SGDClassifier
+
+import util_ml
 
 
 
@@ -166,6 +169,18 @@ def get_category_counts(place_images,category_label,label_suffix,stack_label,win
         df[cat]=cnt
     return df
 
+def get_category_counts_simple(Y_train):
+    df=pd.DataFrame()
+    df['dataset'] = ['preloaded']
+    categories,counts=np.unique(Y_train,return_counts=True)
+    tuples = zip(categories, counts)
+    category_counts={category_label[c]: [] for c in range(2) }
+    for c,cnt in zip(categories,counts):
+        category_counts[category_label[c]].append(cnt)
+    for cat,cnt in category_counts.iteritems():
+        df[cat]=cnt
+    return df
+
 def normalize_weights(weights,max_score=None):
     mx=min(weights)
     weights=[ w/mx for w in weights ]
@@ -192,3 +207,24 @@ def image_names(place_images):
         for suffix in suffixes:
             names.append("{}_{}".format(city,suffix))
     return names    
+
+def generate_category_weights(place_images,category_label,label_suffix,stack_label,window,data_root,use_log=True):
+    df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root)
+    df['Residential-Total']=df['Residential Atomistic']+df['Residential Informal Subdivision']+df['Residential Formal Subdivision']+df['Residential Housing Project']
+    COLUMNS=['image_name','Open Space','Non-Residential','Residential-Total','Roads']
+    df=df[COLUMNS]
+    labels=COLUMNS[1:5]
+    cat_counts=[df.sum()[l] for l in labels]
+    weights=category_weights(cat_counts,use_log)
+    return weights
+
+def generate_category_weights_simple(Y_train,use_log=True):
+    df = get_category_counts_simple(Y_train)
+    df['Residential-Total']=df['Residential Atomistic']+df['Residential Informal Subdivision']+df['Residential Formal Subdivision']+df['Residential Housing Project']
+    COLUMNS=['image_name','Open Space','Non-Residential','Residential-Total','Roads']
+    df=df[COLUMNS]
+    labels=COLUMNS[1:5]
+    cat_counts=[df.sum()[l] for l in labels]
+    weights=category_weights(cat_counts,use_log)
+    return weights
+

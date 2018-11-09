@@ -90,3 +90,16 @@ def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8
         m.summary()
     return m
 
+def compile_network(network, loss, LR=0.001):
+	opt = keras.optimizers.Adam(lr=LR)
+	network.compile(loss=loss,
+	              optimizer=opt,
+	              metrics=['accuracy'])
+
+def create_callbacks(data_root, model_id, weights_label='WCC_weights.best', patience=5):
+	filepath_log = data_root+'models/'+model_id+'_'+weights_label+'.hdf5'
+	estop_cb=EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=0, mode='auto')
+	save_best_cb=ModelCheckpoint(filepath_log, monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=True, 
+	                             mode='auto', period=1)
+	history_cb=History()
+	return [estop_cb,save_best_cb,history_cb]
