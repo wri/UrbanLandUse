@@ -72,6 +72,7 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,):
     tile = tiles['features'][tile_id]
+    print tile['properties']
     side_length = tile['properties']['tilesize'] + tile['properties']['pad']*2
 
     imn = np.zeros((feature_count,side_length,side_length),dtype='float32')
@@ -450,18 +451,18 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
-def load_datasets(place_images, data_root, label_suffix, stack_label, window):
+def load_datasets(place_images, data_root, label_suffix, stack_label, window, resolution=10):
     print 'calculate total size of training and validation supersets'
     t_total = 0
     v_total = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)
@@ -485,12 +486,12 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window):
     t_start = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)

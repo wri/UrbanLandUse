@@ -11,6 +11,8 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Input, Add, Lambda
 from keras.callbacks import EarlyStopping, ModelCheckpoint, History
 
+import tensorflow as tf
+
 
 def weighted_categorical_crossentropy(weights):
     """ weighted_categorical_crossentropy
@@ -47,7 +49,7 @@ def denselayers(x,output_nodes=4):
     x=Activation('relu')(x)
     x=Dropout(0.5)(x)
     x=Dense(output_nodes)(x)
-    return Activation('softmax')(x)
+    return x
 
 def conv_block(filters,x,kernel_size=3):
     x=Conv2D(filters, kernel_size, padding='same')(x)
@@ -85,6 +87,10 @@ def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8
     x=pool_dropout(x)
     x=Flatten()(x)
     x=denselayers(x,output_nodes)
+    if output_nodes == 1:
+    	x = Activation('sigmoid')(x)
+    else:
+    	x = Activation('softmax')(x)
     m=Model(inputs=inputs, outputs=x)
     if print_summary:
         m.summary()
@@ -96,7 +102,7 @@ def compile_network(network, loss, LR=0.001):
 	              optimizer=opt,
 	              metrics=['accuracy'])
 
-def create_callbacks(data_root, model_id, weights_label='WCC_weights.best', patience=5):
+def create_callbacks(data_root, model_id, weights_label='WCC_weights.best', patience=4):
 	filepath_log = data_root+'models/'+model_id+'_'+weights_label+'.hdf5'
 	estop_cb=EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=0, mode='auto')
 	save_best_cb=ModelCheckpoint(filepath_log, monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=True, 
