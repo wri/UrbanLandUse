@@ -96,11 +96,12 @@ def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8
         m.summary()
     return m
 
-def compile_network(network, loss, LR=0.001):
+def compile_network(network, loss, LR=0.001, metrics=['accuracy']):
 	opt = keras.optimizers.Adam(lr=LR)
 	network.compile(loss=loss,
 	              optimizer=opt,
-	              metrics=['accuracy'])
+	              metrics=metrics)
+
 
 def create_callbacks(data_root, model_id, weights_label='WCC_weights.best', patience=4):
 	filepath_log = data_root+'models/'+model_id+'_'+weights_label+'.hdf5'
