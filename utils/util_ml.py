@@ -221,3 +221,70 @@ def generate_category_weights_simple(Y_train,use_log=True):
     weights=category_weights(cat_counts,use_log)
     return weights
 
+def make_binary(Y, category, silent=True):
+    # create binary data
+    Y_bin = Y.copy()
+    cat_mask = (Y==category)
+    Y_bin[cat_mask==1] = 1
+    Y_bin[cat_mask==0] = 0
+    if not silent:
+        print Y[0:20]
+        print Y_bin[0:20]
+    return Y_bin
+
+def balance_binary(X, Y, max_ratio=3.0):
+    where_false = np.where(Y==0)
+    where_true = np.where(Y==1)
+
+    n_false = len(where_false[0])
+    n_true = len(where_true[0])
+
+    n_array = np.array([n_false,n_true])
+    arg_min = np.argmin(n_array)
+    arg_max = np.argmax(n_array)
+    n_min = n_array[arg_min]
+    n_max = n_array[arg_max]
+
+    if (int(max_ratio * n_min) > n_max):
+        # no balancing necessary; proportions already within acceptable range
+        return X, Y
+
+    n_special = int(max_ratio * n_min)
+    n_balanced = n_min + n_special
+
+    X_balanced_shape = X.shape
+    X_balanced_shape[0] = n_balanced
+
+    X_balanced = np.zeros(X_balanced_shape,dtype=X.dtype)
+    Y_balanced = np.zeros((n_balanced),dtype=Y.dtype)
+
+    perm_false = np.random.permutation(n_false)
+    perm_true = np.random.permutation(n_true)
+
+    false_samples = where_false[0][perm_false[:]]
+    true_samples = where_true[0][perm_true[:]]
+
+    if arg_min==0: # more true samples than false
+        X_balanced[:n_min] = X[(false_samples,)]
+        Y_balanced[:n_min] = Y[(false_samples,)]
+        X_balanced[n_min:] = X[(true_samples[:n_special],)]
+        Y_balanced[n_min:] = Y[(true_samples[:n_special],)]
+    else:
+        X_balanced[:n_min] = X[(true_samples,)]
+        Y_balanced[:n_min] = Y[(true_samples,)]
+        X_balanced[n_min:] = X[(false_samples[:n_special],)]
+        Y_balanced[n_min:] = Y[(false_samples[:n_special],)]
+
+    perm_balanced = np.random.permutation(n_balanced)
+    X_balanced = X_balanced[perm_balanced]
+    Y_balanced = Y_balanced[perm_balanced]
+
+    where_false_array = where_false[0]
+    perm = np.random.permutation(len(where_false_array))
+    where_false_array = where_false_array[perm[:]]
+    where_false_trunc = (where_false_array[:n_0],)
+
+    print np.sum(Y_balanced==0),np.sum(Y_balanced!=0)
+    print Y_balanced.shape
+
+    return X_balanced, Y_balanced

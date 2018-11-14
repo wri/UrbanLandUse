@@ -155,7 +155,13 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
                   bands=['alpha'], label_suffix='aue', vector_format='geojson',
                   touch_category=None):
     #
-    imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix
+    resolution = int(tile['properties']['resolution'])
+    if resolution == 10:
+        imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix
+    elif resolution == 5:
+        imgfile = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+str(resolution)+'m'
+    elif resolution == 2:
+        imgfile = data_path+place+'_tile'+str(tile_id).zfill(5)+'_'+label_suffix+'_'+str(resolution)+'m'
     print 'imgfile', imgfile
     
     ret = dl.raster.raster(
@@ -185,6 +191,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     command = 'gdal_rasterize -a Land_use -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels)
     print '>>>',command
     try:
+        s=0
         print subprocess.check_output(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
@@ -198,6 +205,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     command = 'gdal_rasterize -a Land_use -l {0} -where Land_use=\'{3}\' -at {1} {2}'.format(zcomplete,zcompleteshp,zlabels,cat)
     print '>>>',command,'\n'
     try:
+        s=0
         print subprocess.check_output(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
