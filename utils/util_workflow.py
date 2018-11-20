@@ -914,3 +914,124 @@ def record_model_application(
             ])
     return
 
+def chunk_training_data(data_root, place_images, label_suffix, resolution, stack_label, window, chunk_id_base, 
+        training_samples_per_chunk=70000, validation_samples_per_chunk=30000):
+    image_names = []
+    t_paths = []
+    v_paths = []
+    t_counts = []
+    v_counts = []
+    t_perms = []
+    v_perms = []
+    X_shape = None
+    X_dtype = None
+    Y_shape = None
+    Y_dtype = None
+
+    t_total = 0
+    v_total = 0
+    for city, suffixes in place_images.iteritems():
+        for suffix in suffixes:
+            image_names.append("{}_{}".format(city,suffix))
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            t_paths.append(train_file)
+            v_paths.append(valid_file)
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            X_shape = X_train_sub.shape
+            X_dtype = X_train_sub.dtype
+            Y_shape = Y_train_sub.shape
+            Y_dtype = Y_train_sub.dtype
+            t_sub = X_train_sub.shape[0]
+            v_sub = X_valid_sub.shape[0]
+            #print t_sub, v_sub
+            t_counts.append(t_sub)
+            v_counts.append(v_sub)
+            t_perms.append(np.random.permutation(t_sub))
+            v_perms.append(np.random.permutation(v_sub))
+            t_total += t_sub
+            v_total += v_sub
+    print t_total, v_total
+    n_images = len(image_names)
+    image_shares = []
+    for i in range(n_images):
+        image_shares.append(float(t_counts[i]) / float(t_total))
+
+    t_samples_per_chunk = training_samples_per_chunk
+    v_samples_per_chunk = validation_samples_per_chunk
+    n_chunks = (t_total / t_samples_per_chunk) + 1 #plus one for remainder
+
+    t_samples = []
+    v_samples = []
+
+    for i in range(n_images):
+        
+        t_samples.append(int(math.floor((float(t_samples_per_chunk) * image_shares[i]))))
+        v_samples.append(int(math.floor((float(v_samples_per_chunk) * image_shares[i]))))
+
+    for chunk_no in range(n_chunks):
+        #
+        chunk_id = chunk_id_base + '_'+str(chunk_no).zfill(2)+'-'+str(n_chunks-1).zfill(2)
+
+        t_chunk_X = np.zeros(((t_samples_per_chunk,) + X_shape[1:]),dtype=X_dtype)
+        t_chunk_Y = np.zeros((t_samples_per_chunk),dtype=Y_dtype)
+        v_chunk_X = np.zeros(((v_samples_per_chunk,) + X_shape[1:]),dtype=X_dtype)
+        v_chunk_Y = np.zeros((v_samples_per_chunk),dtype=Y_dtype)
+        print t_chunk_X.shape, t_chunk_Y.shape, v_chunk_X.shape, v_chunk_Y.shape
+        
+        
+        chunk_t_start_idx = 0
+        chunk_t_stop_idx = 0
+        chunk_v_start_idx = 0
+        chunk_v_stop_idx = 0
+        for i in range(len(image_names)):
+            train_file = t_paths[i]
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = v_paths[i]
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            
+            if chunk_no == n_chunks-1:
+                chunk_t_stop_idx = min(chunk_t_start_idx + t_samples[i], chunk_t_start_idx + t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]].shape[0])
+                chunk_v_stop_idx = min(chunk_v_start_idx + v_samples[i], chunk_v_start_idx + v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]].shape[0])
+            else: 
+                chunk_t_stop_idx = (chunk_t_start_idx + t_samples[i])
+                chunk_v_stop_idx = (chunk_v_start_idx + v_samples[i])
+                
+            print 'FROM ('+image_names[i]+')', chunk_no*t_samples[i], ':', (chunk_no+1)*t_samples[i], 'INTO (chunk_'+str(chunk_no)+')', chunk_t_start_idx, ':', chunk_t_stop_idx
+            t_chunk_X[chunk_t_start_idx:chunk_t_stop_idx] = X_train_sub[t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]]]
+            t_chunk_Y[chunk_t_start_idx:chunk_t_stop_idx] = Y_train_sub[t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]]]
+            v_chunk_X[chunk_v_start_idx:chunk_v_stop_idx] = X_train_sub[v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]]]
+            v_chunk_Y[chunk_v_start_idx:chunk_v_stop_idx] = Y_train_sub[v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]]]
+
+            chunk_t_start_idx = chunk_t_stop_idx
+            chunk_v_start_idx = chunk_v_stop_idx
+            
+        if True or chunk_no == n_chunks-1:
+            #print 'empty rows (training):', np.sum(np.all(t_chunk_X==0, axis=1))
+            nonempty_rows = ~np.all(t_chunk_X==0, axis=1)
+            t_chunk_X = t_chunk_X[nonempty_rows]
+            t_chunk_Y = t_chunk_Y[nonempty_rows]
+            nonempty_rows = ~np.all(v_chunk_X==0, axis=1)
+            v_chunk_X = v_chunk_X[nonempty_rows]
+            v_chunk_Y = v_chunk_Y[nonempty_rows]
+            
+        #now write chunk
+        chunk_file = data_root+'chunks/'+chunk_id+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w.pkl'
+        print 'Writing chunk:', chunk_file
+        # print np.sum(np.all(t_chunk_X==0,axis=1))
+        pickle.dump((t_chunk_X, t_chunk_Y, v_chunk_X, v_chunk_Y), open(chunk_file, 'wb'))
