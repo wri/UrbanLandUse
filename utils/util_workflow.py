@@ -337,12 +337,20 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             image_suffix, label_suffix, window, imn, y, tile_id)
         
 
-def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
+def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window,
+        tile_min=None, tile_max=None):
+    if tile_min=None or tile_max=None:
+        assert tile_min is not None
+        assert tile_max is not None
     n_samples = 0
     n_features = 0
     n_dtype = 'none'
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
+        if tile_min is not None and tile_id < tile_min:
+            continue
+        if tile_max is not None and tile_id > tile_max:
+            break
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         #print label_file
 
@@ -372,6 +380,10 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
     n_start = 0
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
+        if tile_min is not None and tile_id < tile_min:
+            continue
+        if tile_max is not None and tile_id > tile_max:
+            break
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         # print label_file
 
