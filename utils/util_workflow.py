@@ -242,7 +242,7 @@ def prepare_output_stack(data_path, place, tiles,
 
 def build_training_samples(data_path, place, stack_label, 
         image_suffix, label_suffix, window, imn, y, tile_id,
-        categories=[0,1,2,3,4,5,6]):
+        categories=[0,1,2,3,4,5,6], resolution=10):
     r = window/2
     n_features = imn.shape[0] 
 
@@ -286,7 +286,7 @@ def build_training_samples(data_path, place, stack_label,
         print k, index, X_k.shape, Y_k.shape
     print X_data.shape, Y_data.shape, X_data.dtype
     if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
         print label_file
         pickle.dump((X_data,Y_data), open(label_file, 'wb'))
     else:
@@ -316,6 +316,8 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
     if window/2 > tiles['features'][0]['properties']['pad']:
         raise ValueError("trying to use look window that exceeds size of available imagery tiles")
     
+    resolution = int(tiles['features'][0]['properties']['resolution'])
+
     # fundamentally a tile-by-tile process
     for tile_id in range(len(tiles['features'])):
         # skip tiles without labels
@@ -334,7 +336,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             label_suffix, mask, category_label, tile_id)
         
         build_training_samples(data_path, place, stack_label, 
-            image_suffix, label_suffix, window, imn, y, tile_id)
+            image_suffix, label_suffix, window, imn, y, tile_id, resolution=resolution)
         
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window,
@@ -418,7 +420,7 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     
     n_samples = Y_data.shape[0]
     
-    perm_file = data_path+place+'_perm_'+label_suffix+'.pkl'
+    perm_file = data_path+place+'_perm_'+label_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
     print perm_file
     try:
         with open(perm_file, "rb") as f:
