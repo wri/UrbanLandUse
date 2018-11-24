@@ -338,7 +338,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window,
-        tile_min=None, tile_max=None):
+        resolution=10, tile_min=None, tile_max=None):
     if tile_min=None or tile_max=None:
         assert tile_min is not None
         assert tile_max is not None
@@ -351,7 +351,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
         #print label_file
 
         try:
@@ -384,7 +384,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
         # print label_file
 
         try:
@@ -403,14 +403,14 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         print n_start, n_end
         n_start = n_end
     print X_data.shape, Y_data.shape
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
     #print 'Write complete datasets to file:', data_file
     pickle.dump((X_data,Y_data), open(data_file, 'wb'))
 
     return X_data, Y_data
 
-def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window):
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=10:
+    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
@@ -457,9 +457,9 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     print X_train.shape, Y_train.shape
     print X_valid.shape, Y_valid.shape
 
-    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
     pickle.dump((X_train,Y_train), open(train_file, 'wb'))
-    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
