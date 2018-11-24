@@ -469,7 +469,7 @@ def cloud_mask(X,T,get_rgb=False,
 
 # calculations from imagery dynamically acquired through dl api
 # references to this should be replaced with references to calc_index_minmax
-def calc_ndvi_minmax(s2_ids, tiles, shape):
+def calc_ndvi_minmax(s2_ids, tiles, shape, resampler='bilinear'):
     bands=['blue','green','red','nir','swir1','swir2','alpha'];
 
     ntiles = len(tiles['features'])
@@ -491,6 +491,7 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                     bands=bands,
                     data_type='UInt16',
                     dltile=tile,
+                    resampler=resampler,
                     #cutline=shape['geometry'] # removing to try to sidestep nan issue
                 )
             except Exception as e:
