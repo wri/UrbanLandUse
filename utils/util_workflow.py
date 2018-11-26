@@ -405,7 +405,10 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         print n_start, n_end
         n_start = n_end
     print X_data.shape, Y_data.shape
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    if tile_min is None:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    else:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
     #print 'Write complete datasets to file:', data_file
     pickle.dump((X_data,Y_data), open(data_file, 'wb'))
 
