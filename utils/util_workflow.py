@@ -414,8 +414,14 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
 
     return X_data, Y_data
 
-def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=10:
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, 
+    resolution=10, tile_min=None, tile_max=None):
+    if tile_min is not None or tile_max is not None:
+        assert tile_min is not None
+        assert tile_max is not None
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    else:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
