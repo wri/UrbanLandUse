@@ -84,6 +84,7 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
     elif resolution==5:
         vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
+    print vir_file
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
     vir = vir.astype('float32')
