@@ -713,7 +713,7 @@ def classify_tile(tile_id,
     Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
     fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_mask=water_mask)
-    resolution = int(tiles['features'][0]['properties']['tilesize'])
+    resolution = int(tiles['features'][0]['properties']['resolution'])
     if resolution==10:
         result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
     elif resolution==5:
