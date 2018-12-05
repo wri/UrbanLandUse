@@ -81,9 +81,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
 
     print 'tile', tile_id, 'load VIR image'
     if resolution==10:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
     elif resolution==5:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
     print vir_file
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
@@ -111,9 +111,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
     if bands_sar is not None:
         print 'tile', tile_id, 'load SAR image'
         if resolution==10:
-            sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
+            sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
         elif resolution==5:
-            sar_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m_')+'.tif'
+            sar_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
         sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
         print 'sar shape:',sar.shape
         sar = sar.astype('float32')
