@@ -204,12 +204,13 @@ def image_names(place_images):
             names.append("{}_{}".format(city,suffix))
     return names    
 
-def generate_category_weights(place_images,category_label,label_suffix,stack_label,window,data_root,use_log=True):
+def generate_category_weights(place_images,category_label,label_suffix,stack_label,window,data_root,
+        use_log=True, columns=['image_name','Open Space','Non-Residential','Residential-Total','Roads']):
     df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root)
     df['Residential-Total']=df['Residential Atomistic']+df['Residential Informal Subdivision']+df['Residential Formal Subdivision']+df['Residential Housing Project']
-    COLUMNS=['image_name','Open Space','Non-Residential','Residential-Total','Roads']
+    COLUMNS=columns
     df=df[COLUMNS]
-    labels=COLUMNS[1:5]
+    labels=COLUMNS[1:]
     cat_counts=[df.sum()[l] for l in labels]
     weights=category_weights(cat_counts,use_log)
     return weights
