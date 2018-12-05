@@ -81,9 +81,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
 
     print 'tile', tile_id, 'load VIR image'
     if resolution==10:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else str(resolution)+'m_')+'.tif'
     elif resolution==5:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+'.tif'
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else str(resolution)+'m_')+'.tif'
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
     vir = vir.astype('float32')
@@ -110,9 +110,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
     if bands_sar is not None:
         print 'tile', tile_id, 'load SAR image'
         if resolution==10:
-            sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
+            sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+('' if resolution==10 else str(resolution)+'m_')+'.tif'
         elif resolution==5:
-            sar_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_sar_'+image_suffix+'.tif'
+            sar_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_sar_'+image_suffix+('' if resolution==10 else str(resolution)+'m_')+'.tif'
         sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
         print 'sar shape:',sar.shape
         sar = sar.astype('float32')
@@ -142,9 +142,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         if 'min' in bands_ndvi:
             print 'tile', tile_id, 'load NDVI min'
             if resolution==10:
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             elif resolution==5:
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndvimin.tif'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndvimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimin)) > 0):
                 ndvi_nan = np.isnan(ndvimin)
@@ -156,9 +156,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         if 'max' in bands_ndvi:
             print 'tile', tile_id, 'load NDVI max'
             if resolution==10:
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             elif resolution==5:
-                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndvimax.tif'
+                ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndvimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimax)) > 0):
                 ndvi_nan = np.isnan(ndvimax)
@@ -187,9 +187,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         if 'min' in bands_ndbi:
             print 'tile', tile_id, 'load ndbi min'
             if resolution==10:
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin.tif'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             elif resolution==5:
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndbimin.tif'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndbimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             ndbimin, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
             if(np.sum(np.isnan(ndbimin)) > 0):
                 ndbi_nan = np.isnan(ndbimin)
@@ -201,9 +201,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         if 'max' in bands_ndbi:
             print 'tile', tile_id, 'load ndbi max'
             if resolution==10:
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax.tif'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             elif resolution==5:
-                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndbimax.tif'
+                ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_ndbimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             ndbimax, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
             if(np.sum(np.isnan(ndbimax)) > 0):
                 ndbi_nan = np.isnan(ndbimax)
@@ -217,9 +217,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         if 'roads' in bands_osm:
             print 'tile', tile_id, 'load OSM roads'
             if resolution==10:
-                osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
+                osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             elif resolution==5:
-                osm_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_osm.tif'
+                osm_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_osm'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
             osm, osmgeo, osmprj, osmcols, osmrows = util_rasters.load_geotiff(osm_file,dtype='uint8')
             osm[osm==255] = 0
             osm = osm.astype('float32')
