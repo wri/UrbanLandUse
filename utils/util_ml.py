@@ -147,19 +147,19 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
 
 # from class weightings development
 
-def load_training_data(city, suffix, label_suffix, stack_label, window,data_root, typ='train'):
+def load_training_data(city, suffix, label_suffix, stack_label, window,data_root, resolution=10, typ='train'):
     train_file = data_root+city+'/'+city+'_'+typ+'_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
     with open(train_file, 'rb') as f:
         X_train, Y_train = pickle.load(f)
     return X_train, Y_train
 
-def get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root):
+def get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root,resolution=10):
     image_names=[]
     category_counts={category_label[c]: [] for c in range(7) }
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
             image_names.append("{}_{}".format(city,suffix))
-            _,Y_train=load_training_data(city,suffix,label_suffix, stack_label, window,data_root)
+            _,Y_train=load_training_data(city,suffix,label_suffix, stack_label, window,data_root,resolution=resolution)
             # can insert remapping here if necessary,
             # then calculate counts off of modified/remapped data
             categories,counts=np.unique(Y_train,return_counts=True)
@@ -205,8 +205,9 @@ def image_names(place_images):
     return names    
 
 def generate_category_weights(place_images,category_label,label_suffix,stack_label,window,data_root,
-        use_log=True, columns=['image_name','Open Space','Non-Residential','Residential-Total','Roads']):
-    df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root)
+        use_log=True, columns=['image_name','Open Space','Non-Residential','Residential-Total','Roads'],
+        resolution=10):
+    df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root,resolution=10)
     df['Residential-Total']=df['Residential Atomistic']+df['Residential Informal Subdivision']+df['Residential Formal Subdivision']+df['Residential Housing Project']
     COLUMNS=columns
     df=df[COLUMNS]
