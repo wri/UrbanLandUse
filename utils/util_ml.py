@@ -207,7 +207,7 @@ def image_names(place_images):
 def generate_category_weights(place_images,category_label,label_suffix,stack_label,window,data_root,
         use_log=True, columns=['image_name','Open Space','Non-Residential','Residential-Total','Roads'],
         resolution=10):
-    df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root,resolution=10)
+    df = get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root,resolution=resolution)
     df['Residential-Total']=df['Residential Atomistic']+df['Residential Informal Subdivision']+df['Residential Formal Subdivision']+df['Residential Housing Project']
     COLUMNS=columns
     df=df[COLUMNS]
