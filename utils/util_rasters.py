@@ -771,7 +771,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix):
     elif resolution==5:
         vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
     print vir_file
-    vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
+    vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
 
     water = calc_water_mask(vir)
