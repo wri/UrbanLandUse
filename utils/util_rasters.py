@@ -745,3 +745,39 @@ def show_vir_s2(file):
         print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
+
+def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.0):
+
+    assert vir.shape[0]==6
+
+    band_a = idx_green
+    band_b = idx_nir
+    threshold = threshold # water = ndwi > threshold 
+    ndwi = spectral_index_tile(vir, band_a, band_b)
+    water = ndwi > threshold
+
+    return water
+
+def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix):
+    assert type(tile_id) is int 
+    assert tile_id < len(tiles['features'])
+    tile = tiles['features'][tile_id]
+    resolution = int(tile['properties']['resolution'])
+
+    print 'tile', tile_id, 'load VIR image'
+    assert resolution==10 or resolution==5
+    if resolution==10:
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+    elif resolution==5:
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+    print vir_file
+    vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
+    print 'vir shape:',vir.shape
+
+    water = calc_water_mask(vir)
+
+    return water
+
+    
+
+

@@ -574,7 +574,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_mask=False):
+def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_overwrite=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -636,14 +636,9 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
         Y_max[j_c[:],i_c[:]] = Yhat_max[:]
 
-    if water_mask:
-        # for the moment hardcoding values
-        band_a = 1 # green
-        band_b = 3 # nir
+    if water_overwrite:
+        water = util_rasters.calc_water_mask(imn[0:6])
         cat_water = 9 # addition to 0-6 AUE taxonomy
-        threshold = 0.0 # water = ndwi > threshold 
-        ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
-        water = ndwi > threshold
         Y[water] = cat_water
     
     print "done"
@@ -703,7 +698,7 @@ def classify_tile(tile_id,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir,
         bands_sar, bands_ndvi, bands_ndbi, bands_osm,
-        haze_removal, unflatten_input, water_mask):
+        haze_removal, unflatten_input, water_overwrite, water_mask):
         
     mask, imn, geo, prj = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
         image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
@@ -712,8 +707,13 @@ def classify_tile(tile_id,
 
     Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
-    fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_mask=water_mask)
+    fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_overwrite=water_overwrite)
     resolution = int(tiles['features'][0]['properties']['resolution'])
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+
     if resolution==10:
         result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
     elif resolution==5:
@@ -739,6 +739,12 @@ def classify_tile(tile_id,
         full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(4)+'_'+model_id+'_full_'+image_suffix+'.tif'
     util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
 
+    if water_mask:
+        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix)
+        water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+        print water_file
+        util_rasters.write_multiband_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
+
     del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
     print 'tile', tile_id, 'done'
     
@@ -755,7 +761,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False, unflatten_input=False, water_mask=False):
+        haze_removal=False, unflatten_input=False, water_overwrite=False, water_mask=False):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -769,7 +775,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
             window, stack_label, feature_count, model_id, scaler, model, n_cats,
             bands_vir,
             bands_sar, bands_ndvi, bands_ndbi, bands_osm,
-            haze_removal, unflatten_input, water_mask)
+            haze_removal, unflatten_input, water_overwrite, water_mask)
         
 
 def class_balancing(Y_t, X_train, Y_train):
