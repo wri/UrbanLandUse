@@ -774,7 +774,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix):
     vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
 
-    water = calc_water_mask(vir)
+    water = calc_water_mask(vir[0:6])
 
     return water
 
