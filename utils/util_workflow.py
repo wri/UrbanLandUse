@@ -574,7 +574,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_overwrite=False):
+def fill_classification_arrays(feature_count, window, n_cats, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_overwrite=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -599,8 +599,13 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         else:
             X_c_final = X_c_scaled
         Yhat_c_prob = network.predict(X_c_final)
-        Yhat_c = Yhat_c_prob.argmax(axis=-1)
-        Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+        if n_cats==2:
+            Yhat_c = np.rint(Yhat_c_prob).astype(int).reshape(Yhat_c_prob.shape[0])
+            Yhat_max = Yhat_c.copy()
+        else:
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+            
         #set_trace()
         sys.stdout.write('.')
         Y[j_c[:],i_c[:]] = Yhat_c[:]
@@ -628,8 +633,12 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         else:
             X_c_final = X_c_scaled
         Yhat_c_prob = network.predict(X_c_final)
-        Yhat_c = Yhat_c_prob.argmax(axis=-1)
-        Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+        if n_cats==2:
+            Yhat_c = np.rint(Yhat_c_prob).astype(int).reshape(Yhat_c_prob.shape[0])
+            Yhat_max = Yhat_c.copy()
+        else:
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
         sys.stdout.write('.')
         Y[j_c[:],i_c[:]] = Yhat_c[:]
@@ -707,7 +716,7 @@ def classify_tile(tile_id,
 
     Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
-    fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_overwrite=water_overwrite)
+    fill_classification_arrays(feature_count, window, n_cats, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_overwrite=water_overwrite)
     resolution = int(tiles['features'][0]['properties']['resolution'])
     if resolution==10:
         zfill = 3
