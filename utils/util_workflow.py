@@ -670,15 +670,21 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             bands_ndvi=bands_ndvi,
             bands_ndbi=bands_ndbi,
             bands_osm=bands_osm,)
+    if tile_resolution==10:
+        zfill = 3
+    elif tile_resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile_resolution: '+str(tile_resolution))
     for place, image_suffix_list in place_images.iteritems():
         data_path = data_root + place + '/'
         place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
         shape = util_vectors.load_shape(place_shapefile)
-        tiles = dl.raster.dltiles_from_shape(10.0, 256, 8, shape)
+        tiles = dl.raster.dltiles_from_shape(tile_resolution, tile_size, tile_pad, shape)
         label_stats = {}
         for tile_id in range(len(tiles['features'])):
             tile = tiles['features'][tile_id]
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'.tif'
             label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
 
         for image_suffix in image_suffix_list:
