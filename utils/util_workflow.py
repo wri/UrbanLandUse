@@ -237,7 +237,14 @@ def prepare_output_stack(data_path, place, tiles,
     
     b= tiles['features'][tile_id]['properties']['pad']
     print 'tile', tile_id, 'load labels'
-    label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+    resolution = int(tiles['features'][tile_id]['properties']['resolution'])
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+    label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+('' if resolution==10 else ('_'+str(resolution))+'m')+'.tif'
     print label_file
     lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
     #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
@@ -684,7 +691,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
         label_stats = {}
         for tile_id in range(len(tiles['features'])):
             tile = tiles['features'][tile_id]
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'.tif'
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+('' if tile_resolution==10 else str(int(tile_resolution))+'m')+'.tif'
             label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
 
         for image_suffix in image_suffix_list:
