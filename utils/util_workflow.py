@@ -511,12 +511,12 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window, re
     v_total = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)
@@ -540,12 +540,12 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window, re
     t_start = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)
