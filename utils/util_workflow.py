@@ -460,7 +460,7 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     
     n_samples = Y_data.shape[0]
     
-    perm_file = data_path+place+'_perm_'+label_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    perm_file = data_path+place+'_perm_'+label_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     print perm_file
     try:
         with open(perm_file, "rb") as f:
