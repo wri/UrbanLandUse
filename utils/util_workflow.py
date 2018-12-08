@@ -709,10 +709,10 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
                 category_label=category_label )
 
             print 'Combine dataset tiles into complete data arrays'
-            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window)
+            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window, resolution=tile_resolution)
 
             print 'Write complete datasets to file'
-            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
+            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=tile_resolution)
             print ''
 
 def classify_tile(tile_id, 
