@@ -148,7 +148,7 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
 # from class weightings development
 
 def load_training_data(city, suffix, label_suffix, stack_label, window,data_root, resolution=10, typ='train'):
-    train_file = data_root+city+'/'+city+'_'+typ+'_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+    train_file = data_root+city+'/'+city+'_'+typ+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     with open(train_file, 'rb') as f:
         X_train, Y_train = pickle.load(f)
     return X_train, Y_train
