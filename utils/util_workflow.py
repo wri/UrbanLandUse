@@ -450,9 +450,9 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     if tile_min is not None or tile_max is not None:
         assert tile_min is not None
         assert tile_max is not None
-        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
-    else:
         data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
+    else:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
