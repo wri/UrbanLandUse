@@ -499,9 +499,9 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     print X_train.shape, Y_train.shape
     print X_valid.shape, Y_valid.shape
 
-    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     pickle.dump((X_train,Y_train), open(train_file, 'wb'))
-    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
