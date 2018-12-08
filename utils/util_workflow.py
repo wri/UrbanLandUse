@@ -371,7 +371,7 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window,
         resolution=10, tile_min=None, tile_max=None):
-    if tile_min is None or tile_max is None:
+    if tile_min is not None or tile_max is not None:
         assert tile_min is not None
         assert tile_max is not None
     n_samples = 0
