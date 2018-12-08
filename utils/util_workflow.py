@@ -383,7 +383,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
         #print label_file
 
         try:
@@ -416,7 +416,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
         # print label_file
 
         try:
@@ -737,9 +737,9 @@ def classify_tile(tile_id,
         zfill = 4
 
     if resolution==10:
-        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
     elif resolution==5:
-        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(4)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+        result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
     print result_file
     util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
     if np.sum(Y==255) != 0:
@@ -876,7 +876,7 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
         show_vir=True):
-    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(4)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
 
@@ -892,7 +892,7 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
     print
 
     if show_vir:
-        img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+        img_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+'.tif'
         print img_file
         util_rasters.show_vir_s2(img_file)
     return
@@ -905,7 +905,7 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
          show_vir=True, show_lulc=True):
     # remapping parameter
 
-    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(4)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
 
@@ -917,7 +917,7 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
 
     rgb = util_rasters.rgb_lulc_result(result)
 
-    img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+    img_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+'.tif'
     img, geo, prj, cols, rows = util_rasters.load_geotiff(img_file)
 
     img = np.transpose(img, (1,2,0))
