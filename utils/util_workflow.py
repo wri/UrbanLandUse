@@ -316,7 +316,7 @@ def build_training_samples(data_path, place, stack_label,
         print k, index, X_k.shape, Y_k.shape
     print X_data.shape, Y_data.shape, X_data.dtype
     if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+sstr(resolution)+'m')+'.pkl'
         print label_file
         pickle.dump((X_data,Y_data), open(label_file, 'wb'))
     else:
