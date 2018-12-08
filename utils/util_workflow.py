@@ -383,7 +383,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         #print label_file
 
         try:
