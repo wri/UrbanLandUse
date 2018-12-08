@@ -416,7 +416,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
         # print label_file
 
         try:
@@ -436,9 +436,9 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         n_start = n_end
     print X_data.shape, Y_data.shape
     if tile_min is None:
-        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        data_file = data_path+place+'_data_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
     else:
-        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
+        data_file = data_path+place+'_data_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
     #print 'Write complete datasets to file:', data_file
     pickle.dump((X_data,Y_data), open(data_file, 'wb'))
 
@@ -449,9 +449,9 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     if tile_min is not None or tile_max is not None:
         assert tile_min is not None
         assert tile_max is not None
-        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'.pkl'
+        data_file = data_path+place+'_data_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
     else:
-        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
+        data_file = data_path+place+'_data_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+image_suffix+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
