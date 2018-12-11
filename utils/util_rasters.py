@@ -758,7 +758,7 @@ def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.1):
 
     return water
 
-def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold=0.1):
+def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
     assert type(tile_id) is int 
     assert tile_id < len(tiles['features'])
     tile = tiles['features'][tile_id]

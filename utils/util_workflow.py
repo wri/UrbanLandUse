@@ -763,7 +763,7 @@ def classify_tile(tile_id,
     util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
 
     if water_mask:
-        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold=water_threshold)
+        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, water_threshold)
         water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
         print water_file
         util_rasters.write_1band_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
