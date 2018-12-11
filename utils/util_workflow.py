@@ -1117,3 +1117,18 @@ def chunk_training_data(data_root, place_images, label_suffix, resolution, stack
         print 'Writing chunk:', chunk_file
         # print np.sum(np.all(t_chunk_X==0,axis=1))
         pickle.dump((t_chunk_X, t_chunk_Y, v_chunk_X, v_chunk_Y), open(chunk_file, 'wb'))
+
+
+def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold):
+    resolution = int(tiles['features'][0]['properties']['resolution'])
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile resolution: '+str(tiles['features'][0]['properties']['resolution']))
+    for tile_id in len(tiles['features']):
+        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, water_threshold)
+        water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+        print water_file
+        util_rasters.write_1band_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
