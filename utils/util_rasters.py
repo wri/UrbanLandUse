@@ -758,7 +758,7 @@ def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.1):
 
     return water
 
-def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix):
+def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold=0.1):
     assert type(tile_id) is int 
     assert tile_id < len(tiles['features'])
     tile = tiles['features'][tile_id]
@@ -774,7 +774,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix):
     vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
 
-    water = calc_water_mask(vir[0:6])
+    water = calc_water_mask(vir[0:6], threshold=threshold)
 
     return water
 
