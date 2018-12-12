@@ -746,7 +746,7 @@ def show_vir_s2(file):
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
 
-def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.1):
+def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15):
 
     assert vir.shape[0]==6
 

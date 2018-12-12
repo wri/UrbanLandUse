@@ -1119,7 +1119,7 @@ def chunk_training_data(data_root, place_images, label_suffix, resolution, stack
         pickle.dump((t_chunk_X, t_chunk_Y, v_chunk_X, v_chunk_Y), open(chunk_file, 'wb'))
 
 
-def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold):
+def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold=0.15):
     resolution = int(tiles['features'][0]['properties']['resolution'])
     if resolution==10:
         zfill = 3
