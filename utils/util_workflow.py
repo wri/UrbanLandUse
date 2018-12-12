@@ -1132,3 +1132,76 @@ def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold=0.15
         water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
         print water_file
         util_rasters.write_1band_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
+
+
+#import 
+def use_model_to_predict_stuff_from_prebuilt_training_data(
+    model_id,
+    data_root, place_images, resolution, window, 
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=None, bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        label_suffix='aue',
+        unflatten_input=True, n_cats=3,
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile_resolution: '+str(tile_resolution))
+
+    #load scaler & network
+    scaler_filename = data_root+'models/'+model_id+'_scaler.pkl'
+    network_filename = data_root+'models/'+model_id+'.hd5'
+    with open(scaler_filename, "rb") as f:
+        scaler = pickle.load(f)
+    f.close()
+    network = load_model(network_filename)
+
+    stack_label, feature_count = build_stack_label(
+            bands_vir=bands_vir,
+            bands_sar=bands_sar,
+            bands_ndvi=bands_ndvi,
+            bands_ndbi=bands_ndbi,
+            bands_osm=bands_osm,)
+
+    # loop: first by city/place
+    #       then by "image"--which could be a set of images
+    # so loop by city then by training data superset
+    # to generalize, a list of tuples: city, image
+    # so we need a list of lists of tuples
+    # could extend that to a dictionary: apply this model to these datasets, now this model to those, etc
+    for place, image_suffix_list in place_images.iteritems():
+        data_path = data_root + place + '/'
+        place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
+        shape = util_vectors.load_shape(place_shapefile)
+        tiles = dl.raster.dltiles_from_shape(tile_resolution, tile_size, tile_pad, shape)
+        label_stats = {}
+        for tile_id in range(len(tiles['features'])):
+            tile = tiles['features'][tile_id]
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+('' if tile_resolution==10 else str(int(tile_resolution))+'m')+'.tif'
+            label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
+
+        for image_suffix in image_suffix_list:
+            print 'Constructing dataset tiles for ' + place.title() + ' image ' + image_suffix + ' using ground-truth \'' + label_suffix + '\' and input stack \'' + stack_label + '\''
+            print ''
+            construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
+                window, stack_label, feature_count,
+                bands_vir=bands_vir,
+                bands_sar=bands_sar,
+                bands_ndvi=bands_ndvi,
+                bands_ndbi=bands_ndbi,
+                bands_osm=bands_osm,
+                haze_removal=False,
+                label_suffix=label_suffix, 
+                category_label=category_label )
+
+            print 'Combine dataset tiles into complete data arrays'
+            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window, resolution=tile_resolution)
+
+            print 'Write complete datasets to file'
+            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=tile_resolution)
+            print ''
