@@ -778,6 +778,13 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
 
     return water
 
-    
+def crop_raster(cutline, input, output)
+    command = 'gdalwarp -q -cutline {0} -of GTiff {1} {2}'.format(cutline, input, output)
+    print '>>>',command
+    try:
+        s=0
+        print subprocess.check_output(command.split(), shell=False)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
-
+def crop_maps()
