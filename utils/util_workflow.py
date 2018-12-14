@@ -1384,7 +1384,7 @@ def apply_model_to_data_1vAll(
             # print Yhat_t_prob[0:20]
             # print Yhat_t[0:20]
             #Yhat_t = Yhat_t_prob.argmax(axis=-1)
-            train_confusion = util_ml.calc_confusion(Yhat_t,Y_t_balanced,cats)
+            train_confusion = util_ml.calc_confusion(Yhat_t,Y_t_bin,cats)
             train_recalls, train_precisions, train_accuracy = util_ml.calc_confusion_details(train_confusion)
             print train_recalls, train_precisions
             print
