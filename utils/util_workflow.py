@@ -1135,13 +1135,13 @@ def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold=0.15
 
 
 #import 
-def use_model_to_predict_stuff_from_prebuilt_training_data(
-    model_id,
+def apply_model_to_data_3category(
+    model_id, notes,
     data_root, place_images, resolution, window, 
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=None, bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        label_suffix='aue',
-        unflatten_input=True, n_cats=3,
+        label_suffix='aue', window=17,
+        unflatten_input=True, 
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
@@ -1168,40 +1168,115 @@ def use_model_to_predict_stuff_from_prebuilt_training_data(
             bands_ndbi=bands_ndbi,
             bands_osm=bands_osm,)
 
-    # loop: first by city/place
-    #       then by "image"--which could be a set of images
-    # so loop by city then by training data superset
-    # to generalize, a list of tuples: city, image
-    # so we need a list of lists of tuples
-    # could extend that to a dictionary: apply this model to these datasets, now this model to those, etc
-    for place, image_suffix_list in place_images.iteritems():
-        data_path = data_root + place + '/'
-        place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
-        shape = util_vectors.load_shape(place_shapefile)
-        tiles = dl.raster.dltiles_from_shape(tile_resolution, tile_size, tile_pad, shape)
-        label_stats = {}
-        for tile_id in range(len(tiles['features'])):
-            tile = tiles['features'][tile_id]
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+('' if tile_resolution==10 else str(int(tile_resolution))+'m')+'.tif'
-            label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
+    cats_map = {}
+    cats_map[0] = 0
+    cats_map[1] = 1
+    cats_map[2] = 4
+    cats_map[3] = 4
+    cats_map[4] = 4
+    cats_map[5] = 4
+    cats_map[6] = 6
 
-        for image_suffix in image_suffix_list:
-            print 'Constructing dataset tiles for ' + place.title() + ' image ' + image_suffix + ' using ground-truth \'' + label_suffix + '\' and input stack \'' + stack_label + '\''
-            print ''
-            construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
-                window, stack_label, feature_count,
-                bands_vir=bands_vir,
-                bands_sar=bands_sar,
-                bands_ndvi=bands_ndvi,
-                bands_ndbi=bands_ndbi,
-                bands_osm=bands_osm,
-                haze_removal=False,
-                label_suffix=label_suffix, 
-                category_label=category_label )
+    categories = [0,1,4,6]
 
-            print 'Combine dataset tiles into complete data arrays'
-            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window, resolution=tile_resolution)
+    for city, image_suffix in place_images.iteritems():
+        data_path = data_root + city + '/'
 
-            print 'Write complete datasets to file'
-            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=tile_resolution)
-            print ''
+        train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+        print train_file
+        with open(train_file, 'rb') as f:
+            X_train_raw, Y_train_raw = pickle.load(f)
+        f.close()
+        valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+        print valid_file
+        with open(valid_file, 'rb') as f:
+            X_valid_raw, Y_valid_raw = pickle.load(f)
+        f.close()
+        print X_train_raw.shape, Y_train_raw.shape, X_valid_raw.shape, Y_valid_raw.shape
+
+        X_train_raw_scaled, X_valid_raw_scaled, scaler = util_ml.scale_learning_data(X_train_raw, X_valid_raw)
+        print X_train_raw_scaled.shape,  X_valid_raw_scaled.shape
+        del X_train_raw, X_valid_raw
+
+        if(unflatten_input):
+            X_train = X_train_raw_scaled.reshape((X_train_raw_scaled.shape[0],feature_count,window,window))
+            X_valid = X_valid_raw_scaled.reshape((X_valid_raw_scaled.shape[0],feature_count,window,window))
+        else:
+            X_train = X_train_raw_scaled
+            X_valid = X_valid_raw_scaled
+
+        del X_train_raw_scaled, X_valid_raw_scaled
+        print X_train.shape
+
+        Y_train = Y_train_raw.copy()
+        Y_valid = Y_valid_raw.copy()
+
+        for k, v in cats_map.iteritems():
+            Y_train[Y_train_raw==k] = v
+            Y_valid[Y_valid_raw==k] = v
+            
+        print Y_train_raw.shape
+        print Y_train.shape
+
+        del Y_train_raw, Y_valid_raw
+
+        non_roads = np.where(Y_train!=6)
+        Y_train = Y_train[non_roads]
+        X_train = X_train[non_roads]
+        non_roads = np.where(Y_valid!=6)
+        Y_valid = Y_valid[non_roads]
+        X_valid = X_valid[non_roads]
+
+        Y_t = Y_train.copy()
+        Y_v = Y_valid.copy()
+
+        Y_t[Y_train==0] = 0
+        Y_t[Y_train==1] = 1
+        Y_t[Y_train==4] = 2
+        Y_t[Y_train==6] = 3
+
+        Y_v[Y_valid==0] = 0
+        Y_v[Y_valid==1] = 1
+        Y_v[Y_valid==4] = 2
+        Y_v[Y_valid==6] = 3
+
+        categories_reduced = [0,1,2]
+
+        print "evaluate training"
+        Yhat_t_prob = network.predict(X_train)
+        Yhat_t = Yhat_t_prob.argmax(axis=-1)
+        train_confusion = util_ml.calc_confusion(Yhat_t,Y_t,categories_reduced)
+        train_recalls, train_precisions, train_accuracy = util_ml.calc_confusion_details(train_confusion)
+
+        print "evaluate validation"
+        Yhat_v_prob = network.predict(X_valid)
+        Yhat_v = Yhat_v_prob.argmax(axis=-1)
+        valid_confusion = util_ml.calc_confusion(Yhat_v,Y_v,categories_reduced)
+        valid_recalls, valid_precisions, valid_accuracy = util_ml.calc_confusion_details(valid_confusion)
+
+        # Calculate f-score
+        beta = 2
+        train_f_score = (beta**2 + 1) * train_precisions * train_recalls / ( (beta**2 * train_precisions) + train_recalls )
+        train_f_score_open = train_f_score[0] 
+        train_f_score_nonres = None#train_f_score[1]  
+        train_f_score_res = None#train_f_score[2]  
+        train_f_score_roads = train_f_score[1]  
+        train_f_score_average = np.mean(train_f_score)
+        # Calculate f-score
+        valid_f_score = (beta**2 + 1) * valid_precisions * valid_recalls / ( (beta**2 * valid_precisions) + valid_recalls )
+        valid_f_score_open = valid_f_score[0] 
+        valid_f_score_nonres = None#valid_f_score[1] 
+        valid_f_score_res = None#valid_f_score[2] 
+        valid_f_score_roads = valid_f_score[1] 
+        valid_f_score_average = np.mean(valid_f_score)
+        # expanding lists to match expected model_record stuff
+        train_recalls_expanded = [train_recalls[0],None,None,train_recalls[1]]
+        valid_recalls_expanded = [valid_recalls[0],None,None,valid_recalls[1]]
+        train_precisions_expanded = [train_precisions[0],None,None,train_precisions[1]]
+        valid_precisions_expanded = [valid_precisions[0],None,None,valid_precisions[1]]
+        util_workflow.record_model_application(
+                model_id, notes, place_images, label_suffix, resolution, stack_label, feature_count, window, cats_map, 
+                train_confusion, train_recalls_expanded, train_precisions_expanded, train_accuracy,
+                train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
+                valid_confusion, valid_recalls_expanded, valid_precisions_expanded, valid_accuracy,
+                valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,)
