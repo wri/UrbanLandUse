@@ -767,18 +767,22 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     tile = tiles['features'][tile_id]
     resolution = int(tile['properties']['resolution'])
 
-    print 'tile', tile_id, 'load VIR image'
+    #print 'tile', tile_id, 'load VIR image'
     assert resolution==10 or resolution==5
     if resolution==10:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+        zfill = 3
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
     elif resolution==5:
-        vir_file = data_path+place+'_tile'+str(tile_id).zfill(4)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
-    print vir_file
+        zfill = 4
+        vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+    #print vir_file
     vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
-    print 'vir shape:',vir.shape
+    #print 'vir shape:',vir.shape
 
     water = calc_water_mask(vir[0:6], threshold=threshold)
-
+    water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+    print water_file
+    write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
 
 def crop_raster(cutline, input, output):
