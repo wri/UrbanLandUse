@@ -59,10 +59,11 @@ def write_multiband_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte
     rows = img.shape[1]
     cols = img.shape[2]
     outds = [ ]
-    if True:# (data_type == gdal.GDT_Byte):
+    if (data_type == gdal.GDT_Byte):
         opts = ["INTERLEAVE=BAND", "COMPRESS=LZW", "PREDICTOR=1", "TILED=YES", "BLOCKXSIZE=512", "BLOCKYSIZE=512"]
         outds  = driver.Create(outfile, cols, rows, bands, data_type, options=opts)
     else:
+        #print outfile, cols, rows, bands, data_type
         outds  = driver.Create(outfile, cols, rows, bands, data_type)
     outds.SetGeoTransform(geotrans)
     outds.SetProjection(prj)
@@ -778,7 +779,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
 
     return water
 
-def crop_raster(cutline, input, output)
+def crop_raster(cutline, input, output):
     command = 'gdalwarp -q -cutline {0} -of GTiff {1} {2}'.format(cutline, input, output)
     print '>>>',command
     try:
@@ -786,5 +787,13 @@ def crop_raster(cutline, input, output)
         print subprocess.check_output(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    return
 
-def crop_maps()
+def crop_maps(cutline, inputs):
+    outputs = []
+    for input in inputs:
+        output = input[0:input.index('.tif')] + '_cut.tif'
+        outputs.append(output)
+        #print input, output
+        crop_raster(cutline, input, output)
+    return outputs
