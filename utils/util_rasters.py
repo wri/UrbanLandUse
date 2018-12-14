@@ -23,6 +23,8 @@ import bronco
 
 from urllib3.exceptions import ProtocolError
 
+import subprocess
+
 
 # FILE READ/WRITE
 
@@ -794,6 +796,6 @@ def crop_maps(cutline, inputs):
     for input in inputs:
         output = input[0:input.index('.tif')] + '_cut.tif'
         outputs.append(output)
-        #print input, output
+        #print input, '->', output
         crop_raster(cutline, input, output)
     return outputs
