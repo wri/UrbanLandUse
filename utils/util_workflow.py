@@ -1142,15 +1142,11 @@ def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold=0.15
 #import 
 def apply_model_to_data_3category(
     model_id, notes,
-    data_root, place_images, resolution, window, 
+    data_root,, resolution, window, 
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=None, bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         label_suffix='aue',
-        unflatten_input=True, 
-        category_label={0:'Open Space',1:'Non-Residential',\
-                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
-                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
-                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'} ):
+        unflatten_input=True):
     if resolution==10:
         zfill = 3
     elif resolution==5:
