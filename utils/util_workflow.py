@@ -510,7 +510,7 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
-def load_datasets(place_images, data_root, label_suffix, stack_label, window, resolution=10):
+def load_datasets(place_images, data_root, label_suffix, stack_label, window, resolution=5):
     print 'calculate total size of training and validation supersets'
     t_total = 0
     v_total = 0
