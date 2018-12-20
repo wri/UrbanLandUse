@@ -152,9 +152,22 @@ def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satel
 # creating new rasters from tiles and vector info
 # for Landsat or S2A (aka SENTINEL-2) scenes
 def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
-                  bands=['alpha'], label_suffix='aue', vector_format='geojson'):
+                  bands=['alpha'], label_suffix='aue', vector_format='geojson',
+                  touch_category=None):
     #
-    imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix
+    resolution = int(tile['properties']['resolution'])
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+    
+    imgfile = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+('' if resolution==10 else ('_'+str(resolution))+'m')+'.tif'
+
+
     print 'imgfile', imgfile
     
     ret = dl.raster.raster(
@@ -184,9 +197,27 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     command = 'gdal_rasterize -a Land_use -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels)
     print '>>>',command
     try:
+        s=0
         print subprocess.check_output(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    
+    if touch_category is None:
+        return
+    cat = int(touch_category)
+    if cat > 255 or cat < 0:
+        raise ValueError('Illegal touch_category passed to make_label_raster: '+touch_category)
+        return
+    command = 'gdal_rasterize -a Land_use -l {0} -where Land_use=\'{3}\' -at {1} {2}'.format(zcomplete,zcompleteshp,zlabels,cat)
+    print '>>>',command,'\n'
+    try:
+        s=0
+        print subprocess.check_output(command.split(), shell=False)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+
+
+
     
 def make_osm_raster(data_path, place, tile_id, tile, vir_ids, shape, new_raster=False, burn_value=6,
                   bands=['alpha'], tile_suffix='osm', layer_suffix='_OSM_Roads', vector_format='geojson'):
