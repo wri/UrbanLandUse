@@ -277,7 +277,7 @@ def prepare_output_stack(data_path, place, tiles,
 
 def build_training_samples(data_path, place, stack_label, 
         image_suffix, label_suffix, window, imn, y, tile_id,
-        categories=[0,1,2,3,4,5,6], resolution=10):
+        categories=[0,1,2,3,4,5,6], resolution=5):
     r = window/2
     n_features = imn.shape[0] 
 
