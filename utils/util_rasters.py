@@ -21,6 +21,10 @@ import matplotlib.pyplot as plt
 import descarteslabs as dl
 import bronco
 
+from urllib3.exceptions import ProtocolError
+
+import subprocess
+
 
 # FILE READ/WRITE
 
@@ -57,10 +61,11 @@ def write_multiband_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte
     rows = img.shape[1]
     cols = img.shape[2]
     outds = [ ]
-    if True:# (data_type == gdal.GDT_Byte):
+    if (data_type == gdal.GDT_Byte):
         opts = ["INTERLEAVE=BAND", "COMPRESS=LZW", "PREDICTOR=1", "TILED=YES", "BLOCKXSIZE=512", "BLOCKYSIZE=512"]
         outds  = driver.Create(outfile, cols, rows, bands, data_type, options=opts)
     else:
+        #print outfile, cols, rows, bands, data_type
         outds  = driver.Create(outfile, cols, rows, bands, data_type)
     outds.SetGeoTransform(geotrans)
     outds.SetProjection(prj)
@@ -226,7 +231,7 @@ def plot_image(array,figsize=(6,6)):
 
 # MASKING
 
-	# CATEGORIZING
+    # CATEGORIZING
 
 def cloud_mask_S2(X,get_rgb=False, 
                   key={0:'nodata',1:'land',2:'snow',3:'water',4:'clouds',5:'vegetation',6:'shadows'}):
@@ -467,7 +472,7 @@ def cloud_mask(X,T,get_rgb=False,
 
 # calculations from imagery dynamically acquired through dl api
 # references to this should be replaced with references to calc_index_minmax
-def calc_ndvi_minmax(s2_ids, tiles, shape):
+def calc_ndvi_minmax(s2_ids, tiles, shape, resampler='bilinear'):
     bands=['blue','green','red','nir','swir1','swir2','alpha'];
 
     ntiles = len(tiles['features'])
@@ -489,9 +494,10 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                     bands=bands,
                     data_type='UInt16',
                     dltile=tile,
+                    resampler=resampler,
                     #cutline=shape['geometry'] # removing to try to sidestep nan issue
                 )
-            except ProtocolError as e:
+            except Exception as e:
                 print 'ProtocolError when acquiring tile #'+str(tile_id)+' for image #'+str(j)+' ('+str(s2_ids[j])+'):'
                 print e
                 import time
@@ -569,7 +575,7 @@ def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
 
 
 
-	# RGP REMAPPING
+    # RGP REMAPPING
 
 def rgb_clouds(Y,BIP=True):
     rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
@@ -742,3 +748,61 @@ def show_vir_s2(file):
         print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
+
+def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15):
+
+    assert vir.shape[0]==6
+
+    band_a = idx_green
+    band_b = idx_nir
+    threshold = threshold # water = ndwi > threshold 
+    ndwi = spectral_index_tile(vir, band_a, band_b)
+    water = ndwi > threshold
+
+    return water
+
+def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
+    assert type(tile_id) is int 
+    assert tile_id < len(tiles['features'])
+    tile = tiles['features'][tile_id]
+    resolution = int(tile['properties']['resolution'])
+
+    #print 'tile', tile_id, 'load VIR image'
+    # assert resolution==10 or resolution==5
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    elif resolution==2:
+        zfill=5
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+    vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+    #print vir_file
+    vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
+    #print 'vir shape:',vir.shape
+
+    water = calc_water_mask(vir[0:6], threshold=threshold)
+    water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+    print water_file
+    write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
+    return water
+
+def crop_raster(cutline, input, output):
+    command = 'gdalwarp -q -cutline {0} -of GTiff {1} {2}'.format(cutline, input, output)
+    print '>>>',command
+    try:
+        s=0
+        print subprocess.check_output(command.split(), shell=False)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    return
+
+def crop_maps(cutline, inputs):
+    outputs = []
+    for input in inputs:
+        output = input[0:input.index('.tif')] + '_cut.tif'
+        outputs.append(output)
+        #print input, '->', output
+        crop_raster(cutline, input, output)
+    return outputs

@@ -25,6 +25,11 @@ import csv
 import descarteslabs as dl
 import util_vectors
 import util_rasters
+import util_ml
+import util_workflow
+
+from keras.models import load_model
+
 
 
 
@@ -72,13 +77,27 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
         haze_removal=False,):
     tile = tiles['features'][tile_id]
+    print tile['properties']
     side_length = tile['properties']['tilesize'] + tile['properties']['pad']*2
+
+    resolution = int(tile['properties']['resolution'])
+
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5
+    else:
+        raise Exception('bad resolution: '+str(resolution))
 
     imn = np.zeros((feature_count,side_length,side_length),dtype='float32')
     n_features = imn.shape[0] 
 
     print 'tile', tile_id, 'load VIR image'
-    vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+
+    vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+    print vir_file
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
     vir = vir.astype('float32')
@@ -104,7 +123,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
 
     if bands_sar is not None:
         print 'tile', tile_id, 'load SAR image'
-        sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
+        
+        sar_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
         sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
         print 'sar shape:',sar.shape
         sar = sar.astype('float32')
@@ -133,7 +154,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
             b_start += 1
         if 'min' in bands_ndvi:
             print 'tile', tile_id, 'load NDVI min'
-            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
+            
+            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_ndvimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
             ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimin)) > 0):
                 ndvi_nan = np.isnan(ndvimin)
@@ -144,7 +167,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
             b_start += 1
         if 'max' in bands_ndvi:
             print 'tile', tile_id, 'load NDVI max'
-            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
+            
+            ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_ndvimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
             ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = util_rasters.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimax)) > 0):
                 ndvi_nan = np.isnan(ndvimax)
@@ -172,7 +197,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
             b_start += 1
         if 'min' in bands_ndbi:
             print 'tile', tile_id, 'load ndbi min'
-            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimin.tif'
+           
+            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_ndbimin'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
             ndbimin, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
             if(np.sum(np.isnan(ndbimin)) > 0):
                 ndbi_nan = np.isnan(ndbimin)
@@ -183,7 +210,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
             b_start += 1
         if 'max' in bands_ndbi:
             print 'tile', tile_id, 'load ndbi max'
-            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndbimax.tif'
+
+            ndbi_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_ndbimax'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
             ndbimax, ndbigeo, ndbiprj, ndbicols, ndbirows = util_rasters.load_geotiff(ndbi_file,dtype='float32')
             if(np.sum(np.isnan(ndbimax)) > 0):
                 ndbi_nan = np.isnan(ndbimax)
@@ -196,7 +225,9 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
     if bands_osm is not None:
         if 'roads' in bands_osm:
             print 'tile', tile_id, 'load OSM roads'
-            osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
+            
+            osm_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_osm'+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
             osm, osmgeo, osmprj, osmcols, osmrows = util_rasters.load_geotiff(osm_file,dtype='uint8')
             osm[osm==255] = 0
             osm = osm.astype('float32')
@@ -213,7 +244,16 @@ def prepare_output_stack(data_path, place, tiles,
     
     b= tiles['features'][tile_id]['properties']['pad']
     print 'tile', tile_id, 'load labels'
-    label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+    resolution = int(tiles['features'][tile_id]['properties']['resolution'])
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+    label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+('' if resolution==10 else ('_'+str(resolution))+'m')+'.tif'
     print label_file
     lb, lbgeo, lbprj, lbcols, lbrows = util_rasters.load_geotiff(label_file,dtype='uint8')
     #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
@@ -241,7 +281,7 @@ def prepare_output_stack(data_path, place, tiles,
 
 def build_training_samples(data_path, place, stack_label, 
         image_suffix, label_suffix, window, imn, y, tile_id,
-        categories=[0,1,2,3,4,5,6]):
+        categories=[0,1,2,3,4,5,6], resolution=10):
     r = window/2
     n_features = imn.shape[0] 
 
@@ -284,8 +324,18 @@ def build_training_samples(data_path, place, stack_label,
         index = index + n_samples[k]
         print k, index, X_k.shape, Y_k.shape
     print X_data.shape, Y_data.shape, X_data.dtype
+
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+
     if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
         print label_file
         pickle.dump((X_data,Y_data), open(label_file, 'wb'))
     else:
@@ -315,6 +365,8 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
     if window/2 > tiles['features'][0]['properties']['pad']:
         raise ValueError("trying to use look window that exceeds size of available imagery tiles")
     
+    resolution = int(tiles['features'][0]['properties']['resolution'])
+
     # fundamentally a tile-by-tile process
     for tile_id in range(len(tiles['features'])):
         # skip tiles without labels
@@ -333,17 +385,36 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             label_suffix, mask, category_label, tile_id)
         
         build_training_samples(data_path, place, stack_label, 
-            image_suffix, label_suffix, window, imn, y, tile_id)
+            image_suffix, label_suffix, window, imn, y, tile_id, resolution=resolution)
         
 
-def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window):
+def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window,
+        resolution=10, tile_min=None, tile_max=None):
+    if tile_min is not None or tile_max is not None:
+        assert tile_min is not None
+        assert tile_max is not None
     n_samples = 0
     n_features = 0
     n_dtype = 'none'
+
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
-        #print label_file
+        if tile_min is not None and tile_id < tile_min:
+            continue
+        if tile_max is not None and tile_id > tile_max:
+            break
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+
+        print label_file
 
         try:
             with open(label_file, "rb") as f:
@@ -371,7 +442,11 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
     n_start = 0
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
-        label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+        if tile_min is not None and tile_id < tile_min:
+            continue
+        if tile_max is not None and tile_id > tile_max:
+            break
+        label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
         # print label_file
 
         try:
@@ -390,14 +465,23 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         print n_start, n_end
         n_start = n_end
     print X_data.shape, Y_data.shape
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    if tile_min is None:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+    else:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
     #print 'Write complete datasets to file:', data_file
     pickle.dump((X_data,Y_data), open(data_file, 'wb'))
 
     return X_data, Y_data
 
-def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window):
-    data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, 
+    resolution=10, tile_min=None, tile_max=None):
+    if tile_min is not None or tile_max is not None:
+        assert tile_min is not None
+        assert tile_max is not None
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'_tile'+str(tile_min)+'-'+str(tile_max)+'.pkl'
+    else:
+        data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     print data_file
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
@@ -405,7 +489,7 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     
     n_samples = Y_data.shape[0]
     
-    perm_file = data_path+place+'_perm_'+label_suffix+'.pkl'
+    perm_file = data_path+place+'_perm_'+label_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     print perm_file
     try:
         with open(perm_file, "rb") as f:
@@ -444,24 +528,24 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     print X_train.shape, Y_train.shape
     print X_valid.shape, Y_valid.shape
 
-    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     pickle.dump((X_train,Y_train), open(train_file, 'wb'))
-    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+'.pkl'
+    valid_file = data_path+place+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
-def load_datasets(place_images, data_root, label_suffix, stack_label, window):
+def load_datasets(place_images, data_root, label_suffix, stack_label, window, resolution=10):
     print 'calculate total size of training and validation supersets'
     t_total = 0
     v_total = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)
@@ -485,12 +569,12 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window):
     t_start = 0
     for city, suffixes in place_images.iteritems():
         for suffix in suffixes:
-            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print train_file
             with open(train_file, 'rb') as f:
                 X_train_sub, Y_train_sub = pickle.load(f)
             f.close()
-            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print valid_file
             with open(valid_file, 'rb') as f:
                 X_valid_sub, Y_valid_sub = pickle.load(f)
@@ -527,7 +611,7 @@ def create_classification_arrays(window, n_cats, imn, pad):
     Y_max[z[0][:],z[1][:]] = 0.0
     return Y, Y_deep, Y_max
 
-def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_mask=False):
+def fill_classification_arrays(feature_count, window, n_cats, scaler, network, imn, Y, Y_deep, Y_max, unflatten_input=False, water_overwrite=False):
     data_scale = 1.0
     r = window/2
     z = np.where((Y==255))
@@ -552,8 +636,13 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         else:
             X_c_final = X_c_scaled
         Yhat_c_prob = network.predict(X_c_final)
-        Yhat_c = Yhat_c_prob.argmax(axis=-1)
-        Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+        if n_cats==2:
+            Yhat_c = np.rint(Yhat_c_prob).astype(int).reshape(Yhat_c_prob.shape[0])
+            Yhat_max = Yhat_c.copy()
+        else:
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+            
         #set_trace()
         sys.stdout.write('.')
         Y[j_c[:],i_c[:]] = Yhat_c[:]
@@ -581,22 +670,21 @@ def fill_classification_arrays(feature_count, window, scaler, network, imn, Y, Y
         else:
             X_c_final = X_c_scaled
         Yhat_c_prob = network.predict(X_c_final)
-        Yhat_c = Yhat_c_prob.argmax(axis=-1)
-        Yhat_max = np.amax(Yhat_c_prob,axis=-1)
+        if n_cats==2:
+            Yhat_c = np.rint(Yhat_c_prob).astype(int).reshape(Yhat_c_prob.shape[0])
+            Yhat_max = Yhat_c.copy()
+        else:
+            Yhat_c = Yhat_c_prob.argmax(axis=-1)
+            Yhat_max = np.amax(Yhat_c_prob,axis=-1)
         #set_trace()
         sys.stdout.write('.')
         Y[j_c[:],i_c[:]] = Yhat_c[:]
         Y_deep[j_c[:],i_c[:]] = Yhat_c_prob[:]
         Y_max[j_c[:],i_c[:]] = Yhat_max[:]
 
-    if water_mask:
-        # for the moment hardcoding values
-        band_a = 1 # green
-        band_b = 3 # nir
+    if water_overwrite:
+        water = util_rasters.calc_water_mask(imn[0:6])
         cat_water = 9 # addition to 0-6 AUE taxonomy
-        threshold = 0.0 # water = ndwi > threshold 
-        ndwi = util_rasters.spectral_index_tile(imn, band_a, band_b)
-        water = ndwi > threshold
         Y[water] = cat_water
     
     print "done"
@@ -619,15 +707,25 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             bands_ndvi=bands_ndvi,
             bands_ndbi=bands_ndbi,
             bands_osm=bands_osm,)
+    resolution = tile_resolution
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+
     for place, image_suffix_list in place_images.iteritems():
         data_path = data_root + place + '/'
         place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
         shape = util_vectors.load_shape(place_shapefile)
-        tiles = dl.raster.dltiles_from_shape(10.0, 256, 8, shape)
+        tiles = dl.raster.dltiles_from_shape(tile_resolution, tile_size, tile_pad, shape)
         label_stats = {}
         for tile_id in range(len(tiles['features'])):
             tile = tiles['features'][tile_id]
-            label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
+            label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+('' if tile_resolution==10 else str(int(tile_resolution))+'m')+'.tif'
             label_stats[tile_id] = util_rasters.stats_byte_raster(label_file, category_label, show=False)
 
         for image_suffix in image_suffix_list:
@@ -645,10 +743,10 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
                 category_label=category_label )
 
             print 'Combine dataset tiles into complete data arrays'
-            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window)
+            X_data, Y_data = combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label, window, resolution=tile_resolution)
 
             print 'Write complete datasets to file'
-            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window)
+            split_dataset(data_path, place, label_suffix, stack_label, image_suffix, window, resolution=tile_resolution)
             print ''
 
 def classify_tile(tile_id, 
@@ -656,7 +754,7 @@ def classify_tile(tile_id,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir,
         bands_sar, bands_ndvi, bands_ndbi, bands_osm,
-        haze_removal, unflatten_input, water_mask):
+        haze_removal, unflatten_input, water_overwrite, water_mask, water_threshold):
         
     mask, imn, geo, prj = prepare_input_stack(data_path, place, tiles, stack_label, feature_count, 
         image_suffix, window, tile_id, bands_vir=bands_vir, bands_sar=bands_sar, 
@@ -665,9 +763,20 @@ def classify_tile(tile_id,
 
     Y, Y_deep, Y_max = create_classification_arrays(window, n_cats, imn, tiles['features'][tile_id]['properties']['pad'])
 
-    fill_classification_arrays(feature_count, window, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_mask=water_mask)
-    
-    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    fill_classification_arrays(feature_count, window, n_cats, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_overwrite=water_overwrite)
+    resolution = int(tiles['features'][0]['properties']['resolution'])
+
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+
+
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
     print result_file
     util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
     if np.sum(Y==255) != 0:
@@ -683,8 +792,16 @@ def classify_tile(tile_id,
     b+=1
     Y_full[b][:,:] = Y_max[:,:]
     print 'Y_full sample', Y_full[:,100,100]
-    full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_full_'+image_suffix+'.tif'
+
+    full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_full_'+image_suffix+'.tif'
+
     util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
+
+    if water_mask:
+        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, water_threshold)
+        water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+        print water_file
+        util_rasters.write_1band_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
 
     del mask, imn, geo, prj, Y, Y_deep, Y_max, Y_full
     print 'tile', tile_id, 'done'
@@ -702,7 +819,8 @@ def classify_tiles(data_path, place, tiles, image_suffix,
         window, stack_label, feature_count, model_id, scaler, model, n_cats,
         bands_vir=['blue','green','red','nir','swir1','swir2'],
         bands_sar=['vv','vh'], bands_ndvi=None, bands_ndbi=None, bands_osm=None,
-        haze_removal=False, unflatten_input=False, water_mask=False):
+        haze_removal=False, unflatten_input=False, water_overwrite=False, water_mask=False,
+        water_threshold=0.1):
             
     print "Feature count:", feature_count
     print "Stack label: ", stack_label
@@ -716,7 +834,7 @@ def classify_tiles(data_path, place, tiles, image_suffix,
             window, stack_label, feature_count, model_id, scaler, model, n_cats,
             bands_vir,
             bands_sar, bands_ndvi, bands_ndbi, bands_osm,
-            haze_removal, unflatten_input, water_mask)
+            haze_removal, unflatten_input, water_overwrite, water_mask, water_threshold)
         
 
 def class_balancing(Y_t, X_train, Y_train):
@@ -789,13 +907,24 @@ def class_balancing(Y_t, X_train, Y_train):
     print "Sum of each categories after balancing = ", np.sum(Y_balanced==0),np.sum(Y_balanced==1),np.sum(Y_balanced==4),np.sum(Y_balanced==6)
     print Y_balanced.shape
 
-def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
+def view_results_tile(data_path, place, tiles, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
         show_vir=True):
-    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    
+    resolution = int(tiles['features'][tile_id]['properties']['resolution'])
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
 
@@ -811,20 +940,28 @@ def view_results_tile(data_path, place, tile_id, model_id, image_suffix,
     print
 
     if show_vir:
-        img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+        img_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+'.tif'
         print img_file
         util_rasters.show_vir_s2(img_file)
     return
 
-def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
+def view_results_overlay(data_path, place, tiles, tile_id, model_id, image_suffix,
         category_label={0:'Open Space',1:'Non-Residential',\
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
          show_vir=True, show_lulc=True):
     # remapping parameter
-
-    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(3)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+    resolution = int(tiles['features'][tile_id]['properties']['resolution'])
+    if resolution==10:
+        zfill=3
+    elif resolution==5:
+        zfill=4
+    elif resolution==2:
+        zfill=5    
+    else:
+        raise Exception('bad resolution: '+str(resolution))
+    result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
     util_rasters.stats_byte_raster(result_file, category_label)
 
@@ -836,7 +973,7 @@ def view_results_overlay(data_path, place, tile_id, model_id, image_suffix,
 
     rgb = util_rasters.rgb_lulc_result(result)
 
-    img_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
+    img_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
     img, geo, prj, cols, rows = util_rasters.load_geotiff(img_file)
 
     img = np.transpose(img, (1,2,0))
@@ -913,3 +1050,428 @@ def record_model_application(
             ])
     return
 
+def chunk_training_data(data_root, place_images, label_suffix, resolution, stack_label, window, chunk_id_base, 
+        training_samples_per_chunk=70000, validation_samples_per_chunk=30000):
+    image_names = []
+    t_paths = []
+    v_paths = []
+    t_counts = []
+    v_counts = []
+    t_perms = []
+    v_perms = []
+    X_shape = None
+    X_dtype = None
+    Y_shape = None
+    Y_dtype = None
+
+    t_total = 0
+    v_total = 0
+    for city, suffixes in place_images.iteritems():
+        for suffix in suffixes:
+            image_names.append("{}_{}".format(city,suffix))
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            t_paths.append(train_file)
+            v_paths.append(valid_file)
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            X_shape = X_train_sub.shape
+            X_dtype = X_train_sub.dtype
+            Y_shape = Y_train_sub.shape
+            Y_dtype = Y_train_sub.dtype
+            t_sub = X_train_sub.shape[0]
+            v_sub = X_valid_sub.shape[0]
+            #print t_sub, v_sub
+            t_counts.append(t_sub)
+            v_counts.append(v_sub)
+            t_perms.append(np.random.permutation(t_sub))
+            v_perms.append(np.random.permutation(v_sub))
+            t_total += t_sub
+            v_total += v_sub
+    print t_total, v_total
+    n_images = len(image_names)
+    image_shares = []
+    for i in range(n_images):
+        image_shares.append(float(t_counts[i]) / float(t_total))
+
+    t_samples_per_chunk = training_samples_per_chunk
+    v_samples_per_chunk = validation_samples_per_chunk
+    n_chunks = (t_total / t_samples_per_chunk) + 1 #plus one for remainder
+
+    t_samples = []
+    v_samples = []
+
+    for i in range(n_images):
+        
+        t_samples.append(int(math.floor((float(t_samples_per_chunk) * image_shares[i]))))
+        v_samples.append(int(math.floor((float(v_samples_per_chunk) * image_shares[i]))))
+
+    for chunk_no in range(n_chunks):
+        #
+        chunk_id = chunk_id_base + '_'+str(chunk_no).zfill(2)+'-'+str(n_chunks-1).zfill(2)
+
+        t_chunk_X = np.zeros(((t_samples_per_chunk,) + X_shape[1:]),dtype=X_dtype)
+        t_chunk_Y = np.zeros((t_samples_per_chunk),dtype=Y_dtype)
+        v_chunk_X = np.zeros(((v_samples_per_chunk,) + X_shape[1:]),dtype=X_dtype)
+        v_chunk_Y = np.zeros((v_samples_per_chunk),dtype=Y_dtype)
+        print t_chunk_X.shape, t_chunk_Y.shape, v_chunk_X.shape, v_chunk_Y.shape
+        
+        
+        chunk_t_start_idx = 0
+        chunk_t_stop_idx = 0
+        chunk_v_start_idx = 0
+        chunk_v_stop_idx = 0
+        for i in range(len(image_names)):
+            train_file = t_paths[i]
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_sub, Y_train_sub = pickle.load(f)
+            f.close()
+            valid_file = v_paths[i]
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_sub, Y_valid_sub = pickle.load(f)
+            f.close()
+            print X_train_sub.shape, Y_train_sub.shape, X_valid_sub.shape, Y_valid_sub.shape
+            
+            if chunk_no == n_chunks-1:
+                chunk_t_stop_idx = min(chunk_t_start_idx + t_samples[i], chunk_t_start_idx + t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]].shape[0])
+                chunk_v_stop_idx = min(chunk_v_start_idx + v_samples[i], chunk_v_start_idx + v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]].shape[0])
+            else: 
+                chunk_t_stop_idx = (chunk_t_start_idx + t_samples[i])
+                chunk_v_stop_idx = (chunk_v_start_idx + v_samples[i])
+                
+            print 'FROM ('+image_names[i]+')', chunk_no*t_samples[i], ':', (chunk_no+1)*t_samples[i], 'INTO (chunk_'+str(chunk_no)+')', chunk_t_start_idx, ':', chunk_t_stop_idx
+            t_chunk_X[chunk_t_start_idx:chunk_t_stop_idx] = X_train_sub[t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]]]
+            t_chunk_Y[chunk_t_start_idx:chunk_t_stop_idx] = Y_train_sub[t_perms[i][chunk_no*t_samples[i]:(chunk_no+1)*t_samples[i]]]
+            v_chunk_X[chunk_v_start_idx:chunk_v_stop_idx] = X_train_sub[v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]]]
+            v_chunk_Y[chunk_v_start_idx:chunk_v_stop_idx] = Y_train_sub[v_perms[i][chunk_no*v_samples[i]:(chunk_no+1)*v_samples[i]]]
+
+            chunk_t_start_idx = chunk_t_stop_idx
+            chunk_v_start_idx = chunk_v_stop_idx
+            
+        if True or chunk_no == n_chunks-1:
+            #print 'empty rows (training):', np.sum(np.all(t_chunk_X==0, axis=1))
+            nonempty_rows = ~np.all(t_chunk_X==0, axis=1)
+            t_chunk_X = t_chunk_X[nonempty_rows]
+            t_chunk_Y = t_chunk_Y[nonempty_rows]
+            nonempty_rows = ~np.all(v_chunk_X==0, axis=1)
+            v_chunk_X = v_chunk_X[nonempty_rows]
+            v_chunk_Y = v_chunk_Y[nonempty_rows]
+            
+        #now write chunk
+        chunk_file = data_root+'chunks/'+chunk_id+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w.pkl'
+        print 'Writing chunk:', chunk_file
+        # print np.sum(np.all(t_chunk_X==0,axis=1))
+        pickle.dump((t_chunk_X, t_chunk_Y, v_chunk_X, v_chunk_Y), open(chunk_file, 'wb'))
+
+
+def water_mask_tiles(data_path, place, tiles, image_suffix, water_threshold=0.15):
+    resolution = int(tiles['features'][0]['properties']['resolution'])
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile resolution: '+str(tiles['features'][0]['properties']['resolution']))
+    for tile_id in len(tiles['features']):
+        water = util_rasters.make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, water_threshold)
+        water_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
+        print water_file
+        util_rasters.write_1band_geotiff(water_file, water, geo, prj, data_type=gdal.GDT_Byte)
+
+
+def apply_model_to_data_3category(
+        model_id, notes, place_images,
+        data_root, resolution, window, 
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=None, bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        label_suffix='aue',
+        unflatten_input=True):
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile_resolution: '+str(tile_resolution))
+
+    #load scaler & network
+    scaler_filename = data_root+'models/'+model_id+'_scaler.pkl'
+    network_filename = data_root+'models/'+model_id+'.hd5'
+    with open(scaler_filename, "rb") as f:
+        scaler = pickle.load(f)
+    f.close()
+    network = load_model(network_filename, custom_objects={'loss': 'categorical_crossentropy'})
+
+    stack_label, feature_count = build_stack_label(
+            bands_vir=bands_vir,
+            bands_sar=bands_sar,
+            bands_ndvi=bands_ndvi,
+            bands_ndbi=bands_ndbi,
+            bands_osm=bands_osm,)
+
+    cats_map = {}
+    cats_map[0] = 0
+    cats_map[1] = 1
+    cats_map[2] = 4
+    cats_map[3] = 4
+    cats_map[4] = 4
+    cats_map[5] = 4
+    cats_map[6] = 6
+
+    categories = [0,1,4,6]
+
+    for city, image_suffixes in place_images.iteritems():
+        for suffix in image_suffixes:
+            data_path = data_root + city + '/'
+
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_raw, Y_train_raw = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_raw, Y_valid_raw = pickle.load(f)
+            f.close()
+            print X_train_raw.shape, Y_train_raw.shape, X_valid_raw.shape, Y_valid_raw.shape
+
+            X_train_raw_scaled, X_valid_raw_scaled, scaler = util_ml.scale_learning_data(X_train_raw, X_valid_raw)
+            print X_train_raw_scaled.shape,  X_valid_raw_scaled.shape
+            del X_train_raw, X_valid_raw
+
+            if(unflatten_input):
+                X_train = X_train_raw_scaled.reshape((X_train_raw_scaled.shape[0],feature_count,window,window))
+                X_valid = X_valid_raw_scaled.reshape((X_valid_raw_scaled.shape[0],feature_count,window,window))
+            else:
+                X_train = X_train_raw_scaled
+                X_valid = X_valid_raw_scaled
+
+            del X_train_raw_scaled, X_valid_raw_scaled
+            print X_train.shape
+
+            Y_train = Y_train_raw.copy()
+            Y_valid = Y_valid_raw.copy()
+
+            for k, v in cats_map.iteritems():
+                Y_train[Y_train_raw==k] = v
+                Y_valid[Y_valid_raw==k] = v
+                
+            print Y_train_raw.shape
+            print Y_train.shape
+
+            del Y_train_raw, Y_valid_raw
+
+            non_roads = np.where(Y_train!=6)
+            Y_train = Y_train[non_roads]
+            X_train = X_train[non_roads]
+            non_roads = np.where(Y_valid!=6)
+            Y_valid = Y_valid[non_roads]
+            X_valid = X_valid[non_roads]
+
+            Y_t = Y_train.copy()
+            Y_v = Y_valid.copy()
+
+            Y_t[Y_train==0] = 0
+            Y_t[Y_train==1] = 1
+            Y_t[Y_train==4] = 2
+            Y_t[Y_train==6] = 3
+
+            Y_v[Y_valid==0] = 0
+            Y_v[Y_valid==1] = 1
+            Y_v[Y_valid==4] = 2
+            Y_v[Y_valid==6] = 3
+
+            categories_reduced = [0,1,2]
+
+            print "evaluate training"
+            Yhat_t_prob = network.predict(X_train)
+            Yhat_t = Yhat_t_prob.argmax(axis=-1)
+            train_confusion = util_ml.calc_confusion(Yhat_t,Y_t,categories_reduced)
+            train_recalls, train_precisions, train_accuracy = util_ml.calc_confusion_details(train_confusion)
+
+            print "evaluate validation"
+            Yhat_v_prob = network.predict(X_valid)
+            Yhat_v = Yhat_v_prob.argmax(axis=-1)
+            valid_confusion = util_ml.calc_confusion(Yhat_v,Y_v,categories_reduced)
+            valid_recalls, valid_precisions, valid_accuracy = util_ml.calc_confusion_details(valid_confusion)
+
+
+            # Calculate f-score
+            beta = 2
+            train_f_score = (beta**2 + 1) * train_precisions * train_recalls / ( (beta**2 * train_precisions) + train_recalls )
+            train_f_score_open = train_f_score[0] 
+            train_f_score_nonres = train_f_score[1]  
+            train_f_score_res = train_f_score[2]  
+            train_f_score_roads = None#train_f_score[3]  
+            train_f_score_average = np.mean(train_f_score)
+
+            # Calculate f-score
+            valid_f_score = (beta**2 + 1) * valid_precisions * valid_recalls / ( (beta**2 * valid_precisions) + valid_recalls )
+            valid_f_score_open = valid_f_score[0] 
+            valid_f_score_nonres = valid_f_score[1] 
+            valid_f_score_res = valid_f_score[2] 
+            valid_f_score_roads = None# valid_f_score[3] 
+            valid_f_score_average = np.mean(valid_f_score)
+
+            # expanding lists to match expected model_record stuff
+            train_recalls_expanded = [train_recalls[0],train_recalls[1],train_recalls[2],None]
+            valid_recalls_expanded = [valid_recalls[0],valid_recalls[1],valid_recalls[2],None]
+            train_precisions_expanded = [train_precisions[0],train_precisions[1],train_precisions[2],None]
+            valid_precisions_expanded = [valid_precisions[0],valid_precisions[1],valid_precisions[2],None]
+
+            util_workflow.record_model_application(
+                    model_id, notes, place_images, label_suffix, resolution, stack_label, feature_count, window, cats_map, 
+                    train_confusion, train_recalls_expanded, train_precisions_expanded, train_accuracy,
+                    train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
+                    valid_confusion, valid_recalls_expanded, valid_precisions_expanded, valid_accuracy,
+                    valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,)
+
+
+def apply_model_to_data_1vAll(
+        model_id, notes, place_images,
+        data_root, resolution, window, 
+        bands_vir=['blue','green','red','nir','swir1','swir2'],
+        bands_sar=None, bands_ndvi=None, bands_ndbi=None, bands_osm=None,
+        label_suffix='aue',
+        unflatten_input=True):
+    if resolution==10:
+        zfill = 3
+    elif resolution==5:
+        zfill = 4
+    else:
+        raise Exception('bad tile_resolution: '+str(tile_resolution))
+
+    #load scaler & network
+    scaler_filename = data_root+'models/'+model_id+'_scaler.pkl'
+    network_filename = data_root+'models/'+model_id+'.hd5'
+    with open(scaler_filename, "rb") as f:
+        scaler = pickle.load(f)
+    f.close()
+    network = load_model(network_filename, custom_objects={'loss': 'categorical_crossentropy'})
+
+    stack_label, feature_count = build_stack_label(
+            bands_vir=bands_vir,
+            bands_sar=bands_sar,
+            bands_ndvi=bands_ndvi,
+            bands_ndbi=bands_ndbi,
+            bands_osm=bands_osm,)
+
+    cats_map = {}
+    cats_map[0] = 0
+    cats_map[1] = 1
+    cats_map[2] = 4
+    cats_map[3] = 4
+    cats_map[4] = 4
+    cats_map[5] = 4
+    cats_map[6] = 6
+
+    categories = [0,1,4,6]
+
+    for city, image_suffixes in place_images.iteritems():
+        for suffix in image_suffixes:
+            data_path = data_root + city + '/'
+
+            train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+            print train_file
+            with open(train_file, 'rb') as f:
+                X_train_raw, Y_train_raw = pickle.load(f)
+            f.close()
+            valid_file = data_root+city+'/'+city+'_valid_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+            print valid_file
+            with open(valid_file, 'rb') as f:
+                X_valid_raw, Y_valid_raw = pickle.load(f)
+            f.close()
+            print X_train_raw.shape, Y_train_raw.shape, X_valid_raw.shape, Y_valid_raw.shape
+
+            X_train_raw_scaled, X_valid_raw_scaled, scaler = util_ml.scale_learning_data(X_train_raw, X_valid_raw)
+            print X_train_raw_scaled.shape,  X_valid_raw_scaled.shape
+            del X_train_raw, X_valid_raw
+
+            if(unflatten_input):
+                X_train = X_train_raw_scaled.reshape((X_train_raw_scaled.shape[0],feature_count,window,window))
+                X_valid = X_valid_raw_scaled.reshape((X_valid_raw_scaled.shape[0],feature_count,window,window))
+            else:
+                X_train = X_train_raw_scaled
+                X_valid = X_valid_raw_scaled
+
+            del X_train_raw_scaled, X_valid_raw_scaled
+            print X_train.shape
+
+            Y_train = Y_train_raw.copy()
+            Y_valid = Y_valid_raw.copy()
+
+            for k, v in cats_map.iteritems():
+                Y_train[Y_train_raw==k] = v
+                Y_valid[Y_valid_raw==k] = v
+
+            NB_FILTERS_1=32
+            NB_FILTERS_2=64
+
+            cats=[0,1]
+            networks = []
+            # for cat in [6,4,1,0]:
+            cat = 6
+                        
+            # create binary data
+            Y_t_bin = util_ml.make_binary(Y_train, cat, silent=True)
+            Y_v_bin = util_ml.make_binary(Y_valid, cat, silent=True)
+                
+
+            # score model
+            print "evaluate training"
+            Yhat_t_prob = network.predict(X_train)
+            Yhat_t = np.rint(Yhat_t_prob).astype(int).reshape(Yhat_t_prob.shape[0])
+            # print Yhat_t_prob[0:20]
+            # print Yhat_t[0:20]
+            #Yhat_t = Yhat_t_prob.argmax(axis=-1)
+            train_confusion = util_ml.calc_confusion(Yhat_t,Y_t_bin,cats)
+            train_recalls, train_precisions, train_accuracy = util_ml.calc_confusion_details(train_confusion)
+            print train_recalls, train_precisions
+            print
+
+            print "evaluate validation"
+            Yhat_v_prob = network.predict(X_valid)
+            Yhat_v = np.rint(Yhat_v_prob).astype(int).reshape(Yhat_v_prob.shape[0])
+            # print Yhat_v_prob[0:20]
+            # print Yhat_v[0:20]
+            #Yhat_v = Yhat_v_prob.argmax(axis=-1)
+            valid_confusion = util_ml.calc_confusion(Yhat_v,Y_v_bin,cats)
+            valid_recalls, valid_precisions, valid_accuracy = util_ml.calc_confusion_details(valid_confusion)
+            print valid_recalls, valid_precisions
+            print
+                
+            # Calculate f-score
+            beta = 2
+            train_f_score = (beta**2 + 1) * train_precisions * train_recalls / ( (beta**2 * train_precisions) + train_recalls )
+            train_f_score_open = train_f_score[0] 
+            train_f_score_nonres = None#train_f_score[1]  
+            train_f_score_res = None#train_f_score[2]  
+            train_f_score_roads = train_f_score[1]  
+            train_f_score_average = np.mean(train_f_score)
+            # Calculate f-score
+            valid_f_score = (beta**2 + 1) * valid_precisions * valid_recalls / ( (beta**2 * valid_precisions) + valid_recalls )
+            valid_f_score_open = valid_f_score[0] 
+            valid_f_score_nonres = None#valid_f_score[1] 
+            valid_f_score_res = None#valid_f_score[2] 
+            valid_f_score_roads = valid_f_score[1] 
+            valid_f_score_average = np.mean(valid_f_score)
+            # expanding lists to match expected model_record stuff
+            train_recalls_expanded = [train_recalls[0],None,None,train_recalls[1]]
+            valid_recalls_expanded = [valid_recalls[0],None,None,valid_recalls[1]]
+            train_precisions_expanded = [train_precisions[0],None,None,train_precisions[1]]
+            valid_precisions_expanded = [valid_precisions[0],None,None,valid_precisions[1]]
+            util_workflow.record_model_application(
+                    model_id, notes, place_images, label_suffix, resolution, stack_label, feature_count, window, cats_map, 
+                    train_confusion, train_recalls_expanded, train_precisions_expanded, train_accuracy,
+                    train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
+                    valid_confusion, valid_recalls_expanded, valid_precisions_expanded, valid_accuracy,
+                    valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,)
