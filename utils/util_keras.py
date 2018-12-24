@@ -88,15 +88,18 @@ def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8
     x=Flatten()(x)
     x=denselayers(x,output_nodes)
     if output_nodes == 1:
+
         x = Activation('sigmoid')(x)
     else:
         x = Activation('softmax')(x)
+
     m=Model(inputs=inputs, outputs=x)
     if print_summary:
         m.summary()
     return m
 
 def compile_network(network, loss, LR=0.001, metrics=['accuracy']):
+
     opt = keras.optimizers.Adam(lr=LR)
     network.compile(loss=loss,
                   optimizer=opt,

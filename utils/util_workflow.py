@@ -97,6 +97,7 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
     print 'tile', tile_id, 'load VIR image'
 
     vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
     print vir_file
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
     print 'vir shape:',vir.shape
@@ -125,6 +126,7 @@ def prepare_input_stack(data_path, place, tiles, stack_label, feature_count,
         print 'tile', tile_id, 'load SAR image'
         
         sar_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_sar_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
 
         sar, sargeo, sarprj, sarcols, sarrows = util_rasters.load_geotiff(sar_file,dtype='uint16')
         print 'sar shape:',sar.shape
@@ -281,7 +283,8 @@ def prepare_output_stack(data_path, place, tiles,
 
 def build_training_samples(data_path, place, stack_label, 
         image_suffix, label_suffix, window, imn, y, tile_id,
-        categories=[0,1,2,3,4,5,6], resolution=10):
+        categories=[0,1,2,3,4,5,6], resolution=5):
+
     r = window/2
     n_features = imn.shape[0] 
 
@@ -336,6 +339,7 @@ def build_training_samples(data_path, place, stack_label,
 
     if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
         label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+
         print label_file
         pickle.dump((X_data,Y_data), open(label_file, 'wb'))
     else:
@@ -414,6 +418,7 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             break
         label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
 
+
         print label_file
 
         try:
@@ -446,7 +451,9 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
             continue
         if tile_max is not None and tile_id > tile_max:
             break
+
         label_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
+
         # print label_file
 
         try:
@@ -534,7 +541,9 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix, win
     pickle.dump((X_valid,Y_valid), open(valid_file, 'wb'))
 
 
+
 def load_datasets(place_images, data_root, label_suffix, stack_label, window, resolution=10):
+
     print 'calculate total size of training and validation supersets'
     t_total = 0
     v_total = 0
@@ -707,6 +716,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
             bands_ndvi=bands_ndvi,
             bands_ndbi=bands_ndbi,
             bands_osm=bands_osm,)
+
     resolution = tile_resolution
     if resolution==10:
         zfill=3
@@ -716,6 +726,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
         zfill=5    
     else:
         raise Exception('bad resolution: '+str(resolution))
+
 
     for place, image_suffix_list in place_images.iteritems():
         data_path = data_root + place + '/'
@@ -766,6 +777,7 @@ def classify_tile(tile_id,
     fill_classification_arrays(feature_count, window, n_cats, scaler, model, imn, Y, Y_deep, Y_max, unflatten_input=unflatten_input, water_overwrite=water_overwrite)
     resolution = int(tiles['features'][0]['properties']['resolution'])
 
+
     if resolution==10:
         zfill=3
     elif resolution==5:
@@ -777,6 +789,7 @@ def classify_tile(tile_id,
 
 
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
+
     print result_file
     util_rasters.write_1band_geotiff(result_file, Y, geo, prj, data_type=gdal.GDT_Byte)
     if np.sum(Y==255) != 0:
@@ -794,6 +807,7 @@ def classify_tile(tile_id,
     print 'Y_full sample', Y_full[:,100,100]
 
     full_result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_full_'+image_suffix+'.tif'
+
 
     util_rasters.write_multiband_geotiff(full_result_file, Y_full, geo, prj, data_type=gdal.GDT_Float32)
 
@@ -926,6 +940,7 @@ def view_results_tile(data_path, place, tiles, tile_id, model_id, image_suffix,
 
     result_file = data_path+'maps/'+place+'_tile'+str(tile_id).zfill(zfill)+'_'+model_id+'_lulc_'+image_suffix+'.tif'
 
+
     util_rasters.stats_byte_raster(result_file, category_label)
 
     result, geo, prj, cols, rows = util_rasters.load_geotiff(result_file)
@@ -941,6 +956,7 @@ def view_results_tile(data_path, place, tiles, tile_id, model_id, image_suffix,
 
     if show_vir:
         img_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+'.tif'
+
         print img_file
         util_rasters.show_vir_s2(img_file)
     return
@@ -952,6 +968,7 @@ def view_results_overlay(data_path, place, tiles, tile_id, model_id, image_suffi
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',9:'Water',254:'No Data',255:'No Label'} ,
          show_vir=True, show_lulc=True):
     # remapping parameter
+
     resolution = int(tiles['features'][tile_id]['properties']['resolution'])
     if resolution==10:
         zfill=3
@@ -973,7 +990,9 @@ def view_results_overlay(data_path, place, tiles, tile_id, model_id, image_suffi
 
     rgb = util_rasters.rgb_lulc_result(result)
 
+
     img_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
     img, geo, prj, cols, rows = util_rasters.load_geotiff(img_file)
 
     img = np.transpose(img, (1,2,0))
@@ -1475,3 +1494,4 @@ def apply_model_to_data_1vAll(
                     train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
                     valid_confusion, valid_recalls_expanded, valid_precisions_expanded, valid_accuracy,
                     valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,)
+

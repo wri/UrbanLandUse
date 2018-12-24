@@ -156,6 +156,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
                   touch_category=None):
     #
     resolution = int(tile['properties']['resolution'])
+
     if resolution==10:
         zfill=3
     elif resolution==5:

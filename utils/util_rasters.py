@@ -778,6 +778,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     else:
         raise Exception('bad resolution: '+str(resolution))
     vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
+
     #print vir_file
     vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
     #print 'vir shape:',vir.shape
@@ -806,3 +807,4 @@ def crop_maps(cutline, inputs):
         #print input, '->', output
         crop_raster(cutline, input, output)
     return outputs
+
