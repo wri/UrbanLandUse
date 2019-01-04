@@ -166,7 +166,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     else:
         raise Exception('bad resolution: '+str(resolution))
     
-    imgfile = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+('' if resolution==10 else ('_'+str(resolution))+'m')+'.tif'
+    imgfile = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_'+label_suffix+('' if resolution==10 else ('_'+str(resolution))+'m')
 
 
     print 'imgfile', imgfile
