@@ -58,6 +58,7 @@ def calc_confusion(Yhat,Y,categories):
     print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
     return confusion
 
+
 def calc_confusion_details(confusion):
     n_categories = confusion.shape[0]
     # out of samples in category, how many assigned to that category
