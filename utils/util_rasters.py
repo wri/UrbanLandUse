@@ -117,7 +117,7 @@ def stats_byte_raster(label_file, category_label, show=False, band_index=0):
     for c in range(256):
         if np.sum((y == c))>0:
             yd[c] = np.sum((y == c))
-            print c, yd[c], category_label[c]
+            print c, yd[c], category_label[c] if c in category_label else ''
     if(show):
         y[y>6]=0  # TBD add a utility function to colorize the result map
         plt.figure(figsize=[8,8])
