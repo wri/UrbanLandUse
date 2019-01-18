@@ -108,9 +108,11 @@ def maxmin_info(img):
     for i,(mn,mx) in enumerate(zip(mns,mxs)):
         print(i,mn,mx)
 
-def stats_byte_raster(label_file, category_label, show=False):
+def stats_byte_raster(label_file, category_label, show=False, band_index=0):
     print label_file
     y, ygeo, yprj, ycols, yrows = load_geotiff(label_file,dtype='uint8')
+    if y.ndim == 3
+        y = y[band_index]
     yd = {}
     for c in range(256):
         if np.sum((y == c))>0:
