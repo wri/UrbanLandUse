@@ -119,9 +119,9 @@ def stats_byte_file(label_file, category_label, show=False, band_index=0):
             yd[c] = np.sum((y == c))
             print c, yd[c], category_label[c] if c in category_label else ''
     if(show):
-        y[y>6]=0  # TBD add a utility function to colorize the result map
+        rgb = rgb_lulc_result(y)
         plt.figure(figsize=[8,8])
-        plt.imshow(y)
+        plt.imshow(rgb)
     return yd
 
 def stats_byte_raster(y, category_label, show=False, band_index=0):
@@ -135,10 +135,9 @@ def stats_byte_raster(y, category_label, show=False, band_index=0):
             yd[c] = np.sum((y == c))
             print c, yd[c], category_label[c] if c in category_label else ''
     if(show):
-        y2 = y.copy()
-        y2[y>6]=0  # TBD add a utility function to colorize the result map
+        rgb = rgb_lulc_result(y)
         plt.figure(figsize=[8,8])
-        plt.imshow(y2 )
+        plt.imshow(rgb)
     return yd
 
 def stats_byte_tiles(data_path, place, tiles, label_suffix, 
