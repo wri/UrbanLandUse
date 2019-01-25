@@ -108,7 +108,7 @@ def maxmin_info(img):
     for i,(mn,mx) in enumerate(zip(mns,mxs)):
         print(i,mn,mx)
 
-def stats_byte_file(label_file, category_label, show=False, band_index=0):
+def stats_byte_file(label_file, category_label, lulc=True, show=False, band_index=0):
     print label_file
     y, ygeo, yprj, ycols, yrows = load_geotiff(label_file,dtype='uint8')
     if y.ndim == 3:
@@ -119,12 +119,17 @@ def stats_byte_file(label_file, category_label, show=False, band_index=0):
             yd[c] = np.sum((y == c))
             print c, yd[c], category_label[c] if c in category_label else ''
     if(show):
-        rgb = rgb_lulc_result(y)
-        plt.figure(figsize=[8,8])
-        plt.imshow(rgb)
+        if lulc:
+            rgb = rgb_lulc_result(y)
+            plt.figure(figsize=[8,8])
+            plt.imshow(rgb)
+        else:
+            y2 = y.copy()
+            plt.figure(figsize=[8,8])
+            plt.imshow(y2)
     return yd
 
-def stats_byte_raster(y, category_label, show=False, band_index=0):
+def stats_byte_raster(y, category_label, lulc=True, show=False, band_index=0):
     if y.dtype != 'uint8':
         raise ArgumentException('passed raster is not byte-valued:'+str(y.dtype))
     if y.ndim == 3:
@@ -135,9 +140,14 @@ def stats_byte_raster(y, category_label, show=False, band_index=0):
             yd[c] = np.sum((y == c))
             print c, yd[c], category_label[c] if c in category_label else ''
     if(show):
-        rgb = rgb_lulc_result(y)
-        plt.figure(figsize=[8,8])
-        plt.imshow(rgb)
+        if lulc:
+            rgb = rgb_lulc_result(y)
+            plt.figure(figsize=[8,8])
+            plt.imshow(rgb)
+        else:
+            y2 = y.copy()
+            plt.figure(figsize=[8,8])
+            plt.imshow(y2)
     return yd
 
 def stats_byte_tiles(data_path, place, tiles, label_suffix, 
@@ -672,9 +682,9 @@ def rgb_lulc_result(Y,BIP=True):
     rgb[1][(Y==254)] = int("00", 16)
     rgb[2][(Y==254)] = int("00", 16)
     # no data
-    rgb[0][(Y==255)] = int("ff", 16)
-    rgb[1][(Y==255)] = int("ff", 16)
-    rgb[2][(Y==255)] = int("ff", 16)
+    rgb[0][(Y==255)] = int("dd", 16)
+    rgb[1][(Y==255)] = int("dd", 16)
+    rgb[2][(Y==255)] = int("dd", 16)
     #
     if (BIP==True):
         tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
