@@ -645,6 +645,7 @@ def rgb_clouds(Y,BIP=True):
 
 def rgb_lulc_result(Y,BIP=True):
     rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
+    print 'test'
     # open space
     rgb[0][(Y==0)] = int("b2", 16)
     rgb[1][(Y==0)] = int("df", 16)
@@ -682,9 +683,9 @@ def rgb_lulc_result(Y,BIP=True):
     rgb[1][(Y==254)] = int("00", 16)
     rgb[2][(Y==254)] = int("00", 16)
     # no data
-    rgb[0][(Y==255)] = int("dd", 16)
-    rgb[1][(Y==255)] = int("dd", 16)
-    rgb[2][(Y==255)] = int("dd", 16)
+    rgb[0][(Y==255)] = int("f3", 16)
+    rgb[1][(Y==255)] = int("f3", 16)
+    rgb[2][(Y==255)] = int("f3", 16)
     #
     if (BIP==True):
         tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
