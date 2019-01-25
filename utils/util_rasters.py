@@ -124,6 +124,23 @@ def stats_byte_file(label_file, category_label, show=False, band_index=0):
         plt.imshow(y)
     return yd
 
+def stats_byte_raster(y, category_label, show=False, band_index=0):
+    if y.dtype != 'uint8':
+        raise ArgumentException('passed raster is not byte-valued:'+str(y.dtype))
+    if y.ndim == 3:
+        y = y[band_index]
+    yd = {}
+    for c in range(256):
+        if np.sum((y == c))>0:
+            yd[c] = np.sum((y == c))
+            print c, yd[c], category_label[c] if c in category_label else ''
+    if(show):
+        y2 = y.copy()
+        y2[y>6]=0  # TBD add a utility function to colorize the result map
+        plt.figure(figsize=[8,8])
+        plt.imshow(y2 )
+    return yd
+
 def stats_byte_tiles(data_path, place, tiles, label_suffix, 
         no_data=255,
         categories=[0,1,2,3,4,5,6],
