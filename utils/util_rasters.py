@@ -111,28 +111,14 @@ def maxmin_info(img):
     for i,(mn,mx) in enumerate(zip(mns,mxs)):
         print(i,mn,mx)
 
-def stats_byte_file(label_file, category_label, lulc=True, show=False, band_index=0):
-    print label_file
-    y, ygeo, yprj, ycols, yrows = load_geotiff(label_file,dtype='uint8')
-    if y.ndim == 3:
-        y = y[band_index]
-    yd = {}
-    for c in range(256):
-        if np.sum((y == c))>0:
-            yd[c] = np.sum((y == c))
-            print c, yd[c], category_label[c] if c in category_label else ''
-    if(show):
-        if lulc:
-            rgb = rgb_lulc_result(y)
-            plt.figure(figsize=[8,8])
-            plt.imshow(rgb)
-        else:
-            y2 = y.copy()
-            plt.figure(figsize=[8,8])
-            plt.imshow(y2)
-    return yd
-
-def stats_byte_raster(y, category_label, lulc=True, show=False, band_index=0):
+def stats_byte_raster(y, 
+        category_label={0:'Open Space',1:'Non-Residential',\
+                   2:'Residential Atomistic',3:'Residential Informal Subdivision',\
+                   4:'Residential Formal Subdivision',5:'Residential Housing Project',\
+                   6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'},
+        lulc=True, show=False, band_index=0):
+    if isinstance(y,str):
+            y,_,_,_,_=load_geotiff(y,dtype='uint8')
     if y.dtype != 'uint8':
         raise ArgumentException('passed raster is not byte-valued:'+str(y.dtype))
     if y.ndim == 3:
