@@ -97,8 +97,11 @@ def spectral_index_tile(img,a,b,tol=1e-6):
     return y
 
 # assumes first dimension is bands
-def window(x,j,i,r):
-    w = x[:,j-r:j+r+1,i-r:i+r+1]
+def window(x,j,i,r,bands_first=True):
+    if bands_first:
+        w = x[:,j-r:j+r+1,i-r:i+r+1]
+    else:
+        w = x[j-r:j+r+1,i-r:i+r+1,:]
     return w
 
 def maxmin_info(img):
