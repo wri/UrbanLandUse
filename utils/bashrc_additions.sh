@@ -22,6 +22,14 @@ jup_stop(){
 	pkill jupyter ; 
 }
 
+mount_data(){
+	pushd $ULU_REPO
+	export DEV=/dev/sdb
+	export MNT=/data
+	sudo mount -o discard,defaults $DEV $MNT
+	popd
+}
+
 # add a file counting function based on ls * | wc -l, with param for specifying filename pattern
 
 ### LOCAL MACHINE
