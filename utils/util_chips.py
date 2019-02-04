@@ -62,7 +62,7 @@ def generate_chips(data_root, place, tiles,
 			continue
 		if show_stats:
 			util_rasters.stats_byte_raster(lulc, category_label, lulc=True, show=True)
-		print place + ' '+ image_suffix + ': non-pad, labeled pixels in tile'+str(tile_id).zfill(zfill)+':', len(locs[0])
+		print place + ' '+ image_suffix + ': valid pixels in tile'+str(tile_id).zfill(zfill)+':', len(locs[0])
 		#image path example: /data/phase_iv/sitapur/imagery/none/sitapur_s2_E_5m_p32_tile0006.tif
 		path_image = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+place+'_'+source+'_'+\
 			image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(pad)+'_'+'tile'+str(tile_id).zfill(zfill)+'.tif'
@@ -137,6 +137,5 @@ def generate_chips(data_root, place, tiles,
 			df_combo.drop_duplicates(subset='path',keep='first',inplace=True)
 		df_combo.to_csv(path_catalog,index=False,header=True)
 
-def load_catalog(data_root='/data/phase_iv/',catalog_name='chip_catalog'):
-	path_catalog = data_root+catalog_name+'.csv'
-	return pd.read_csv(path_catalog)
+def load_catalog(path='/data/phase_iv/chip_catalog.csv'):
+	return pd.read_csv(path)
