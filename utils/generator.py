@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import rasterio as rio
-import matplotlib.pyplot as plt
-%matplotlib inline
+from keras.utils import to_categorical
 
 ULU_REPO = os.environ["ULU_REPO"]
 sys.path.append(ULU_REPO+'/utils')
