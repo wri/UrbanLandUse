@@ -102,6 +102,7 @@ class SampleGenerator(object):
     # simple example of more customized input generator
     def _construct_sample(self, im, look_radius):
         assert im.shape[0] == im.shape[1]
+        im = im[:,:,:-1]
         im_side = im.shape[0]
         center = im_side/2
         return util_rasters.window(im,center,center,look_radius,bands_first=False)
