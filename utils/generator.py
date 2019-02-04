@@ -15,7 +15,7 @@ class SampleGenerator(object):
     # constructor stuff
     def __init__(self,
                 df,
-                batch_size=64,
+                batch_size=128,
                 look_window=17,
                 remapping=None,
                 one_hot=True,
