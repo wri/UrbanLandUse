@@ -30,6 +30,10 @@ mount_data(){
 	popd
 }
 
+watch_gpu(){
+	watch -d -n 0.5 nvidia-smi
+}
+
 # add a file counting function based on ls * | wc -l, with param for specifying filename pattern
 
 ### LOCAL MACHINE
