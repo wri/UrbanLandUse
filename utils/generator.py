@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import rasterio as rio
+import gdal
 from keras.utils import to_categorical
 
 ULU_REPO = os.environ["ULU_REPO"]
@@ -93,27 +94,34 @@ class SampleGenerator(object):
         imgs=[]
         profiles=[]
         for path in self.rows.path:
-            im,profile=self._read_image(path)
+            im=self._read_image(path)
             im2 = self._construct_sample(im, self.look_window/2)
             imgs.append(im2)
-            profiles.append(profile)
-        return np.array(imgs),profiles    
+            #profiles.append(profile)
+        return np.array(imgs),None
+    
+    def _read_image(self,path,dtype='uint16'):
+		obj = gdal.Open(path, gdal.gdalconst.GA_ReadOnly)
+		#prj = obj.GetProjection()
+		#geotrans = obj.GetGeoTransform()
+		#cols = obj.RasterXSize
+		#rows = obj.RasterYSize
+		#im = np.zeros((rows,cols), dtype=dtype)
+		im = obj.ReadAsArray().astype(dtype)
+		#with rio.open(path,'r') as src:
+		#    profile=src.profile
+		#    image=src.read()
+		#bands last
+		#im = image.swapaxes(0,1).swapaxes(1,2)
+		return im
     
     # simple example of more customized input generator
-    def _construct_sample(self, im, look_radius):
-        assert im.shape[0] == im.shape[1]
-        im = im[:,:,:-1]
-        im_side = im.shape[0]
-        center = im_side/2
-        return util_rasters.window(im,center,center,look_radius,bands_first=False)
-    
-    def _read_image(self,path):
-        with rio.open(path,'r') as src:
-            profile=src.profile
-            image=src.read()
-        #bands last
-        im = image.swapaxes(0,1).swapaxes(1,2)
-        return im,profile
+    def _construct_sample(self, image, look_radius):
+        assert image.shape[1] == image.shape[2]
+        image = image[:-1,:,:]
+        image_side = image.shape[1]
+        center = image_side/2
+        return util_rasters.window(image,center,center,look_radius,bands_first=True)
 
     def _get_targets(self):
         categories = list(self.rows.lulc)
