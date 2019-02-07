@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import keras.backend as K
+from keras.callbacks import EarlyStopping, ModelCheckpoint, History
 import tensorflow as tf
 
 # loss function stuff
@@ -85,3 +86,12 @@ def make_loss_function_wcc(weights):
             raise ValueError('WeightedCategoricalCrossentropy: not valid with logits')
 
     return loss
+
+# returns callback functions for training, as well as path of weights file
+def create_callbacks(data_root, model_id, weights_label='weights', patience=4):
+    filepath = data_root+'models/'+model_id+'_'+weights_label+'.hdf5'
+    estop_cb=EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=0, mode='auto')
+    save_best_cb=ModelCheckpoint(filepath, monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=True, 
+                                 mode='auto', period=1)
+    history_cb=History()
+    return [estop_cb,save_best_cb,history_cb], filepath

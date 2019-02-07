@@ -9,34 +9,11 @@ from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Input, Add, Lambda
-from keras.callbacks import EarlyStopping, ModelCheckpoint, History
 
 import tensorflow as tf
 
 
-def weighted_categorical_crossentropy(weights):
-    """ weighted_categorical_crossentropy
-        Args:
-            * weights<ktensor|nparray|list>: crossentropy weights
-        Returns:
-            * weighted categorical crossentropy function
-    """
-    if isinstance(weights,list) or isinstance(weights,np.ndarray):
-        weights=K.variable(weights)
-
-    def loss(target,output,from_logits=False):
-        if not from_logits:
-            output /= tf.reduce_sum(output,
-                                    len(output.get_shape()) - 1,
-                                    True)
-            _epsilon = tf.convert_to_tensor(K.epsilon(), dtype=output.dtype.base_dtype)
-            output = tf.clip_by_value(output, _epsilon, 1. - _epsilon)
-            weighted_losses = target * tf.log(output) * weights
-            return - tf.reduce_sum(weighted_losses,len(output.get_shape()) - 1)
-        else:
-            raise ValueError('WeightedCategoricalCrossentropy: not valid with logits')
-
-    return loss    
+    
 
 
 
@@ -104,12 +81,3 @@ def compile_network(network, loss, LR=0.001, metrics=['accuracy']):
     network.compile(loss=loss,
                   optimizer=opt,
                   metrics=metrics)
-
-
-def create_callbacks(data_root, model_id, weights_label='WCC_weights.best', patience=4):
-    filepath = data_root+'models/'+model_id+'_'+weights_label+'.hdf5'
-    estop_cb=EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=0, mode='auto')
-    save_best_cb=ModelCheckpoint(filepath, monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=True, 
-                                 mode='auto', period=1)
-    history_cb=History()
-    return [estop_cb,save_best_cb,history_cb], filepath
