@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import keras.backend as K
+import tensorflow as tf
 
 # loss function stuff
 
@@ -58,3 +60,28 @@ def generate_category_weights(df,remapping='standard',log=False,mu=1.0,max_score
     cat_weights = calc_category_weights(cat_counts,log=log,mu=1.0)
     cat_normed = normalize_category_weights(cat_weights,max_score=max_score)
     return cat_normed
+
+# build loss function
+def make_loss_function_wcc(weights):
+    """ make loss function: weighted categorical crossentropy
+        Args:
+            * weights<ktensor|nparray|list>: crossentropy weights
+        Returns:
+            * weighted categorical crossentropy function
+    """
+    if isinstance(weights,list) or isinstance(weights,np.ndarray):
+        weights=K.variable(weights)
+
+    def loss(target,output,from_logits=False):
+        if not from_logits:
+            output /= tf.reduce_sum(output,
+                                    len(output.get_shape()) - 1,
+                                    True)
+            _epsilon = tf.convert_to_tensor(K.epsilon(), dtype=output.dtype.base_dtype)
+            output = tf.clip_by_value(output, _epsilon, 1. - _epsilon)
+            weighted_losses = target * tf.log(output) * weights
+            return - tf.reduce_sum(weighted_losses,len(output.get_shape()) - 1)
+        else:
+            raise ValueError('WeightedCategoricalCrossentropy: not valid with logits')
+
+    return loss
