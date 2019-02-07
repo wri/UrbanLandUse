@@ -75,6 +75,8 @@ class SampleGenerator(object):
         self.rows=self.dataframe.iloc[start:end]
         inputs,self.profiles=self._get_inputs()
         targets=self._get_targets()
+        #print 'inputs', inputs.shape
+        #print 'targets', targets.shape
         return inputs, targets
         
     def _batch_range(self):
@@ -101,24 +103,39 @@ class SampleGenerator(object):
         return np.array(imgs),None
     
     def _read_image(self,path,dtype='uint16'):
-		obj = gdal.Open(path, gdal.gdalconst.GA_ReadOnly)
-		#prj = obj.GetProjection()
-		#geotrans = obj.GetGeoTransform()
-		#cols = obj.RasterXSize
-		#rows = obj.RasterYSize
-		#im = np.zeros((rows,cols), dtype=dtype)
-		im = obj.ReadAsArray().astype(dtype)
-		#with rio.open(path,'r') as src:
-		#    profile=src.profile
-		#    image=src.read()
-		#bands last
-		#im = image.swapaxes(0,1).swapaxes(1,2)
-		return im
+        # read using gdal directly
+        # skip loading any nonessential elements
+        # can add this back in later if we use metadata
+        obj = gdal.Open(path, gdal.gdalconst.GA_ReadOnly)
+        #prj = obj.GetProjection()
+        #geotrans = obj.GetGeoTransform()
+        #cols = obj.RasterXSize
+        #rows = obj.RasterYSize
+        #im = np.zeros((rows,cols), dtype=dtype)
+        im = obj.ReadAsArray().astype(dtype)
+        return im
+
+    def _read_image_old(self,path):
+        with rio.open(path,'r') as src:
+            profile=src.profile
+            im=src.read()
+        #bands last
+        im = image.swapaxes(0,1).swapaxes(1,2)
+        return im, profile
     
     # simple example of more customized input generator
     def _construct_sample(self, image, look_radius):
         assert image.shape[1] == image.shape[2]
+
+        # manual "rescaling" as in all previous phases
+        image = image.astype('float32')
+        image = image/10000.
+        image = np.clip(image,0.0,1.0)
+
+        # remove alpha
         image = image[:-1,:,:]
+
+        # grab look window
         image_side = image.shape[1]
         center = image_side/2
         return util_rasters.window(image,center,center,look_radius,bands_first=True)
