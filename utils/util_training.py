@@ -52,3 +52,9 @@ def normalize_category_weights(category_weights,max_score=None):
             normalized_weights[k] = min(max_score, normalized_weights[k])
     return normalized_weights
 
+# single function to wrap previous three: catalog -> normalized weights
+def generate_category_weights(df,remapping='standard',log=False,mu=1.0,max_score=None):
+    cat_counts = calc_category_counts(df,remapping=remapping)
+    cat_weights = calc_category_weights(cat_counts,log=log,mu=1.0)
+    cat_normed = normalize_category_weights(cat_weights,max_score=max_score)
+    return cat_normed
