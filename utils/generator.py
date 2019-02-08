@@ -5,6 +5,8 @@ import math
 import rasterio as rio
 import gdal
 from keras.utils import to_categorical
+import threading
+
 
 ULU_REPO = os.environ["ULU_REPO"]
 sys.path.append(ULU_REPO+'/utils')
@@ -20,7 +22,13 @@ class SampleGenerator(object):
                 look_window=17,
                 remapping=None,
                 one_hot=True,
+                lock=None
                 ):
+        if lock is None:
+            self.lock = threading.Lock()
+        else:
+            self.lock=lock
+
         self.batch_size=batch_size
         self.look_window=look_window
         
@@ -53,7 +61,7 @@ class SampleGenerator(object):
         else:
             self.dataframe=df
         self.size=self.dataframe.shape[0]
-        self.steps=int(math.floor(1.0*self.size/self.batch_size))
+        self.steps=int(math.floor(1.0*self.size/self.batch_size))+1
         self.reset()
 
     def reset(self):
@@ -71,7 +79,8 @@ class SampleGenerator(object):
     def __next__(self):
         """ batchwise return tuple of (inputs,targets)
         """        
-        start,end=self._batch_range()
+        with self.lock:
+            start,end=self._batch_range()
         self.rows=self.dataframe.iloc[start:end]
         inputs,self.profiles=self._get_inputs()
         targets=self._get_targets()
@@ -86,10 +95,20 @@ class SampleGenerator(object):
             * start/end indices for batch_index
         """
         if (self.batch_index+1>=self.steps):
+            print 'resetting batch stuff from next'
             self.reset()
         self.batch_index+=1
+        print 'batch index', self.batch_index
         start=self.batch_index*self.batch_size
         end=start+self.batch_size
+        if end >= self.size:
+            end = self.size-1
+            print 'last batch: start '+str(start)+', end '+str(end)
+        if (self.batch_index+1>=self.steps):
+            end=self.size-1
+            print 'last batch: start '+str(start)+', end '+str(end)
+        else:
+            end=start+self.batch_size
         return start,end
 
     def _get_inputs(self):
@@ -158,3 +177,12 @@ class SampleGenerator(object):
     def next(self):
         """py2: alias __next__"""
         return self.__next__()
+
+    
+    # subsequently added
+    def get_label_series(self):
+        mapped_series = self.dataframe['lulc'].map(self.remapping)
+        if mapped_series.isnull().sum() > 0:
+            raise KeyError('remapping does not cover all relevant values, resulting in nan entries')
+        return mapped_series
+    
