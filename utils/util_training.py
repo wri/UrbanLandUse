@@ -8,12 +8,8 @@ import tensorflow as tf
 
 # get category counts from chip catalog
 def calc_category_counts(df,remapping='standard'):
-    df_counts = df['lulc'].value_counts()
-    cats = df_counts.index.values
-    cats.sort()
-    counts_dict = {}
-    for c in cats:
-        counts_dict[c] = df_counts.loc[c]
+    count_series = df['lulc'].value_counts()
+    counts_dict = count_series.to_dict()
     if remapping is None:
         return counts_dict
     else:
