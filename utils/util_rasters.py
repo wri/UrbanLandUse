@@ -37,9 +37,9 @@ def load_geotiff(tif,dtype='uint16'):
     img = np.zeros((rows,cols), dtype=dtype)
     img = obj.ReadAsArray().astype(dtype)
     del obj
-    return img, geotrans, prj, cols, rows
+    return img, geo, prj, cols, rows
 
-def write_1band_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte):
+def write_1band_geotiff(outfile, img, geo, prj, data_type=gdal.GDT_Byte):
     driver = gdal.GetDriverByName('GTiff')
     rows = img.shape[0]
     cols = img.shape[1]
