@@ -83,7 +83,7 @@ def record_model_creation(
         valid_confusion, valid_recalls, valid_precisions, valid_accuracy,
         valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
         datetime=datetime.datetime.now(),
-        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_models.csv'):
+        scorecard_file='/data/phase_iv/models/scorecard_phase_iv_models.csv'):
     
     with open(scorecard_file, mode='a') as scorecard:
         score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -105,7 +105,7 @@ def record_model_application(
         valid_confusion, valid_recalls, valid_precisions, valid_accuracy,         
         valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
         datetime=datetime.datetime.now(),
-        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_runs.csv'):
+        scorecard_file='/data/phase_iv/models/scorecard_phase_iv_runs.csv'):
     with open(scorecard_file, mode='a') as scorecard:
         score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
