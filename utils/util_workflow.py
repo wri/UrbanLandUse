@@ -1023,52 +1023,6 @@ def view_results_overlay(data_path, place, tiles, tile_id, model_id, image_suffi
 
     return
 
-
-
-
-def record_model_creation(
-        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
-        model_summary, epochs, batch_size,
-        train_confusion, train_recalls, train_precisions, train_accuracy, 
-        train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-        valid_confusion, valid_recalls, valid_precisions, valid_accuracy,
-        valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
-        datetime=datetime.datetime.now(),
-        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_models.csv'):
-    
-    with open(scorecard_file, mode='a') as scorecard:
-        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-
-        score_writer.writerow([
-            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
-            model_summary, epochs, batch_size,
-            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
-            train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy, 
-            valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
-            ])
-    return
-
-def record_model_application(
-        model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, 
-        train_confusion, train_recalls, train_precisions, train_accuracy, 
-        train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-        valid_confusion, valid_recalls, valid_precisions, valid_accuracy,         
-        valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
-        datetime=datetime.datetime.now(),
-        scorecard_file='/data/phase_iii/models/scorecard_phase_iii_runs.csv'):
-    with open(scorecard_file, mode='a') as scorecard:
-        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-
-        score_writer.writerow([
-            model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map,
-            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
-            train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
-            valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
-            ])
-    return
-
 def chunk_training_data(data_root, place_images, label_suffix, resolution, stack_label, window, chunk_id_base, 
         training_samples_per_chunk=70000, validation_samples_per_chunk=30000):
     image_names = []
