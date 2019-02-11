@@ -20,9 +20,8 @@ class ImageSampleGenerator(keras.utils.Sequence):
                 image,
                 pad=32,
 
-                batch_size=128,
                 look_window=17,
-                prep_image=True,
+                prep_image=False,
                 ):
         if prep_image:
             self.image = self._prep_image(image)
@@ -30,7 +29,7 @@ class ImageSampleGenerator(keras.utils.Sequence):
             self.image = image
         self.pad=pad
         self.look_window=look_window
-        self._set_data(image,pad)
+        self._set_data(image)
     
     # eventually this should all be happening beforehand
     # want to just pass the prepared, fused input_stack to generator constructor
@@ -42,19 +41,20 @@ class ImageSampleGenerator(keras.utils.Sequence):
         image = image.astype('float32')
         image = image/10000.
         image = np.clip(image,0.0,1.0)
+        #print 'image prepped'
         return image
 
     def _set_data(self,
-                  image,
-                  pad):
-        assert isinstance(image,np.array)
+                  image,):
+        assert isinstance(image,np.ndarray)
         # can relax conditions later
-        assert len(image.shape==3)
+        assert len(image.shape)==3
         assert image.shape[1]==image.shape[2]
-        self.size = image.shape[1]^2
-        self.batch_size=image.shape[1]
+        self.batch_size=(image.shape[1]-self.pad-self.pad)
+        self.size = self.batch_size^2
         # for starters, will make columns into batches/steps
-        self.steps=int(image.shape[2])
+        self.steps= self.batch_size
+        #print 'data set'
         self.reset()
 
     def __len__(self):
@@ -70,17 +70,17 @@ class ImageSampleGenerator(keras.utils.Sequence):
         if index >= self.steps or index < 0:
             raise ValueError('illegal batch index:',str(index))
         self.batch_index = index
-        inputs=self._get_inputs()
+        inputs=self._get_inputs(index)
         #print 'inputs', inputs.shape
+        #print 'batch #'+str(index)+' generated with shape '+str(inputs.shape)
         return inputs
 
-    def _get_inputs(self):
+    def _get_inputs(self, index):
         look_radius = self.look_window/2
         samples=[]
-        for j in range(self.pad,self.image.shape[1]-pad):
-            for i in range(self.pad,self.image.shape[1]-pad):
-                sample = util_rasters.window(self.image,j,i,look_radius,bands_first=True)
-                samples.append(sample)
+        for j in range(self.pad,self.image.shape[1]-self.pad):
+            sample = util_rasters.window(self.image,j,index+self.pad,look_radius,bands_first=True)
+            samples.append(sample)
         return np.array(samples)
 
     
