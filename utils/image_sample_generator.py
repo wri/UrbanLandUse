@@ -13,7 +13,7 @@ sys.path.append(ULU_REPO+'/utils')
 import util_rasters
 
 # class itself
-class TileGenerator(keras.utils.Sequence):
+class ImageSampleGenerator(keras.utils.Sequence):
     
     # constructor stuff
     def __init__(self,
