@@ -50,7 +50,7 @@ class ImageSampleGenerator(keras.utils.Sequence):
         assert isinstance(image,np.array)
         # can relax conditions later
         assert len(image.shape==3)
-        assert image.shape[1]=image.shape[2]
+        assert image.shape[1]==image.shape[2]
         self.size = image.shape[1]^2
         self.batch_size=image.shape[1]
         # for starters, will make columns into batches/steps
