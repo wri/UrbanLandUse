@@ -1,5 +1,7 @@
 import numpy as np
 import util_rasters
+import datetime
+import csv
 
 def calc_confusion(Yhat,Y,categories,silent=False):
     n_categories = len(categories)
@@ -86,7 +88,7 @@ def record_model_creation(
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_models.csv'):
     
     with open(scorecard_file, mode='a') as scorecard:
-        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
         score_writer.writerow([
             model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
@@ -96,6 +98,7 @@ def record_model_creation(
             valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy, 
             valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
             ])
+    print 'model scorecard updated'
     return
 
 def record_model_application(
@@ -107,7 +110,7 @@ def record_model_application(
         datetime=datetime.datetime.now(),
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_runs.csv'):
     with open(scorecard_file, mode='a') as scorecard:
-        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        score_writer = csv.writer(scorecard, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
 
         score_writer.writerow([
             model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map,
@@ -116,4 +119,5 @@ def record_model_application(
             valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
             valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
             ])
+    print 'run scorecard updated'
     return
