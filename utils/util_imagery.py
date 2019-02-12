@@ -312,7 +312,7 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
 
-            ndvi_j = spectral_index(vir,band_a,band_b,bands_first=True)
+            ndvi_j = spectral_index(vir,band_a,band_b,bands_first=False)
             masking, key = s2_cloud_mask(vir,bands_first=False)
 
             if (j==0):
@@ -331,7 +331,7 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
 
 
 def show_vir(file,
-            bands_first=False):
+            bands_first=True):
     img, geo, prj, cols, rows = util_rasters.load_geotiff(file)
 
     if bands_first:
