@@ -28,7 +28,22 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
                 resampler=resampler,
                 data_type='UInt16',
                 dltile=tile,
-                cutline=shape['geometry'],
+                cutline=shape['geometry'], # how can she cut
                 processing_level=processing_level,
                 save=True,
                 outfile_basename=basename)
+
+
+def spectral_index(img,a,b,tol=1e-6,bands_first=False):
+    # returns (a - b)/(a + b)
+    if bands_first:
+        a_minus_b = np.add(img[a,:,:],np.multiply(img[b,:,:],-1.0))
+        a_plus_b = np.add(np.add(img[a,:,:],img[b,:,:]),tol)
+    else:
+        a_minus_b = np.add(img[:,:,a],np.multiply(img[:,:,b],-1.0))
+        a_plus_b = np.add(np.add(img[:,:,a],img[:,:,b]),tol)
+    y = np.divide(a_minus_b,a_plus_b)
+    y = np.clip(y,-1.0,1.0)
+    a_minus_b = None
+    a_plus_b = None
+    return y

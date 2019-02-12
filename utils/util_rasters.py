@@ -76,25 +76,6 @@ def write_multiband_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte
 
 # RASTER CALCULATION & SAMPLING
 
-def spectral_index(img,a,b,tol=1e-6):
-    # returns (a - b)/(a + b)
-    a_minus_b = np.add(img[:,:,a],np.multiply(img[:,:,b],-1.0))
-    a_plus_b = np.add(np.add(img[:,:,a],img[:,:,b]),tol)
-    y = np.divide(a_minus_b,a_plus_b)
-    y = np.clip(y,-1.0,1.0)
-    a_minus_b = None
-    a_plus_b = None
-    return y
-
-def spectral_index_tile(img,a,b,tol=1e-6):
-    # returns (a - b)/(a + b)
-    a_minus_b = np.add(img[a,:,:],np.multiply(img[b,:,:],-1.0))
-    a_plus_b = np.add(np.add(img[a,:,:],img[b,:,:]),tol)
-    y = np.divide(a_minus_b,a_plus_b)
-    y = np.clip(y,-1.0,1.0)
-    a_minus_b = None
-    a_plus_b = None
-    return y
 
 # assumes first dimension is bands
 def window(x,j,i,r,bands_first=True):
