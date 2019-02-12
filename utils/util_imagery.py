@@ -190,4 +190,99 @@ def s2_cloud_mask(X,get_rgb=False,
     #
     return Y,key
 
+def ls_cloud_mask(X,T,get_rgb=False, 
+               key={0:'nodata',1:'land',2:'snow',3:'water',4:'clouds',5:'vegetation',6:'shadows'},
+               bands_first=False):
+    #
+    #    clouds are bright, visibly gray, and relatively cool
+    #
+    #    inputs:
+    #    X       6-band landsat images : VIS/NIR/SWIR bands[1,2,3,4,5,7] in top-of-atmosphere reflectance
+    #    T       1-band landsat Thermal IR band : at-sensor temperature in celsius in range [-32.0C, 96.0C]
+    #
+    #    output:
+    #    Y       byte-valued cloud/snow/water/shadow mask
+    # 
+    #    vals:   (based on official NASA LTK cloud mask labels)
+    #    1       land
+    #    2       snow
+    #    3       water bodies
+    #    4       clouds
+    #    5       vegetation
+    #    6       shadows  (extra category not in the standard NASA label set)
+    #
+    if bands_first:
+        L1 = X[0,:,:]
+        L2 = X[1,:,:]
+        L3 = X[2,:,:]
+        L5 = X[4,:,:]
+        alpha = X[-1,:,:]
+    else:
+        L1 = X[:,:,0]
+        L2 = X[:,:,1]
+        L3 = X[:,:,2]
+        L5 = X[:,:,4]
+        alpha = X[:,:,-1]
+    L6 = T   # celsius
+    #
+    # land - default value
+    #
+    Y = np.ones(L1.shape,dtype='uint8')
+    #
+    # snow/ice
+    #
+    ndsi = spectral_index(X,1,4,bands_first=bands_first)
+    #
+    # Y[(L6 <= 0)] = 2  # v2
+    Y[np.logical_or((L6 <= 0),(ndsi > 0.4))]  = 2  
+    #
+    ndvi = spectral_index(X,3,2,bands_first=bands_first)
+    #
+    # Y[(ndvi <= 0.0)] = 3  
+    #
+    # shadows
+    #
+    shadow_index = np.logical_and((ndvi <= 0.0),(L6 > 0))
+    Y[shadow_index] = 6
+    #
+    # water
+    #
+    ratioBR = np.divide(L1,np.add(L3,1e-6))
+    # water_index = np.logical_and(shadow_index,(ratioBR > 1.0))
+    water_index = np.logical_and((ndvi <= 0.0),(ratioBR >= 1.0))
+    # ratioBG = np.divide(L1,np.add(L2,1e-8))
+    # water_index = np.logical_and(shadow_index,(ratioBG > 1.0))
+    # water_index = (ndvi <= 0.0) # simplest
+    Y[water_index] = 3  # water
+    #
+    # vegetation
+    #
+    Y[(ndvi > 0.2)] = 5
+    #
+    # CLOUD INDEX
+    # 
+    # index = (L5 > 0.30)  # 0.40
+    # index = (L1 > 0.20)  # 0.40
+    index = (L2 >= 0.20)  # 0.40
+    #
+    grey = spectral_index(X,1,0,bands_first=bands_first)
+    index = np.logical_and(index, (abs(grey) < 0.2))    
+    grey = spectral_index(X,2,1,bands_first=bands_first)
+    index = np.logical_and(index, (abs(grey) < 0.2))
+    #
+    # index = np.logical_and(index, (L6 < 15))  # 280
+    index = np.logical_and(index, (L6 < 30))  # 280
+    #
+    Y[index] = 4  # clouds
+    #
+    # nodata 
+    #
+    Y[(alpha==0)]=0
+    #
+    if (get_rgb==True):
+        rgb = rgb_clouds(Y)
+        return Y,rgb,key
+    #
+    return Y,key
+
 
