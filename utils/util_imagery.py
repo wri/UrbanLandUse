@@ -349,3 +349,16 @@ def show_vir(file,
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
 
+def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15, bands_first=False):
+    if bands_first:
+        assert vir.shape[0]==6
+    else:
+        assert vir.shape[2]==6
+
+    band_a = idx_green
+    band_b = idx_nir
+    threshold = threshold # water = ndwi > threshold 
+    ndwi = spectral_index(vir, band_a, band_b, bands_first=bands_first)
+    water = ndwi > threshold
+
+    return water

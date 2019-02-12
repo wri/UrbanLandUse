@@ -317,17 +317,6 @@ def rgb_esa_lulc(Y,BIP=True):
         rgb = tmp
     return rgb
 
-def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15):
-
-    assert vir.shape[0]==6
-
-    band_a = idx_green
-    band_b = idx_nir
-    threshold = threshold # water = ndwi > threshold 
-    ndwi = spectral_index_tile(vir, band_a, band_b)
-    water = ndwi > threshold
-
-    return water
 
 def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
     assert type(tile_id) is int 
