@@ -31,7 +31,7 @@ import subprocess
 def load_geotiff(tif,dtype='uint16'):
     obj = gdal.Open(tif, gdal.gdalconst.GA_ReadOnly)
     prj = obj.GetProjection()
-    geotrans = obj.GetGeoTransform()
+    geo = obj.GetGeoTransform()
     cols = obj.RasterXSize
     rows = obj.RasterYSize
     img = np.zeros((rows,cols), dtype=dtype)
@@ -49,7 +49,7 @@ def write_1band_geotiff(outfile, img, geo, prj, data_type=gdal.GDT_Byte):
         outds  = driver.Create(outfile, cols, rows, 1, data_type, options=opts)
     else:
         outds  = driver.Create(outfile, cols, rows, 1, data_type)
-    outds.SetGeoTransform(geotrans)
+    outds.SetGeoTransform(geo)
     outds.SetProjection(prj)
     outband = outds.GetRasterBand(1)
     outband.WriteArray(img)
