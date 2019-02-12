@@ -317,35 +317,6 @@ def rgb_esa_lulc(Y,BIP=True):
         rgb = tmp
     return rgb
 
-
-def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
-    assert type(tile_id) is int 
-    assert tile_id < len(tiles['features'])
-    tile = tiles['features'][tile_id]
-    resolution = int(tile['properties']['resolution'])
-
-    #print 'tile', tile_id, 'load VIR image'
-    # assert resolution==10 or resolution==5
-    if resolution==10:
-        zfill = 3
-    elif resolution==5:
-        zfill = 4
-    elif resolution==2:
-        zfill=5
-    else:
-        raise Exception('bad resolution: '+str(resolution))
-    vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
-
-    #print vir_file
-    vir, virgeo, virprj, vircols, virrows = load_geotiff(vir_file,dtype='uint16')
-    #print 'vir shape:',vir.shape
-
-    water = calc_water_mask(vir[0:6], threshold=threshold)
-    water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
-    print water_file
-    write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
-    return water
-
 def crop_raster(cutline, input, output):
     command = 'gdalwarp -q -cutline {0} -of GTiff {1} {2}'.format(cutline, input, output)
     print '>>>',command
