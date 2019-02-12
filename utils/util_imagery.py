@@ -1,5 +1,5 @@
 import descarteslabs as dl
-
+import util_rasters
 
 def download_imagery(data_root, place, source, bands, shape, tiles, image_dict, 
 		resampler='bilinear', processing_level=None):
@@ -330,4 +330,22 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
     return min_tiles, max_tiles
 
 
+def show_vir(file,
+            bands_first=False):
+    img, geo, prj, cols, rows = util_rasters.load_geotiff(file)
+
+    if bands_first:
+        img = np.transpose(img, (1,2,0))
+    img = img[:,:,0:3]
+    img = np.flip(img, axis=-1)
+
+    viz = img.astype('float32')
+    viz = viz/3000 # why 3000?
+    viz = 255.*viz
+    viz = np.clip(viz,0,255)
+    viz = viz.astype('uint8')
+    for b in range(img.shape[2]):
+        print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
+    plt.figure(figsize=[16,16])
+    plt.imshow(viz)
 

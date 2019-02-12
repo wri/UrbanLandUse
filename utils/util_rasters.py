@@ -317,23 +317,6 @@ def rgb_esa_lulc(Y,BIP=True):
         rgb = tmp
     return rgb
 
-def show_vir_s2(file):
-    img, geo, prj, cols, rows = load_geotiff(file)
-
-    img = np.transpose(img, (1,2,0))
-    img = img[:,:,0:3]
-    img = np.flip(img, axis=-1)
-
-    viz = img.astype('float32')
-    viz = viz/3000
-    viz = 255.*viz
-    viz = np.clip(viz,0,255)
-    viz = viz.astype('uint8')
-    for b in range(img.shape[2]):
-        print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
-    plt.figure(figsize=[16,16])
-    plt.imshow(viz)
-
 def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15):
 
     assert vir.shape[0]==6
