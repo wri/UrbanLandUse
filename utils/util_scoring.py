@@ -104,9 +104,7 @@ def record_model_creation(
 def record_model_application(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, 
         train_confusion, train_recalls, train_precisions, train_accuracy, 
-        train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-        valid_confusion, valid_recalls, valid_precisions, valid_accuracy,         
-        valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
+        f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
         datetime=datetime.datetime.now(),
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_runs.csv'):
     with open(scorecard_file, mode='a') as scorecard:
