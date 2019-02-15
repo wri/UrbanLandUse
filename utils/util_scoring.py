@@ -112,10 +112,8 @@ def record_model_application(
 
         score_writer.writerow([
             model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map,
-            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
-            train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy,
-            valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
+            confusion, recalls[0], recalls[1], recalls[2], recalls[3], precisions[0], precisions[1], precisions[2], precisions[3], accuracy, 
+            f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
             ])
     print 'run scorecard updated'
     return
