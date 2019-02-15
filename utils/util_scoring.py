@@ -103,7 +103,7 @@ def record_model_creation(
 
 def record_model_application(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, 
-        train_confusion, train_recalls, train_precisions, train_accuracy, 
+        confusion, recalls, precisions, accuracy, 
         f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
         datetime=datetime.datetime.now(),
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_runs.csv'):
