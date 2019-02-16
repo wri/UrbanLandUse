@@ -156,7 +156,8 @@ def stats_byte_tiles(data_path, place, tiles, label_suffix,
 
 # DRAWING
 
-def plot_image(array,figsize=(6,6)):
+def plot_image(array,figsize=(8,8)):
+    fig = plt.figure(figsize=figsize)
     plt.imshow(array)
     plt.show()
 
