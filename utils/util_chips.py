@@ -140,7 +140,7 @@ def generate_chips(data_root, place, tiles,
 def load_catalog(path='/data/phase_iv/chip_catalog.csv'):
 	return pd.read_csv(path)
 
-def split_catalog_by_locale(df,training_fraction=0.7):
+def split_catalog_by_locale_simple(df,training_fraction=0.7):
     locales = df['locale'].unique()
     np.random.shuffle(locales)
     # number of locales
