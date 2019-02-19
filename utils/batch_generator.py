@@ -21,7 +21,7 @@ class BatchGenerator(keras.utils.Sequence):
                 batch_size=128,
                 look_window=17,
                 remapping=None,
-                one_hot=True,
+                one_hot=4,
                 ):
 
         self.batch_size=batch_size
@@ -41,6 +41,7 @@ class BatchGenerator(keras.utils.Sequence):
                     raise ValueError('Unrecognized remapping identifier: ',remapping)
             else:
                 raise ValueError('Illegal object passed as remapping: ',remapping)
+        assert isinstance(one_hot, int)
         self.one_hot = one_hot
         self._set_data(df)
         
@@ -129,8 +130,9 @@ class BatchGenerator(keras.utils.Sequence):
         if self.remapping is not None:
             for k in sorted(self.remapping.iterkeys()):
                 targets[targets==k] = self.remapping[k]
-        if self.one_hot:
-            targets = to_categorical(targets)
+        if self.one_hot != 0:
+            # keras.utils.to_categorical(y, num_classes=None, dtype='float32')
+            targets = to_categorical(targets, num_classes=self.one_hot, dtype='uint8')
         return targets
 
         
