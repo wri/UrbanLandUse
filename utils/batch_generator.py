@@ -132,7 +132,7 @@ class BatchGenerator(keras.utils.Sequence):
                 targets[targets==k] = self.remapping[k]
         if self.one_hot != 0:
             # keras.utils.to_categorical(y, num_classes=None, dtype='float32')
-            targets = to_categorical(targets, num_classes=self.one_hot, dtype='uint8')
+            targets = to_categorical(targets, num_classes=self.one_hot)
         return targets
 
         
