@@ -166,3 +166,20 @@ def apportion_locales(df,training_fraction=0.7):
         locales_v = locales[n_locales_t:]
         place_locales[place] = (locales_t,locales_v)
     return place_locales
+
+def mask_locales(df, place_locales):
+    mask_t = pd.Series(data=np.zeros(len(df.index),dtype='bool'))
+    mask_v = mask_t.copy(deep=True)
+
+    places = place_locales.keys()
+    for place in places:
+        submask_t = (df['city']==place)
+        submask_v = submask_t.copy()
+        
+        submask_t = submask_t & (df['locale'].isin(place_locales[place][0]))
+        submask_v = submask_v & (df['locale'].isin(place_locales[place][1]))
+        
+        mask_t = mask_t | submask_t
+        mask_v = mask_v | submask_v
+
+    return df[mask_t], df[mask_v]
