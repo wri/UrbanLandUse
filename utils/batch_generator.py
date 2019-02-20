@@ -140,7 +140,10 @@ class BatchGenerator(keras.utils.Sequence):
     # other functions
 
     def get_label_series(self):
-        mapped_series = self.dataframe['lulc'].map(self.remapping)
+        if self.remapping is not None:
+            mapped_series = self.dataframe['lulc'].map(self.remapping)
+        else:
+            mapped_series = self.dataframe['lulc']
         if mapped_series.isnull().sum() > 0:
             raise KeyError('remapping does not cover all relevant values, resulting in nan entries')
         return mapped_series
