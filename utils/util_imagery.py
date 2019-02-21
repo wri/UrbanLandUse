@@ -1,5 +1,6 @@
 import descarteslabs as dl
 import util_rasters
+import numpy as np
 
 def download_imagery(data_root, place, source, bands, shape, tiles, image_dict, 
 		resampler='bilinear', processing_level=None):
