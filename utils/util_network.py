@@ -6,15 +6,12 @@ warnings.filterwarnings('ignore')
 import keras
 import keras.backend as K
 from keras.models import Model
+import tensorflow.keras.layers as layers
 from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Conv2D, MaxPooling2D, SeparableConv2D, BatchNormalization
 from keras.layers import Input, Add, Lambda
 
 import tensorflow as tf
-
-
-    
-
 
 
 def pool_dropout(x):
@@ -55,8 +52,29 @@ def doubleres_block(filters,x,weights=[0.9,1.0,1.1]):
     x=keras.layers.Add()([x_5,x_3,x_1])
     return x
 
+# xception block stuff
+def xception_block(x,filters,depth=2,input_act=True,dropout=False):
+    residual=_pointwise(x,filters)
+    x=_depthwise(x,filters,depth,input_act)
+    x=MaxPooling2D(3,strides=2,padding='same')(x)
+    x=layers.add([x, residual])
+    if dropout:
+        x=Dropout(0.25)(x)
+    return x
 
-def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8,17,17),output_nodes=4):
+def _depthwise(x,filters,depth,input_act):
+    for i in range(depth):
+        if input_act or i:
+            x = Activation('relu')(x)
+        x = SeparableConv2D(filters,3,padding='same',use_bias=False)(x)
+        x = BatchNormalization()(x)
+    return x 
+
+def _pointwise(x,filters):
+    x = Conv2D(filters,1,strides=2,padding='same',use_bias=False)(x)
+    return BatchNormalization()(x)
+
+def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(6,17,17),output_nodes=3):
     inputs=Input(shape=input_shape) 
     x=cblock(filters1,inputs)
     x=pool_dropout(x)
@@ -70,6 +88,32 @@ def build_model(cblock,filters1=32,filters2=64,print_summary=True,input_shape=(8
     else:
         x = Activation('softmax')(x)
 
+    m=Model(inputs=inputs, outputs=x)
+    if print_summary:
+        m.summary()
+    return m
+
+# alternate structure with xception block
+def build_xmodel(
+        filters1=32,
+        filters2=64,
+        print_summary=True,
+        input_shape=(6,17,17),
+        output_nodes=3,
+        input_conv_block=False,
+        input_conv_filters=32):
+    inputs=Input(shape=input_shape)
+    x=inputs
+    if input_conv_block:
+        x=conv_block(input_conv_filters,x)
+    x=xception_block(x,filters1,input_act=False)
+    x=xception_block(x,filters2)
+    x=layers.Flatten()(x)
+    x=denselayers(x,output_nodes)
+    if output_nodes == 1:
+        x = Activation('sigmoid')(x)
+    else:
+        x = Activation('softmax')(x)
     m=Model(inputs=inputs, outputs=x)
     if print_summary:
         m.summary()
