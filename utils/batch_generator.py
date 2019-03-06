@@ -22,6 +22,7 @@ class BatchGenerator(keras.utils.Sequence):
                 look_window=17,
                 remapping=None,
                 one_hot=4,
+                flatten=False
                 ):
 
         self.batch_size=batch_size
@@ -43,6 +44,7 @@ class BatchGenerator(keras.utils.Sequence):
                 raise ValueError('Illegal object passed as remapping: ',remapping)
         assert isinstance(one_hot, int)
         self.one_hot = one_hot
+        self.flatten = flatten
         self._set_data(df)
         
     def _set_data(self,
@@ -91,7 +93,10 @@ class BatchGenerator(keras.utils.Sequence):
         for path in self.rows.path:
             im = self._read_image(path)
             im = self._construct_sample(im, self.look_window/2)
-            imgs.append(im)
+            if self.flatten:
+                imgs.append(im.flatten())
+            else:
+                imgs.append(im)
         return np.array(imgs)
     
     def _read_image(self,path,dtype='uint16'):
