@@ -108,7 +108,7 @@ def build_xmodel(
         x=conv_block(input_conv_filters,x)
     x=xception_block(x,filters1,input_act=False)
     x=xception_block(x,filters2)
-    x=keras.layers.Flatten()(x)
+    x=tf.keras.layers.Flatten()(x)
     x=denselayers(x,output_nodes)
     if output_nodes == 1:
         x = Activation('sigmoid')(x)
