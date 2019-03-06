@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 import keras
 import keras.backend as K
 from keras.models import Model
-import tensorflow.keras.layers as layers
+#import tensorflow.keras.layers as layers
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, SeparableConv2D, BatchNormalization
 from keras.layers import Input, Add, Lambda
@@ -57,7 +57,7 @@ def xception_block(x,filters,depth=2,input_act=True,dropout=False):
     residual=_pointwise(x,filters)
     x=_depthwise(x,filters,depth,input_act)
     x=MaxPooling2D(3,strides=2,padding='same')(x)
-    x=layers.add([x, residual])
+    x=keras.layers.add([x, residual])
     if dropout:
         x=Dropout(0.25)(x)
     return x
@@ -108,7 +108,7 @@ def build_xmodel(
         x=conv_block(input_conv_filters,x)
     x=xception_block(x,filters1,input_act=False)
     x=xception_block(x,filters2)
-    x=layers.Flatten()(x)
+    x=keras.layers.Flatten()(x)
     x=denselayers(x,output_nodes)
     if output_nodes == 1:
         x = Activation('sigmoid')(x)
