@@ -94,7 +94,7 @@ class TilewiseGenerator(keras.utils.Sequence):
 
     def _get_inputs(self, index):
         image_tile_path = self._get_input_path(index)
-        image, geo, prj, cols, rows = util_rasters.load_geotiff(tilepath,dtype='uint16')
+        image, geo, prj, cols, rows = util_rasters.load_geotiff(image_tile_path,dtype='uint16')
         image = self._prep_image(image)
 
         assert isinstance(image,np.ndarray)
@@ -106,9 +106,10 @@ class TilewiseGenerator(keras.utils.Sequence):
 
         samples=[]
         for j in range(self.tile_pad,image.shape[1]-self.tile_pad):
+            #for i in range(self.tile_pad,self.tile_pad+1):
             for i in range(self.tile_pad,image.shape[1]-self.tile_pad):
-            sample = util_rasters.window(image,j,i,self.look_radius,bands_first=True)
-            samples.append(sample)
+                sample = util_rasters.window(image,j,i,self.look_radius,bands_first=True)
+                samples.append(sample)
         return np.array(samples)
 
 
@@ -116,6 +117,7 @@ class TilewiseGenerator(keras.utils.Sequence):
         image_tile_path = self.data_root+self.place+'/imagery/'+self.processing+'/'+\
             self.place+'_'+self.source+'_'+self.image_suffix+'_'+str(self.tile_resolution)+'m'+'_'+'p'+str(self.tile_pad)+'_'+\
             'tile'+str(index).zfill(self.zfill)+'.tif'
+        #print image_tile_path
         return image_tile_path
 
     def _prep_image(self,
