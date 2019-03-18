@@ -391,3 +391,161 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     print water_file
     util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
+
+
+    # RGP REMAPPING
+
+def rgb_clouds(Y,BIP=True):
+    rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
+    # nodata
+    rgb[0][(Y==0)] = 255
+    rgb[1][(Y==0)] = 255
+    rgb[2][(Y==0)] = 255
+    # non-vegetated land -> Tan (210,180,140)
+    rgb[0][(Y==1)] = 210
+    rgb[1][(Y==1)] = 180
+    rgb[2][(Y==1)] = 140
+    # snow/ice -> (220,220,220)
+    rgb[0][(Y==2)] = 220
+    rgb[1][(Y==2)] = 220
+    rgb[2][(Y==2)] = 220
+    # water bodies -> lighter (119,214,232), or darker (98,176,214)
+    rgb[0][(Y==3)] =  98  # 119
+    rgb[1][(Y==3)] = 176  # 214
+    rgb[2][(Y==3)] = 214  # 232
+    # clouds -> (241,248,251)
+    rgb[0][(Y==4)] = 241
+    rgb[1][(Y==4)] = 248
+    rgb[2][(Y==4)] = 251
+    # vegetation -> lighter (120,176,21), or darker (134,148,21)
+    rgb[0][(Y==5)] = 134  # 120
+    rgb[1][(Y==5)] = 148  # 176
+    rgb[2][(Y==5)] =  21  #  21
+    # shadow -> (64,64,64)
+    rgb[0][(Y==6)] = 128 
+    rgb[1][(Y==6)] = 128
+    rgb[2][(Y==6)] = 128
+    #
+    if (BIP==True):
+        tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
+        for b in range(3):
+            tmp[:,:,b] = rgb[b][:,:]
+        rgb = tmp
+    return rgb
+
+def rgb_lulc_result(Y,BIP=True):
+    rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
+    # open space
+    rgb[0][(Y==0)] = int("b2", 16)
+    rgb[1][(Y==0)] = int("df", 16)
+    rgb[2][(Y==0)] = int("8a", 16)
+    # non-residential
+    rgb[0][(Y==1)] = int("fb", 16)
+    rgb[1][(Y==1)] = int("9a", 16)
+    rgb[2][(Y==1)] = int("99", 16)
+    # residential - atomistic
+    rgb[0][(Y==2)] = int("ff", 16)
+    rgb[1][(Y==2)] = int("7f", 16)
+    rgb[2][(Y==2)] = int("00", 16)
+    # residential - informal
+    rgb[0][(Y==3)] = int("fd", 16)
+    rgb[1][(Y==3)] = int("bf", 16)
+    rgb[2][(Y==3)] = int("6f", 16)
+    # residential - formal
+    rgb[0][(Y==4)] = int("1f", 16)
+    rgb[1][(Y==4)] = int("78", 16)
+    rgb[2][(Y==4)] = int("b4", 16)
+    # residential - projects
+    rgb[0][(Y==5)] = int("a6", 16)
+    rgb[1][(Y==5)] = int("ce", 16)
+    rgb[2][(Y==5)] = int("e3", 16)
+    # roads
+    rgb[0][(Y==6)] = int("e3", 16)
+    rgb[1][(Y==6)] = int("1a", 16)
+    rgb[2][(Y==6)] = int("1c", 16)
+    # water
+    rgb[0][(Y==9)] = int("00", 16)
+    rgb[1][(Y==9)] = int("33", 16)
+    rgb[2][(Y==9)] = int("66", 16)
+    # outside study area
+    rgb[0][(Y==254)] = int("00", 16)
+    rgb[1][(Y==254)] = int("00", 16)
+    rgb[2][(Y==254)] = int("00", 16)
+    # no data
+    rgb[0][(Y==255)] = int("f3", 16)
+    rgb[1][(Y==255)] = int("f3", 16)
+    rgb[2][(Y==255)] = int("f3", 16)
+    #
+    if (BIP==True):
+        tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
+        for b in range(3):
+            tmp[:,:,b] = rgb[b][:,:]
+        rgb = tmp
+    return rgb
+
+def rgb_esa_lulc(Y,BIP=True):
+    # NB_LAB;LCCOwnLabel;R;G;B
+    # 0;No data;0;0;0
+    # 1;Tree cover areas;0;160;0
+    # 2;Shrubs cover areas;150;100;0
+    # 3;Grassland;255;180;0
+    # 4;Cropland;255;255;100
+    # 5;Vegetation aquatic or regularly flooded;0;220;130
+    # 6;Lichens Mosses / Sparse vegetation;255;235;175
+    # 7;Bare areas;255;245;215
+    # 8;Built up areas;195;20;0
+    # 9;Snow and/or Ice;255;255;255
+    # 10;Open Water;0;70;200
+    #
+    rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
+    # No data
+    rgb[0][(Y==0)] = 0
+    rgb[1][(Y==0)] = 0
+    rgb[2][(Y==0)] = 0
+    # Tree cover areas
+    rgb[0][(Y==1)] = 0
+    rgb[1][(Y==1)] = 160
+    rgb[2][(Y==1)] = 0
+    # Shrubs cover areas
+    rgb[0][(Y==2)] = 150
+    rgb[1][(Y==2)] = 100
+    rgb[2][(Y==2)] = 0
+    # Grassland
+    rgb[0][(Y==3)] = 255
+    rgb[1][(Y==3)] = 180
+    rgb[2][(Y==3)] = 0
+    # Cropland
+    rgb[0][(Y==4)] = 255
+    rgb[1][(Y==4)] = 255
+    rgb[2][(Y==4)] = 100
+    # Vegetation aquatic or regularly flooded
+    rgb[0][(Y==5)] = 0
+    rgb[1][(Y==5)] = 220
+    rgb[2][(Y==5)] = 130
+    # Lichens Mosses / Sparse vegetation
+    rgb[0][(Y==6)] = 255
+    rgb[1][(Y==6)] = 235
+    rgb[2][(Y==6)] = 175
+    # Bare areas
+    rgb[0][(Y==7)] = 255
+    rgb[1][(Y==7)] = 245
+    rgb[2][(Y==7)] = 215
+    # Built up areas 
+    rgb[0][(Y==8)] = 195
+    rgb[1][(Y==8)] = 20
+    rgb[2][(Y==8)] = 0
+    # Snow and/or Ice
+    rgb[0][(Y==9)] = 255
+    rgb[1][(Y==9)] = 255
+    rgb[2][(Y==9)] = 255
+    # Open Water
+    rgb[0][(Y==10)] = 0
+    rgb[1][(Y==10)] = 70
+    rgb[2][(Y==10)] = 200
+    #
+    if (BIP==True):
+        tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
+        for b in range(3):
+            tmp[:,:,b] = rgb[b][:,:]
+        rgb = tmp
+    return rgb
