@@ -34,6 +34,16 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
                 save=True,
                 outfile_basename=basename)
 
+def s2_preprocess(im):
+    # probably don't need to drop alpha..
+    # drop alpha
+    im = im[:-1,:,:]
+    # manual "rescaling" as in all previous phases
+    im = im.astype('float32')
+    im = im/10000.
+    im = np.clip(im,0.0,1.0)
+    #print 'im prepped'
+    return im
 
 def spectral_index(img,a,b,tol=1e-6,bands_first=False):
     # returns (a - b)/(a + b)
@@ -391,6 +401,31 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     print water_file
     util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
+
+def calc_cloud_score_default(clouds_window):
+    assert len(clouds_window.shape)==2
+    n_pixels = clouds_window.shape[0] * clouds_window.shape[1] * 1.0
+    rating_sum = np.sum(clouds_window)
+    return rating_sum / n_pixels
+
+def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=32):
+    assert len(clouds.shape)==2
+    assert clouds.shape[0]==clouds.shape[1]
+    rows = clouds.shape[0]
+    cols = clouds.shape[1]
+    r = look_window / 2
+    score_map = np.zeros(clouds.shape, dtype='float32')
+    for j in range(rows):
+        for i in range(cols):
+            clouds_window = clouds[j-r:j+r+1,i-r:i+r+1]
+#             if clouds_window.shape!=(look_window, look_window):
+#                 print 'bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape)
+            window_score = scorer(clouds_window)
+            score_map[j,i] = window_score
+    if pad is not None:
+        score_map[:pad,:] = -1.0; score_map[-pad:,:] = -1.0
+        score_map[:,:pad] = -1.0; score_map[:,-pad:] = -1.0
+    return score_map
 
 
     # RGP REMAPPING
