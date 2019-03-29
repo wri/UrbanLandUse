@@ -402,6 +402,9 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
 
+
+# CLOUDS
+
 def calc_cloud_score_default(clouds_window):
     assert len(clouds_window.shape)==2
     n_pixels = clouds_window.shape[0] * clouds_window.shape[1] * 1.0
@@ -427,8 +430,56 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
         score_map[:,:pad] = -1.0; score_map[:,-pad:] = -1.0
     return score_map
 
+def cloudscore_image(im, window,
+                    tile_pad=32,
+                    ):
+    image = util_imagery.s2_preprocess(im)
+    Y, key = util_imagery.s2_cloud_mask(image,get_rgb=False,bands_first=True)
+    cloud_mask = (Y==4)
+    score_map = util_imagery.map_cloud_scores(cloud_mask, window, pad=tile_pad)
+    return score_map
 
-    # RGP REMAPPING
+def cloudscore_and_classify_tile_memory(ids, tile, network,
+                    local=True,
+                    bands=['blue','green','red','nir','swir1','swir2','alpha'],
+                    resampler='bilinear',
+                    #cutline=shape['geometry'], #cut or no?
+                    processing_level=None,
+                    window=17
+                    ):
+    tile_size = tile['properties']['tilesize']
+    tile_pad = tile['properties']['pad']
+    tile_res = int(tile['properties']['resolution'])
+    tile_side = tile_size+(2*tile_pad)
+
+    im = dl.raster.ndarray(
+        ids,
+        bands=bands,
+        resampler=resampler,
+        data_type='UInt16',
+        dltile=tile,
+        #cutline=shape['geometry'], 
+        processing_level=processing_level,
+        )
+    # create cloudscore from image
+    score_map = cloudscore_image(im, window, tile_pad=tile_pad)
+    # -> store output
+
+    # classify image using nn
+    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True)
+    predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
+        use_multiprocessing=False, max_queue_size=1, workers=1,)
+    Yhat = predictions.argmax(axis=-1)
+    Yhat_square = Yhat.reshape((tile_size,tile_size),order='F')
+    Yhat_tile = np.zeros((tile_side,tile_side),dtype='uint8')
+    Yhat_tile.fill(255)
+    Yhat_tile[tile_pad:-tile_pad,tile_pad:-tile_pad] = Yhat_square[:,:]
+    # -> store output
+
+    return
+
+
+# RGP REMAPPING
 
 def rgb_clouds(Y,BIP=True):
     rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
