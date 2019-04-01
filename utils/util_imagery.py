@@ -1,6 +1,9 @@
 import descarteslabs as dl
 import util_rasters
 import numpy as np
+from image_sample_generator import ImageSampleGenerator
+import os
+import gdal
 
 def download_imagery(data_root, place, source, bands, shape, tiles, image_dict, 
 		resampler='bilinear', processing_level=None):
@@ -433,50 +436,100 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
 def cloudscore_image(im, window,
                     tile_pad=32,
                     ):
-    image = util_imagery.s2_preprocess(im)
-    Y, key = util_imagery.s2_cloud_mask(image,get_rgb=False,bands_first=True)
+    image = s2_preprocess(im)
+    Y, key = s2_cloud_mask(image,get_rgb=False,bands_first=True)
     cloud_mask = (Y==4)
-    score_map = util_imagery.map_cloud_scores(cloud_mask, window, pad=tile_pad)
-    return score_map
+    score_map = map_cloud_scores(cloud_mask, window, pad=tile_pad)
+    return cloud_mask, score_map
 
-def cloudscore_and_classify_tile_memory(ids, tile, network,
-                    local=True,
+def map_tile(dl_id, tile, tile_id, network,
+                    read_local=False,
+                    write_local=True,
+                    make_watermask=True,
+                    store_cloudmask=False,
+                    store_watermask=False,
                     bands=['blue','green','red','nir','swir1','swir2','alpha'],
                     resampler='bilinear',
                     #cutline=shape['geometry'], #cut or no?
                     processing_level=None,
-                    window=17
+                    window=17,
+                    data_root='/data/phase_iv/',
+                    zfill=4
                     ):
+    dl_id_cleaned = dl_id.replace(':','^')
     tile_size = tile['properties']['tilesize']
     tile_pad = tile['properties']['pad']
     tile_res = int(tile['properties']['resolution'])
     tile_side = tile_size+(2*tile_pad)
 
-    im = dl.raster.ndarray(
-        ids,
-        bands=bands,
-        resampler=resampler,
-        data_type='UInt16',
-        dltile=tile,
-        #cutline=shape['geometry'], 
-        processing_level=processing_level,
-        )
-    # create cloudscore from image
-    score_map = cloudscore_image(im, window, tile_pad=tile_pad)
-    # -> store output
+    if read_local: # read file on local machine
+        d=2
+        # tilepath = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
+        #     place+'_'+source+'_'+image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+        #     'tile'+str(tile_id).zfill(zfill)+'.tif'
+    else: # read from dl
+        im, metadata = dl.raster.ndarray(
+            dl_id,
+            bands=bands,
+            resampler=resampler,
+            data_type='UInt16',
+            #cutline=shape['geometry'], 
+            order='gdal',
+            dltile=tile,
+            processing_level=processing_level,
+            )
+    # insert test here for if imagery is empty: how else to account for 'empty' tiles?
+    # will become more important/challenging as we move to generalized imagery
+    # on the other hand, maybe without a cutline this isn't an issue.
+    # placeholder comment for now, let's see how the application context develops
 
+    # create cloudscore from image
+    cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad)
     # classify image using nn
     generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True)
     predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
         use_multiprocessing=False, max_queue_size=1, workers=1,)
     Yhat = predictions.argmax(axis=-1)
     Yhat_square = Yhat.reshape((tile_size,tile_size),order='F')
-    Yhat_tile = np.zeros((tile_side,tile_side),dtype='uint8')
-    Yhat_tile.fill(255)
-    Yhat_tile[tile_pad:-tile_pad,tile_pad:-tile_pad] = Yhat_square[:,:]
+    lulc = np.zeros((tile_side,tile_side),dtype='uint8')
+    lulc.fill(255)
+    lulc[tile_pad:-tile_pad,tile_pad:-tile_pad] = Yhat_square[:,:]
     # -> store output
+    if make_watermask:
+        water_mask = calc_water_mask(im[:-1], bands_first=True)
+    else:
+        water_mask = None
 
-    return
+    # -> store output
+    if write_local: # write to file on local machine
+        # check if corresponding directory exists
+        # if not, create
+        scene_dir = data_root + 'scenes/' + dl_id_cleaned
+        #print scene_dir
+        try: 
+            os.makedirs(scene_dir)
+        except OSError:
+            if not os.path.isdir(scene_dir):
+                raise
+        # write cloud score map (and cloud mask? water mask?) to disk
+        scorepath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+            'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
+        #print scorepath
+        geo = tile['properties']['geotrans']
+        prj = str(tile['properties']['wkt'])
+        util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)
+        if store_cloudmask:
+            cloudpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+            'tile'+str(tile_id).zfill(zfill)+'_'+'cloudmask'+'.tif'
+            util_rasters.write_1band_geotiff(cloudpath, cloud_mask, geo, prj, data_type=gdal.GDT_Byte)
+        if store_watermask and make_watermask:
+            waterpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+                'tile'+str(tile_id).zfill(zfill)+'_'+'watermask'+'.tif'
+            util_rasters.write_1band_geotiff(waterpath, water_mask, geo, prj, data_type=gdal.GDT_Byte)
+    else: #write to dl catalog
+        d=2
+
+    return cloud_mask, cloud_scores, lulc, water_mask
 
 
 # RGP REMAPPING
