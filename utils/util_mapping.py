@@ -86,7 +86,8 @@ def map_tile(dl_id, tile, tile_id, network,
                     data_root='/data/phase_iv/',
                     zfill=4
                     ):
-    dl_id_cleaned = dl_id.replace(':','^')
+    dl_id = str(dl_id)
+    dl_id_short = dl_id[str.rfind(dl_id,':')+1:]
     tile_size = tile['properties']['tilesize']
     tile_pad = tile['properties']['pad']
     tile_res = int(tile['properties']['resolution'])
@@ -108,10 +109,13 @@ def map_tile(dl_id, tile, tile_id, network,
             dltile=tile,
             processing_level=processing_level,
             )
+    dl_id = str(dl_id)
+
     # insert test here for if imagery is empty: how else to account for 'empty' tiles?
     # will become more important/challenging as we move to generalized imagery
     # on the other hand, maybe without a cutline this isn't an issue.
     # placeholder comment for now, let's see how the application context develops
+    blank_mask = np.invert(im[-1])
 
     # create cloudscore from image
     cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad)
@@ -124,9 +128,11 @@ def map_tile(dl_id, tile, tile_id, network,
     lulc = np.zeros((tile_side,tile_side),dtype='uint8')
     lulc.fill(255)
     lulc[tile_pad:-tile_pad,tile_pad:-tile_pad] = Yhat_square[:,:]
+    lulc[blank_mask]=255
     # -> store output
     if make_watermask:
         water_mask = util_imagery.calc_water_mask(im[:-1], bands_first=True)
+        water_mask[blank_mask] = 255
     else:
         water_mask = None
 
@@ -134,7 +140,7 @@ def map_tile(dl_id, tile, tile_id, network,
     if write_local: # write to file on local machine
         # check if corresponding directory exists
         # if not, create
-        scene_dir = data_root + 'scenes/' + dl_id_cleaned
+        scene_dir = data_root + 'scenes/' + dl_id_short
         #print scene_dir
         try: 
             os.makedirs(scene_dir)
@@ -142,24 +148,25 @@ def map_tile(dl_id, tile, tile_id, network,
             if not os.path.isdir(scene_dir):
                 raise
         # write cloud score map (and cloud mask? water mask?) to disk
-        scorepath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+        scorepath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
         #print scorepath
         geo = tile['properties']['geotrans']
         prj = str(tile['properties']['wkt'])
         util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)
         if store_cloudmask:
-            cloudpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+            cloudpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'cloudmask'+'.tif'
             util_rasters.write_1band_geotiff(cloudpath, cloud_mask, geo, prj, data_type=gdal.GDT_Byte)
         if store_watermask and make_watermask:
-            waterpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+            waterpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
                 'tile'+str(tile_id).zfill(zfill)+'_'+'watermask'+'.tif'
             util_rasters.write_1band_geotiff(waterpath, water_mask, geo, prj, data_type=gdal.GDT_Byte)
-        lulcpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+        lulcpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'lulc'+'.tif'
         util_rasters.write_1band_geotiff(lulcpath, lulc, geo, prj, data_type=gdal.GDT_Byte)
     else: #write to dl catalog
         d=2
 
     return cloud_mask, cloud_scores, lulc, water_mask
+
