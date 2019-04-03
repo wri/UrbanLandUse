@@ -170,3 +170,27 @@ def map_tile(dl_id, tile, tile_id, network,
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
+
+def prep_lulc_derivation_arrays(lulc_paths, score_paths):
+    assert len(lulc_paths)==len(score_paths)
+    img, geo, prj, cols, rows = util_rasters.load_geotiff(lulc_paths[0],dtype='uint8')
+    assert img.ndim==2
+    lulcs = np.zeros((len(lulc_paths),)+img.shape, dtype='uint8')
+    scores = np.zeros((len(lulc_paths),)+img.shape, dtype='float32')
+    for i in range(len(lulc_paths)):
+        lulc_img, lulc_geo, lulc_prj, lulc_cols, lulc_rows = util_rasters.load_geotiff(lulc_paths[i],dtype='uint8')
+        assert img.shape==lulc_img.shape
+        assert geo==lulc_geo
+        assert prj==lulc_prj
+        assert cols==lulc_cols
+        assert rows==lulc_rows
+        scores_img, scores_geo, scores_prj, scores_cols, scores_rows = util_rasters.load_geotiff(score_paths[0],dtype='float32')
+        assert img.shape==scores_img.shape
+        assert geo==scores_geo
+        assert prj==scores_prj
+        assert cols==scores_cols
+        assert rows==scores_rows
+        lulcs[i]=lulc_img
+        scores[i]=scores_img
+    return lulcs, scores
+
