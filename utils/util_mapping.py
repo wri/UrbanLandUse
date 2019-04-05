@@ -115,8 +115,8 @@ def map_tile(dl_id, tile, tile_id, network,
     # will become more important/challenging as we move to generalized imagery
     # on the other hand, maybe without a cutline this isn't an issue.
     # placeholder comment for now, let's see how the application context develops
-    blank_mask = np.invert(im[-1])
-
+    alpha_mask = im[-1].astype(bool)
+    blank_mask = np.invert(alpha_mask)
     # create cloudscore from image
     cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad)
     # classify image using nn
