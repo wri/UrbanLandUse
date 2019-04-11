@@ -141,6 +141,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # check if corresponding directory exists
         # if not, create
         scene_dir = data_root + 'scenes/' + dl_id_short
+        
         #print scene_dir
         try: 
             os.makedirs(scene_dir)
