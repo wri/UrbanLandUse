@@ -195,3 +195,64 @@ def prep_lulc_derivation_arrays(lulc_paths, score_paths):
         scores[i]=scores_img
     return lulcs, scores
 
+# lulcs and scores are already numpy stacks of 2d maps
+def derive_lulc_map_binary(lulcs, scores, categories=[0,1,2], threshold=0.05):
+    array_shape = lulcs[0].shape
+    cats = list(categories)
+    cats.append(255)
+    votes = np.zeros(((len(cats),)+array_shape), dtype='uint8')
+    valid_stack = (scores<=threshold)
+    
+    for i in range(len(cats)):
+        c = cats[i]
+        mask_stack = (lulcs==c)
+        #print mask_stack
+        votes_stack = mask_stack & valid_stack
+        vote_count = np.sum(votes_stack, axis=0)
+        #print vote_count
+        votes[i] = vote_count
+    cat_votes = np.sum(votes[:-1], axis=0)
+    nodata_mask = (cat_votes==0)
+#     print votes
+    winner_indices = np.argmax(votes[:-1], axis=0)
+    lulc_derived = np.zeros(array_shape, dtype='uint8')
+    for i in range(len(cats)):
+        mask = (winner_indices==i)
+        lulc_derived[mask] = cats[i]
+    lulc_derived[nodata_mask]=255
+#     print winner_indices
+#     print lulc_derived
+    return lulc_derived
+
+# lulcs and scores are already numpy stacks of 2d maps
+def derive_lulc_map_weighted(lulcs, scores, categories=[0,1,2], threshold=0.5, stretch=False):
+    array_shape = lulcs[0].shape
+    cats = list(categories)
+    cats.append(255)
+    votes = np.zeros(((len(cats),)+array_shape), dtype='float32')
+    valid_masks = (scores<=threshold)
+    
+    if stretch:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), np.divide(scores, threshold))
+    else:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), scores) # 1 - scores
+    
+    for i in range(len(cats)):
+        c = cats[i]
+        cat_masks = (lulcs==c)
+        full_masks = (cat_masks & valid_masks)
+        votes_stack = np.multiply(full_masks, reverse_scores)
+        votes[i] = np.sum(votes_stack, axis=0)
+    
+    cat_votes = np.sum(votes[:-1], axis=0)
+    nodata_mask = (cat_votes==0)
+#     print votes
+    winner_indices = np.argmax(votes[:-1], axis=0)
+    lulc_derived = np.zeros(array_shape, dtype='uint8')
+    for i in range(len(cats)):
+        mask = (winner_indices==i)
+        lulc_derived[mask] = cats[i]
+    lulc_derived[nodata_mask]=255
+#     print winner_indices
+#     print lulc_derived
+    return lulc_derived
