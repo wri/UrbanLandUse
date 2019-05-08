@@ -71,7 +71,7 @@ class TilewiseGenerator(keras.utils.Sequence):
         self.size = self.batch_size^2
         # for starters, will make columns into batches/steps
         self.steps= self.batch_size
-        #print 'data set'
+        #print('data set')
         self.reset()
 
     def __len__(self):
@@ -88,8 +88,8 @@ class TilewiseGenerator(keras.utils.Sequence):
             raise ValueError('illegal batch index:',str(index))
         self.batch_index = index
         inputs=self._get_inputs(index)
-        #print 'inputs', inputs.shape
-        #print 'batch #'+str(index)+' generated with shape '+str(inputs.shape)
+        #print('inputs', inputs.shape)
+        #print('batch #'+str(index)+' generated with shape '+str(inputs.shape))
         return inputs
 
     def _get_inputs(self, index):
@@ -117,7 +117,7 @@ class TilewiseGenerator(keras.utils.Sequence):
         image_tile_path = self.data_root+self.place+'/imagery/'+self.processing+'/'+\
             self.place+'_'+self.source+'_'+self.image_suffix+'_'+str(self.tile_resolution)+'m'+'_'+'p'+str(self.tile_pad)+'_'+\
             'tile'+str(index).zfill(self.zfill)+'.tif'
-        #print image_tile_path
+        #print(image_tile_path)
         return image_tile_path
 
     def _prep_image(self,
@@ -128,7 +128,7 @@ class TilewiseGenerator(keras.utils.Sequence):
         image = image.astype('float32')
         image = image/10000.
         image = np.clip(image,0.0,1.0)
-        #print 'image prepped'
+        #print('image prepped')
         return image
 
     

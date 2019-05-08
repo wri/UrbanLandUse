@@ -65,7 +65,7 @@ def write_multiband_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte
         opts = ["INTERLEAVE=BAND", "COMPRESS=LZW", "PREDICTOR=1", "TILED=YES", "BLOCKXSIZE=512", "BLOCKYSIZE=512"]
         outds  = driver.Create(outfile, cols, rows, bands, data_type, options=opts)
     else:
-        #print outfile, cols, rows, bands, data_type
+        #print(outfile, cols, rows, bands, data_type)
         outds  = driver.Create(outfile, cols, rows, bands, data_type)
     outds.SetGeoTransform(geotrans)
     outds.SetProjection(prj)
@@ -104,7 +104,7 @@ def stats_byte_raster(y,
     for c in range(256):
         if np.sum((y == c))>0:
             yd[c] = np.sum((y == c))
-            print c, yd[c], category_label[c] if c in category_label else ''
+            print(c, yd[c], category_label[c] if c in category_label else '')
     if(show):
         if lulc:
             rgb = rgb_lulc_result(y)
@@ -142,14 +142,14 @@ def stats_byte_tiles(data_path, place, tiles, label_suffix,
 
     for tile_id in tile_stats.keys():
         if tile_stats[tile_id][no_data] != tile_pixels:
-            print tile_id, tile_stats[tile_id]
+            print(tile_id, tile_stats[tile_id])
         for c in categories:
             try:
                 agg_stats[c] = agg_stats[c] + tile_stats[tile_id][c]
             except:
                 continue
 
-    print agg_stats
+    print(agg_stats)
 
     return tile_stats, agg_stats
 
@@ -163,10 +163,10 @@ def plot_image(array,figsize=(8,8)):
 
 def crop_raster(cutline, input, output):
     command = 'gdalwarp -q -cutline {0} -of GTiff {1} {2}'.format(cutline, input, output)
-    print '>>>',command
+    print('>>>',command)
     try:
         s=0
-        print subprocess.check_output(command.split(), shell=False)
+        print(subprocess.check_output(command.split(), shell=False))
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     return
@@ -176,6 +176,6 @@ def crop_maps(cutline, inputs):
     for input in inputs:
         output = input[0:input.index('.tif')] + '_cut.tif'
         outputs.append(output)
-        #print input, '->', output
+        #print(input, '->', output)
         crop_raster(cutline, input, output)
     return outputs

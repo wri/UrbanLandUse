@@ -41,7 +41,7 @@ class ImageSampleGenerator(keras.utils.Sequence):
         image = image.astype('float32')
         image = image/10000.
         image = np.clip(image,0.0,1.0)
-        #print 'image prepped'
+        #print('image prepped')
         return image
 
     def _set_data(self,
@@ -54,7 +54,7 @@ class ImageSampleGenerator(keras.utils.Sequence):
         self.size = self.batch_size^2
         # for starters, will make columns into batches/steps
         self.steps= self.batch_size
-        #print 'data set'
+        #print('data set')
         self.reset()
 
     def __len__(self):
@@ -71,8 +71,8 @@ class ImageSampleGenerator(keras.utils.Sequence):
             raise ValueError('illegal batch index:',str(index))
         self.batch_index = index
         inputs=self._get_inputs(index)
-        #print 'inputs', inputs.shape
-        #print 'batch #'+str(index)+' generated with shape '+str(inputs.shape)
+        #print('inputs', inputs.shape)
+        #print('batch #'+str(index)+' generated with shape '+str(inputs.shape))
         return inputs
 
     def _get_inputs(self, index):

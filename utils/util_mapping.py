@@ -13,7 +13,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     tile = tiles['features'][tile_id]
     resolution = int(tile['properties']['resolution'])
 
-    #print 'tile', tile_id, 'load VIR image'
+    #print('tile', tile_id, 'load VIR image')
     # assert resolution==10 or resolution==5
     if resolution==10:
         zfill = 3
@@ -25,13 +25,13 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
         raise Exception('bad resolution: '+str(resolution))
     vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
 
-    #print vir_file
+    #print(vir_file)
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
-    #print 'vir shape:',vir.shape
+    #print('vir shape:',vir.shape)
 
     water = util_imagery.calc_water_mask(vir[0:6], threshold=threshold, bands_first=True)
     water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
-    print water_file
+    print(water_file)
     util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
 
@@ -55,7 +55,7 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
         for i in range(cols):
             clouds_window = clouds[j-r:j+r+1,i-r:i+r+1]
 #             if clouds_window.shape!=(look_window, look_window):
-#                 print 'bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape)
+#                 print('bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape))
             window_score = scorer(clouds_window)
             score_map[j,i] = window_score
     if pad is not None:
@@ -142,7 +142,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # if not, create
         scene_dir = data_root + 'scenes/' + dl_id_short
         
-        #print scene_dir
+        #print(scene_dir)
         try: 
             os.makedirs(scene_dir)
         except OSError:
@@ -151,7 +151,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # write cloud score map (and cloud mask? water mask?) to disk
         scorepath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
-        #print scorepath
+        #print(scorepath)
         geo = tile['properties']['geotrans']
         prj = str(tile['properties']['wkt'])
         util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)
@@ -206,22 +206,22 @@ def derive_lulc_map_binary(lulcs, scores, categories=[0,1,2], threshold=0.05):
     for i in range(len(cats)):
         c = cats[i]
         mask_stack = (lulcs==c)
-        #print mask_stack
+        #print(mask_stack)
         votes_stack = mask_stack & valid_stack
         vote_count = np.sum(votes_stack, axis=0)
-        #print vote_count
+        #print(vote_count)
         votes[i] = vote_count
     cat_votes = np.sum(votes[:-1], axis=0)
     nodata_mask = (cat_votes==0)
-#     print votes
+#     print(votes)
     winner_indices = np.argmax(votes[:-1], axis=0)
     lulc_derived = np.zeros(array_shape, dtype='uint8')
     for i in range(len(cats)):
         mask = (winner_indices==i)
         lulc_derived[mask] = cats[i]
     lulc_derived[nodata_mask]=255
-#     print winner_indices
-#     print lulc_derived
+#     print(winner_indices)
+#     print(lulc_derived)
     return lulc_derived
 
 # lulcs and scores are already numpy stacks of 2d maps
@@ -246,13 +246,13 @@ def derive_lulc_map_weighted(lulcs, scores, categories=[0,1,2], threshold=0.5, s
     
     cat_votes = np.sum(votes[:-1], axis=0)
     nodata_mask = (cat_votes==0)
-#     print votes
+#     print(votes)
     winner_indices = np.argmax(votes[:-1], axis=0)
     lulc_derived = np.zeros(array_shape, dtype='uint8')
     for i in range(len(cats)):
         mask = (winner_indices==i)
         lulc_derived[mask] = cats[i]
     lulc_derived[nodata_mask]=255
-#     print winner_indices
-#     print lulc_derived
+#     print(winner_indices)
+#     print(lulc_derived)
     return lulc_derived

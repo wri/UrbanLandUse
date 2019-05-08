@@ -9,11 +9,11 @@ def calc_confusion(Yhat,Y,categories,silent=False):
     for j in range(n_categories):
         for i in range(n_categories):
             confusion[j,i] = np.sum(np.logical_and((Yhat==categories[i]),(Y==categories[j])))
-            # print j,i, confusion[j,i], categories[j], categories[i] 
-        print categories[j], np.sum(confusion[j,:])
+            # print(j,i, confusion[j,i], categories[j], categories[i])
+        print(categories[j], np.sum(confusion[j,:]))
     if not silent:
-	    print confusion
-	    print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
+	    print(confusion)
+	    print(confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum()))
     return confusion
 
 
@@ -98,7 +98,7 @@ def record_model_creation(
             valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy, 
             valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
             ])
-    print 'model scorecard updated'
+    print('model scorecard updated')
     return
 
 def record_model_application(
@@ -115,5 +115,5 @@ def record_model_application(
             confusion, recalls[0], recalls[1], recalls[2], recalls[3], precisions[0], precisions[1], precisions[2], precisions[3], accuracy, 
             f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
             ])
-    print 'run scorecard updated'
+    print('run scorecard updated')
     return

@@ -19,13 +19,13 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
 	    raise Exception('bad resolution: '+str(resolution))
 
 	for suffix, ids in image_dict.iteritems():
-	    print suffix, ids
+	    print(suffix, ids)
 
 	    for tile_id in range(len(tiles['features'])):
 	        tile = tiles['features'][tile_id]
 	        basename = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
 	        	place+'_'+source+'_'+suffix+'_'+str(resolution)+'m'+'_'+'p'+str(pad)+'_'+'tile'+str(tile_id).zfill(zfill)
-	        print 'downloading tile'+str(tile_id).zfill(zfill)+':', basename+'.tif'
+	        print('downloading tile'+str(tile_id).zfill(zfill)+':', basename+'.tif')
 	        vir = dl.raster.raster(
                 ids,
                 bands=bands,
@@ -45,7 +45,7 @@ def s2_preprocess(im):
     im = im.astype('float32')
     im = im/10000.
     im = np.clip(im,0.0,1.0)
-    #print 'im prepped'
+    #print('im prepped')
     return im
 
 def spectral_index(img,a,b,tol=1e-6,bands_first=False):
@@ -86,7 +86,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     #
     # check that we have enough pixels to work with
     if ((valid_fraction<0.01) | (n_dark_pix<100)):
-        print "not enough dark pixels for haze correction"
+        print("not enough dark pixels for haze correction")
         return img, refl_offsets
     #
     if n_dark_pix>1e5:
@@ -94,7 +94,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     else:
         ds = 1.
     n_dark_pix /= ds
-    print 'n_dark_pixels: %i' % n_dark_pix
+    print('n_dark_pixels: %i' % n_dark_pix)
     #
     # iterate over bands, measure haze offsets
     offsets = np.zeros(n_bands,dtype=np.float32)
@@ -118,7 +118,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     for b in range(n_bands):
         corrected_img[b][:,:] = img[b][:,:] - refl_offsets[b]
         corrected_img[b] = np.clip(corrected_img[b],0.0,1.5)
-        print b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max() 
+        print(b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max())
     #
     return corrected_img, refl_offsets
 
@@ -308,10 +308,10 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
     min_tiles = np.full([ntiles, tilepixels, tilepixels], np.nan, dtype='float32')
 
     for j in range(len(ids)):
-        print 'image', j
+        print('image', j)
         for tile_id in range(ntiles):
             if(tile_id % 50 == 0):
-               print '    tile', tile_id
+               print('    tile', tile_id)
             tile = tiles['features'][tile_id]
 
             vir, vir_meta = dl.raster.ndarray(
@@ -321,7 +321,7 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
                 dltile=tile,
                 #cutline=shape['geometry'] # removing to try to sidestep nan issue
             )
-            #print vir.shape
+            #print(vir.shape)
             vir = vir.astype('float32')
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
@@ -340,7 +340,7 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
             np.fmax(ndvi_j, max_tiles[tile_id], out=max_tiles[tile_id], where=goodpixels_j)
             np.fmin(ndvi_j, min_tiles[tile_id], out=min_tiles[tile_id], where=goodpixels_j)
 
-    print 'done'
+    print('done')
     return min_tiles, max_tiles
 
 
@@ -359,7 +359,7 @@ def show_vir(file,
     viz = np.clip(viz,0,255)
     viz = viz.astype('uint8')
     for b in range(img.shape[2]):
-        print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
+        print(b, np.min(viz[:,:,b]), np.max(viz[:,:,b]))
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
 
@@ -383,7 +383,7 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
     tile = tiles['features'][tile_id]
     resolution = int(tile['properties']['resolution'])
 
-    #print 'tile', tile_id, 'load VIR image'
+    #print('tile', tile_id, 'load VIR image')
     # assert resolution==10 or resolution==5
     if resolution==10:
         zfill = 3
@@ -395,13 +395,13 @@ def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, thresho
         raise Exception('bad resolution: '+str(resolution))
     vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
 
-    #print vir_file
+    #print(vir_file)
     vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
-    #print 'vir shape:',vir.shape
+    #print('vir shape:',vir.shape)
 
     water = calc_water_mask(vir[0:6], threshold=threshold, bands_first=True)
     water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
-    print water_file
+    print(water_file)
     util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
     return water
 
@@ -425,7 +425,7 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
         for i in range(cols):
             clouds_window = clouds[j-r:j+r+1,i-r:i+r+1]
 #             if clouds_window.shape!=(look_window, look_window):
-#                 print 'bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape)
+#                 print('bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape))
             window_score = scorer(clouds_window)
             score_map[j,i] = window_score
     if pad is not None:
@@ -505,7 +505,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # check if corresponding directory exists
         # if not, create
         scene_dir = data_root + 'scenes/' + dl_id_cleaned
-        #print scene_dir
+        #print(scene_dir)
         try: 
             os.makedirs(scene_dir)
         except OSError:
@@ -514,7 +514,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # write cloud score map (and cloud mask? water mask?) to disk
         scorepath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
-        #print scorepath
+        #print(scorepath)
         geo = tile['properties']['geotrans']
         prj = str(tile['properties']['wkt'])
         util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)

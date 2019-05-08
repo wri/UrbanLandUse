@@ -47,7 +47,7 @@ def generate_chips(data_root, place, tiles,
             # sample file name: /data/phase_iv/sitapur/gt/sitapur_aue0_5m_p32_tile0586_lulc.tif
         path_base = data_root+place+'/gt/'+place+'_'+label_suffix+label_lot+'_'+str(resolution)+'m'+'_'+\
             'p'+str(pad)+'_'+'tile'+str(tile_id).zfill(zfill)
-        #print path_base
+        #print(path_base)
         path_lulc = path_base+'_'+'lulc.tif'
         path_locale = path_base+'_'+'locale.tif'
         lulc,_,_,_,_ = util_rasters.load_geotiff(path_lulc,dtype='uint8')
@@ -62,7 +62,7 @@ def generate_chips(data_root, place, tiles,
             continue
         if show_stats:
             util_rasters.stats_byte_raster(lulc, category_label, lulc=True, show=True)
-        print place + ' '+ image_suffix + ': valid pixels in tile'+str(tile_id).zfill(zfill)+':', len(locs[0])
+        print(place + ' '+ image_suffix + ': valid pixels in tile'+str(tile_id).zfill(zfill)+':', len(locs[0]))
         #image path example: /data/phase_iv/sitapur/imagery/none/sitapur_s2_E_5m_p32_tile0006.tif
         path_image = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+place+'_'+source+'_'+\
             image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(pad)+'_'+'tile'+str(tile_id).zfill(zfill)+'.tif'
@@ -70,7 +70,7 @@ def generate_chips(data_root, place, tiles,
         for i in range(len(locs[0])):
             row = locs[0][i]
             col = locs[1][i]
-            #print row,col,lulc[row,col]
+            #print(row,col,lulc[row,col])
             # for each pixel:
             # grab a window of imagery centered around target pixel
             xoff = col - chip_radius; yoff = row - chip_radius;
@@ -80,13 +80,13 @@ def generate_chips(data_root, place, tiles,
                 place+'_'+label_suffix+label_lot+'_'+source+'_'+image_suffix+'_'+str(resolution)+'m'+'_'+\
                 't'+str(tile_id).zfill(zfill)+'_'+'x'+str(col-pad).zfill(3)+'y'+str(row-pad).zfill(3)+'_'+\
                 'c'+str(lulc[row,col])+'.tif'
-            #print path_image
-            #print path_chip
-            #print xoff, yoff, xsize, ysize
+            #print(path_image)
+            #print(path_chip)
+            #print(xoff, yoff, xsize, ysize)
             #gdal template: gdal_translate -srcwin xstart ystart xstop ystop input.raster output.raster
             #!gdal_translate -q -srcwin {xoff} {yoff} {xsize} {ysize} {path_image} {path_chip}
             command = 'gdal_translate -q -srcwin {0} {1} {2} {3} {4} {5}'.format(xoff,yoff,xsize,ysize,path_image,path_chip)
-            #print '>>>',command
+            #print('>>>',command)
             try:
                 subprocess.check_output(command.split(), shell=False)
             except subprocess.CalledProcessError as e:

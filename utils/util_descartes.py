@@ -38,7 +38,7 @@ def show_scene(ids, geom={}, resolution=60,
         resolution=resolution,
         cutline=geom,
     )
-    print 'shape:', arr.shape
+    print('shape:', arr.shape)
     # pprint(meta)
     fig = plt.figure(figsize=figsize)
     fig.suptitle(title)
@@ -56,7 +56,7 @@ def show_tile(ids, tile={}, resolution=60,
         data_type='Byte',
         dltile=tile,
     )
-    print 'shape:', arr.shape
+    print('shape:', arr.shape)
     # pprint(meta)
     fig = plt.figure(figsize=figsize)
     fig.suptitle(title)
@@ -93,16 +93,16 @@ def info_dl_products(silent=False):
 def info_dl_bands(product='sentinel-2:L1C', silent=False):
     bands_info = dl.metadata.bands(product)
     if(not silent):
-        print bands_info[0].keys()
+        print(bands_info[0].keys())
         # import operator
         # bands_info.sort(key=operator.itemgetter('name'))
         for b in range(len(bands_info)):
             band_info = bands_info[b]
-            print b, band_info['name'], band_info['description'],
+            print(b, band_info['name'], band_info['description'])
             try: 
-                print band_info['name_vendor'], band_info['vendor_order']
+                print(band_info['name_vendor'], band_info['vendor_order'])
             except:
-                print 'derived band'
+                print('derived band')
                 continue
     return bands_info
 
@@ -114,22 +114,22 @@ def info_dl_vendor_bands(silent=False):
         try:
             if band_info['name_vendor']!='':
                 vendor_bands_info[band_info['name']] = bands_info[b]
-                if(not silent): print b, band_info['name'], 'add'
+                if(not silent): print(b, band_info['name'], 'add')
         except:
-            if(not silent): print b, band_info['name'], 'skip'
+            if(not silent): print(b, band_info['name'], 'skip')
             continue
-    print 
+    print() 
     bands = [ u'coastal-aerosol', u'blue', u'green', u'red',  u'nir',  u'swir1', u'swir2'] # S2
     for key in bands:
         try:
-            if(not silent): print vendor_bands_info[key]['name'], vendor_bands_info[key]['name_vendor'],
-            if(not silent): print 'physical_range', vendor_bands_info[key]['physical_range'],
-            if(not silent): print 'valid_range', vendor_bands_info[key]['data_range'],
-            if(not silent): print 'nbits', vendor_bands_info[key]['nbits'],
-            if(not silent): print 'resolution', vendor_bands_info[key]['resolution'],
+            if(not silent): print(vendor_bands_info[key]['name'], vendor_bands_info[key]['name_vendor'])
+            if(not silent): print('physical_range', vendor_bands_info[key]['physical_range'])
+            if(not silent): print('valid_range', vendor_bands_info[key]['data_range'])
+            if(not silent): print('nbits', vendor_bands_info[key]['nbits'])
+            if(not silent): print('resolution', vendor_bands_info[key]['resolution'])
         except:
-            if(not silent): print 'absent for this satellite',
-        if(not silent): print ' '
+            if(not silent): print('absent for this satellite')
+        if(not silent): print()
     return vendor_bands_info
 
 def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satellites=['S2A','S2B'], cloud_fraction_0=0.2, limit=200):
@@ -141,7 +141,7 @@ def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satel
         end_dt = datetime.strptime(end_time, "%Y-%m-%d")
         start_dt = end_dt - timedelta(days=days)
         start_time = start_dt.strftime('%Y-%m-%d')
-        print start_time, end_time
+        print(start_time, end_time)
 
     feature_collection_lookback = dl.metadata.search(sat_id=satellites, start_time=start_time, end_time=end_time, 
                                             cloud_fraction_0=cloud_fraction_0, limit=limit, geom=shape['geometry'])
@@ -154,7 +154,7 @@ def make_osm_raster(data_path, place, tile_id, tile, vir_ids, shape, new_raster=
                   bands=['alpha'], tile_suffix='osm', layer_suffix='_OSM_Roads', vector_format='geojson'):
     #
     imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+tile_suffix
-    #print 'imgfile', imgfile
+    #print('imgfile', imgfile)
     
     if(new_raster):
         ret = dl.raster.raster(
@@ -181,7 +181,10 @@ def make_osm_raster(data_path, place, tile_id, tile, vir_ids, shape, new_raster=
         os.environ['ZOSMSHP'] = zosmshp
     zosmimg = imgfile+'.tif'
     os.environ['ZOSMIMG'] = imgfile+'.tif'
-    #print 'gdal_rasterize -burn 6 -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg)
+    #print('gdal_rasterize -burn 6 -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg))
     command = 'gdal_rasterize -burn {3} -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg,burn_value)
-    print '>>>',command
-    print subprocess.check_output(command.split(), shell=False)
+    print('>>>',command)
+    print(subprocess.check_output(command.split(), shell=False))
+
+
+    

@@ -84,8 +84,8 @@ class SampleGenerator(object):
         self.rows=self.dataframe.iloc[start:end]
         inputs,self.profiles=self._get_inputs()
         targets=self._get_targets()
-        #print 'inputs', inputs.shape
-        #print 'targets', targets.shape
+        #print('inputs', inputs.shape)
+        #print('targets', targets.shape)
         return inputs, targets
         
     def _batch_range(self):
@@ -95,18 +95,18 @@ class SampleGenerator(object):
             * start/end indices for batch_index
         """
         if (self.batch_index+1>=self.steps):
-            print 'resetting batch stuff from next'
+            print('resetting batch stuff from next')
             self.reset()
         self.batch_index+=1
-        print 'batch index', self.batch_index
+        print('batch index', self.batch_index)
         start=self.batch_index*self.batch_size
         end=start+self.batch_size
         if end >= self.size:
             end = self.size-1
-            print 'last batch: start '+str(start)+', end '+str(end)
+            print('last batch: start '+str(start)+', end '+str(end))
         if (self.batch_index+1>=self.steps):
             end=self.size-1
-            print 'last batch: start '+str(start)+', end '+str(end)
+            print('last batch: start '+str(start)+', end '+str(end))
         else:
             end=start+self.batch_size
         return start,end
