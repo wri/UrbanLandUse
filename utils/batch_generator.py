@@ -4,9 +4,9 @@ import numpy as np
 import math
 import rasterio as rio
 import gdal
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 import threading
-import keras
+import tensorflow.keras as keras
 
 ULU_REPO = os.environ["ULU_REPO"]
 sys.path.append(ULU_REPO+'/utils')

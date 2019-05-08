@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import keras.backend as K
-from keras.callbacks import EarlyStopping, ModelCheckpoint, History
+import tensorflow.keras.backend as K
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, History
 import tensorflow as tf
 
 # loss function stuff
