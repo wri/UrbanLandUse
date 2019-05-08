@@ -78,13 +78,13 @@ class BatchGenerator(keras.utils.Sequence):
         if end >= self.size:
             # remember this interval is used [,) so want size as final index (not size-1)
             end = self.size
-            #print 'last batch: start '+str(start)+', end '+str(end)
+            #print('last batch: start '+str(start)+', end '+str(end))
 
         self.rows=self.dataframe.iloc[start:end]
         inputs=self._get_inputs()
         targets=self._get_targets()
-        #print 'inputs', inputs.shape
-        #print 'targets', targets.shape
+        #print('inputs', inputs.shape)
+        #print('targets', targets.shape)
 
         return inputs, targets
 

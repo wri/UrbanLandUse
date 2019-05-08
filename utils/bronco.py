@@ -268,8 +268,8 @@ def score(Yhat,Y,report=True):
     totals[2] += fn
     totals[3] += tn
     if report==True:
-        print "input shapes", Yhat.shape, Y.shape
-        print "scores [tp, fp, fn, tn]", tp, fp, fn, tn,         "accuracy", round(100*((tp + tn)/float(tp + fp + fn + tn)),1),"%"
+        print("input shapes", Yhat.shape, Y.shape)
+        print("scores [tp, fp, fn, tn]", tp, fp, fn, tn,         "accuracy", round(100*((tp + tn)/float(tp + fp + fn + tn)),1),"%")
 
 
 def confusion(Yhat,Y,categories):
@@ -278,10 +278,10 @@ def confusion(Yhat,Y,categories):
     for j in range(n_categories):
         for i in range(n_categories):
             confusion[j,i] = np.sum(np.logical_and((Yhat==categories[i]),(Y==categories[j])))
-            # print j,i, confusion[j,i], categories[j], categories[i] 
-        print categories[j], np.sum(confusion[j,:])
-    print confusion
-    print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
+            # print(j,i, confusion[j,i], categories[j], categories[i])
+        print(categories[j], np.sum(confusion[j,:]))
+    print(confusion)
+    print(confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum()))
     return confusion
 
 def show_scene(ids, geom={}, resolution=60,
@@ -296,7 +296,7 @@ def show_scene(ids, geom={}, resolution=60,
         resolution=resolution,
         cutline=geom,
     )
-    print ids, arr.shape
+    print(ids, arr.shape)
     # pprint(meta)
     fig = plt.figure(figsize=figsize)
     fig.suptitle(title)
@@ -314,7 +314,7 @@ def show_tile(ids, tile={}, resolution=60,
         data_type='Byte',
         dltile=tile,
     )
-    print ids, arr.shape
+    print(ids, arr.shape)
     # pprint(meta)
     fig = plt.figure(figsize=figsize)
     fig.suptitle(title)
@@ -345,7 +345,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     #
     # check that we have enough pixels to work with
     if ((valid_fraction<0.01) | (n_dark_pix<100)):
-        print "not enough dark pixels for haze correction"
+        print("not enough dark pixels for haze correction")
         return img, refl_offsets
     #
     if n_dark_pix>1e5:
@@ -353,7 +353,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     else:
         ds = 1.
     n_dark_pix /= ds
-    print 'n_dark_pixels: %i' % n_dark_pix
+    print('n_dark_pixels: %i' % n_dark_pix)
     #
     # iterate over bands, measure haze offsets
     offsets = np.zeros(n_bands,dtype=np.float32)
@@ -377,7 +377,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     for b in range(n_bands):
         corrected_img[b][:,:] = img[b][:,:] - refl_offsets[b]
         corrected_img[b] = np.clip(corrected_img[b],0.0,1.5)
-        print b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max() 
+        print(b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max())
     #
     return corrected_img, refl_offsets
 

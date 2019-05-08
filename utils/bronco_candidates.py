@@ -35,19 +35,19 @@ import descarteslabs as dl
 
 def info_studyareas(data_path, place):
     # NYU AoUE Study Region shape
-    #print place, place.title() # capitalized version of place name
+    #print(place, place.title())# capitalized version of place name
     place_title = place.title()
 
     place_shapefile = data_path+place_title+"_studyArea.shp"
     command = 'ogrinfo -al -so {0}'.format(place_shapefile)   # the command goes here
-    print '>>>',command
-    print subprocess.check_output(command.split(), shell=False)
+    print('>>>',command)
+    print(subprocess.check_output(command.split(), shell=False))
     
     #!ogrinfo -al -so $ZINSHPNAME
     place_shapefile = data_path+place_title+"_studyAreaEPSG4326.shp"
     command = 'ogrinfo -al -so {0}'.format(place_shapefile)   # the command goes here
-    print '>>>',command
-    print subprocess.check_output(command.split(), shell=False)
+    print('>>>',command)
+    print(subprocess.check_output(command.split(), shell=False))
     # !ogr2ogr -t_srs EPSG:4326 $ZOUTSHPNAME $ZINSHPNAME  # First time only
     return
 
@@ -63,7 +63,7 @@ def load_shape(place_shapefile):
     # if MultiPolygon (e.g., city='kampala')
     if (len(pol['geometry']['coordinates'])>1):
         # identify largest single polygon
-        print "MultiPolygon", len(pol['geometry']['coordinates'])
+        print("MultiPolygon", len(pol['geometry']['coordinates']))
         p_argmax = 0 
         pn_max = 0
         for p in range(len(pol['geometry']['coordinates'])):
@@ -71,11 +71,11 @@ def load_shape(place_shapefile):
             if pn>pn_max:
                 p_argmax = p
                 pn_max = pn
-            print p, pn, p_argmax, pn_max 
+            print(p, pn, p_argmax, pn_max )
         # make largest polygon the only polygon, move other polys to a backup variable 
         polygon = pol['geometry']['coordinates'][p_argmax]
     else:
-        print 'simple polygon'
+        print('simple polygon')
         polygon = pol['geometry']['coordinates']
        
     xmin =  180
@@ -107,16 +107,16 @@ def info_dl_products(silent=False):
 def info_dl_bands(product='sentinel-2:L1C', silent=False):
     bands_info = dl.metadata.bands(product)
     if(not silent):
-        print bands_info[0].keys()
+        print(bands_info[0].keys())
         # import operator
         # bands_info.sort(key=operator.itemgetter('name'))
         for b in range(len(bands_info)):
             band_info = bands_info[b]
-            print b, band_info['name'], band_info['description'],
+            print(b, band_info['name'], band_info['description'])
             try: 
-                print band_info['name_vendor'], band_info['vendor_order']
+                print(band_info['name_vendor'], band_info['vendor_order'])
             except:
-                print 'derived band'
+                print('derived band')
                 continue
     return bands_info
 
@@ -128,22 +128,22 @@ def info_dl_vendor_bands(silent=False):
         try:
             if band_info['name_vendor']!='':
                 vendor_bands_info[band_info['name']] = bands_info[b]
-                if(not silent): print b, band_info['name'], 'add'
+                if(not silent): print(b, band_info['name'], 'add')
         except:
-            if(not silent): print b, band_info['name'], 'skip'
+            if(not silent): print(b, band_info['name'], 'skip')
             continue
-    print 
+    print()
     bands = [ u'coastal-aerosol', u'blue', u'green', u'red',  u'nir',  u'swir1', u'swir2'] # S2
     for key in bands:
         try:
-            if(not silent): print vendor_bands_info[key]['name'], vendor_bands_info[key]['name_vendor'],
-            if(not silent): print 'physical_range', vendor_bands_info[key]['physical_range'],
-            if(not silent): print 'valid_range', vendor_bands_info[key]['data_range'],
-            if(not silent): print 'nbits', vendor_bands_info[key]['nbits'],
-            if(not silent): print 'resolution', vendor_bands_info[key]['resolution'],
+            if(not silent): print(vendor_bands_info[key]['name'], vendor_bands_info[key]['name_vendor'])
+            if(not silent): print('physical_range', vendor_bands_info[key]['physical_range'])
+            if(not silent): print('valid_range', vendor_bands_info[key]['data_range'])
+            if(not silent): print('nbits', vendor_bands_info[key]['nbits'])
+            if(not silent): print('resolution', vendor_bands_info[key]['resolution'])
         except:
-            if(not silent): print 'absent for this satellite',
-        if(not silent): print ' '
+            if(not silent): print('absent for this satellite')
+        if(not silent): print(' ')
     return vendor_bands_info
 
 def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satellites=['S2A','S2B'], cloud_fraction_0=0.2, limit=200):
@@ -155,7 +155,7 @@ def get_lookback_ids(ids, shape, start_time=None, end_time=None, days=365, satel
         end_dt = datetime.strptime(end_time, "%Y-%m-%d")
         start_dt = end_dt - timedelta(days=days)
         start_time = start_dt.strftime('%Y-%m-%d')
-        print start_time, end_time
+        print(start_time, end_time)
 
     feature_collection_lookback = dl.metadata.search(sat_id=satellites, start_time=start_time, end_time=end_time, 
                                             cloud_fraction_0=cloud_fraction_0, limit=limit, geom=shape['geometry'])
@@ -173,10 +173,10 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
     min_tiles = np.full([ntiles, tilepixels, tilepixels], np.nan, dtype='float32')
 
     for j in range(len(s2_ids)):
-        print 'image', j
+        print('image', j)
         for tile_id in range(ntiles):
             if(tile_id % 50 == 0):
-               print '    tile', tile_id
+               print('    tile', tile_id)
             tile = tiles['features'][tile_id]
 
             vir, vir_meta = dl.raster.ndarray(
@@ -186,7 +186,7 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
                 dltile=tile,
                 #cutline=shape['geometry'] # removing to try to sidestep nan issue
             )
-            #print vir.shape
+            #print(vir.shape)
             vir = vir.astype('float32')
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
@@ -205,7 +205,7 @@ def calc_ndvi_minmax(s2_ids, tiles, shape):
             np.fmax(ndvi_j, max_tiles[tile_id], out=max_tiles[tile_id], where=goodpixels_j)
             np.fmin(ndvi_j, min_tiles[tile_id], out=min_tiles[tile_id], where=goodpixels_j)
 
-    print 'done'
+    print('done')
     return min_tiles, max_tiles
 
 def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
@@ -218,10 +218,10 @@ def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
     min_tiles = np.full([ntiles, tilepixels, tilepixels], np.nan, dtype='float32')
 
     for j in range(len(s2_ids)):
-        print 'image', j
+        print('image', j)
         for tile_id in range(ntiles):
             if(tile_id % 50 == 0):
-               print '    tile', tile_id
+               print('    tile', tile_id)
             tile = tiles['features'][tile_id]
 
             vir, vir_meta = dl.raster.ndarray(
@@ -231,7 +231,7 @@ def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
                 dltile=tile,
                 #cutline=shape['geometry'] # removing to try to sidestep nan issue
             )
-            #print vir.shape
+            #print(vir.shape)
             vir = vir.astype('float32')
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
@@ -250,12 +250,12 @@ def calc_index_minmax(s2_ids, tiles, shape, band_a, band_b):
             np.fmax(ndvi_j, max_tiles[tile_id], out=max_tiles[tile_id], where=goodpixels_j)
             np.fmin(ndvi_j, min_tiles[tile_id], out=min_tiles[tile_id], where=goodpixels_j)
 
-    print 'done'
+    print('done')
     return min_tiles, max_tiles
 
 def draw_tiled_area(shape, tiles, projection, lonlat_crs, highlights={0:'black'}):
-    print 'number of tiles to cover region', len(tiles['features'])
-    print tiles['features'][0].keys()
+    print('number of tiles to cover region', len(tiles['features']))
+    print(tiles['features'][0].keys())
 
     fig = plt.figure(figsize=(8, 8))
     ax = plt.subplot(projection=projection) # Specify projection of the map here
@@ -273,7 +273,7 @@ def draw_tiled_area(shape, tiles, projection, lonlat_crs, highlights={0:'black'}
         tile = tiles['features'][key]
         ax.add_geometries([shapely.geometry.shape(tile['geometry'])],
                        lonlat_crs, color=value, alpha=0.5)
-        print 'tile'+str(key).zfill(3), tile['geometry']
+        print('tile'+str(key).zfill(3), tile['geometry'])
 
     # Get a bounding box of the combined scenes
     union = shapely.geometry.MultiPolygon(polygons=shapes)
@@ -286,7 +286,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
                   bands=['alpha'], vector_format='geojson'):
     #
     imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_labels'
-    print 'imgfile', imgfile
+    print('imgfile', imgfile)
     
     ret = dl.raster.raster(
         vir_ids,
@@ -313,21 +313,21 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     os.environ['ZLABELS'] = zlabels
     #!gdal_rasterize -a "Land_use" -l $ZCOMPLETE $ZCOMPLETESHP $ZLABELS
     command = 'gdal_rasterize -a Land_use -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels)
-    print '>>>',command
+    print('>>>',command)
     try:
-        print subprocess.check_output(command.split(), shell=False)
+        print(subprocess.check_output(command.split(), shell=False))
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     
     
 def stats_byte_raster(label_file, category_label, show=False):
-    print label_file
+    print(label_file)
     y, ygeo, yprj, ycols, yrows = bronco.load_geotiff(label_file,dtype='uint8')
     yd = {}
     for c in range(256):
         if np.sum((y == c))>0:
             yd[c] = np.sum((y == c))
-            print c, yd[c], category_label[c]
+            print(c, yd[c], category_label[c])
     if(show):
         y[y>6]=0  # TBD add a utility function to colorize the result map
         plt.figure(figsize=[8,8])
@@ -339,7 +339,7 @@ def make_osm_raster(data_path, place, tile_id, tile, vir_ids, shape, new_raster=
                   bands=['alpha'], tile_suffix='osm', layer_suffix='_OSM_Roads', vector_format='geojson'):
     #
     imgfile = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+tile_suffix
-    #print 'imgfile', imgfile
+    #print('imgfile', imgfile)
     
     if(new_raster):
         ret = dl.raster.raster(
@@ -366,10 +366,10 @@ def make_osm_raster(data_path, place, tile_id, tile, vir_ids, shape, new_raster=
         os.environ['ZOSMSHP'] = zosmshp
     zosmimg = imgfile+'.tif'
     os.environ['ZOSMIMG'] = imgfile+'.tif'
-    #print 'gdal_rasterize -burn 6 -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg)
+    #print('gdal_rasterize -burn 6 -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg))
     command = 'gdal_rasterize -burn {3} -l {0} {1} {2}'.format(zosm,zosmshp,zosmimg,burn_value)
-    print '>>>',command
-    print subprocess.check_output(command.split(), shell=False)
+    print('>>>',command)
+    print(subprocess.check_output(command.split(), shell=False))
 
 def scale_learning_data(X_train, X_valid):
     scaler = StandardScaler()
@@ -377,8 +377,8 @@ def scale_learning_data(X_train, X_valid):
     # apply scaler
     X_train_scaled = scaler.transform(X_train)
     X_valid_scaled = scaler.transform(X_valid)
-    print X_train_scaled.shape, X_valid_scaled.shape
-    # print X_train_scaled[19,:]
+    print(X_train_scaled.shape, X_valid_scaled.shape)
+    # print(X_train_scaled[19,:])
     return X_train_scaled, X_valid_scaled, scaler
     
     
@@ -386,10 +386,10 @@ def train_model_svm(X_train_scaled, X_valid_scaled, Y_train, Y_valid, categories
     model = SGDClassifier(alpha=alpha,penalty=penalty) 
     model.fit(X_train_scaled, Y_train)
     ## evaluate model
-    print "evaluate training"
+    print("evaluate training")
     Yhat_train = model.predict(X_train_scaled)
     confusion = bronco.confusion(Yhat_train,Y_train,categories)
-    print "evaluate validation"
+    print("evaluate validation")
     Yhat_valid = model.predict(X_valid_scaled)
     confusion = bronco.confusion(Yhat_valid,Y_valid,categories)
     return Yhat_train, Yhat_valid, model
@@ -545,15 +545,15 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
     
     r = d/2
 
-    print "Feature count:", feature_count
-    print "Stack label: ", stack_label
+    print("Feature count:", feature_count)
+    print("Stack label: ", stack_label)
     # eg 'vir', 'vir_sar', 'vir_ndvir', 'vir&sar&ndvirnx', 'vir&sar&ndvir', 'vir&sar&ndvirnx&osm', 'vir&ndvirnx&osm', 'vir&dem'
     # for tile_id in [19]:
     for tile_id in range(len(tiles['features'])):
         # skip tiles without labels
         # HARDCODED THRESHOLD
         if (len(label_stats[tile_id].keys())==1) or (label_stats[tile_id][255]<40000):
-            # print 'WARNING: tile', tile_id, ' has no labels'
+            # print('WARNING: tile', tile_id, ' has no labels')
             continue
         tile = tiles['features'][tile_id]
         side_length = tile['properties']['tilesize'] + tile['properties']['pad']*2
@@ -561,46 +561,46 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         imn = np.zeros((feature_count,side_length,side_length),dtype='float32')
         n_features = imn.shape[0] 
 
-        print 'tile', tile_id, 'load VIR image'
+        print('tile', tile_id, 'load VIR image')
         vir_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_vir_'+image_suffix+'.tif'
         vir, virgeo, virprj, vircols, virrows = bronco.load_geotiff(vir_file,dtype='uint16')
-        print 'vir shape:',vir.shape
+        print('vir shape:',vir.shape)
         vir = vir.astype('float32')
         vir = vir/10000.
         vir = np.clip(vir,0.0,1.0)
-        #print 'tile', tile_id, 'make data mask from vir alpha'
+        #print('tile', tile_id, 'make data mask from vir alpha')
         mask = (vir[6][:,:] > 0)  # vir[6] is the alpha band in the image, takes values 0 and 65535
         nodata = (vir[6][:,:]==0)
-        print np.sum(mask), "study area within image"
-        print mask.shape[0] * mask.shape[1], "full extent of image"
+        print(np.sum(mask), "study area within image")
+        print(mask.shape[0] * mask.shape[1], "full extent of image")
         # haze removal
         if(haze_removal):
             virc, virc_ro = bronco.ls_haze_removal(vir[:-1],nodata)
-            print virc_ro
+            print(virc_ro)
             vir[:-1] = virc[:]
 
         b_start = 0
         if bands_vir is not None:
             for b in range(vir.shape[0]-1):
-                print 'vir band',b,'into imn band',b_start+b,'(',np.min(vir[b,:,:]),'-',np.max(vir[b,:,:]),')'
+                print('vir band',b,'into imn band',b_start+b,'(',np.min(vir[b,:,:]),'-',np.max(vir[b,:,:]),')')
                 imn[b_start+b][:,:] = vir[b][:,:]
             b_start += vir.shape[0]-1
 
         if bands_sar is not None:
-            print 'tile', tile_id, 'load SAR image'
+            print('tile', tile_id, 'load SAR image')
             sar_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_sar_'+image_suffix+'.tif'
             sar, sargeo, sarprj, sarcols, sarrows = bronco.load_geotiff(sar_file,dtype='uint16')
-            print 'sar shape:',sar.shape
+            print('sar shape:',sar.shape)
             sar = sar.astype('float32')
             sar = sar/255.
             sar = np.clip(sar,0.0,1.0)
             for b in range(sar.shape[0]):
-                print 'sar band',b,'into imn band',b_start+b,'(',np.min(sar[b,:,:]),'-',np.max(sar[b,:,:]),')'
+                print('sar band',b,'into imn band',b_start+b,'(',np.min(sar[b,:,:]),'-',np.max(sar[b,:,:]),')')
                 imn[b_start+b][:,:] = sar[b][:,:]
             b_start += sar.shape[0]
 
         if bands_ndvi_raw is not None:
-            #print 'tile', tile_id, 'calculate NDVI raw'
+            #print('tile', tile_id, 'calculate NDVI raw')
             # returns (a - b)/(a + b)
             tol=1e-6
             a_minus_b = np.add(vir[3,:,:],np.multiply(vir[2,:,:],-1.0))
@@ -610,52 +610,52 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
             a_minus_b = None
             a_plus_b = None
             ndvi_raw = y #nir, red
-            print 'ndvi_raw shape:', ndvi_raw.shape
-            print 'ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')'
+            print('ndvi_raw shape:', ndvi_raw.shape)
+            print('ndvi raw into imn band',b_start,'(',np.min(ndvi_raw),'-',np.max(ndvi_raw),')')
             imn[b_start] = ndvi_raw
             b_start += 1   
 
         if bands_ndvi_min is not None:
-            print 'tile', tile_id, 'load NDVI min'
+            print('tile', tile_id, 'load NDVI min')
             ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimin.tif'
             ndvimin, ndvigeo, ndviprj, ndvicols, ndvirows = bronco.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimin)) > 0):
                 ndvi_nan = np.isnan(ndvimin)
-                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                print('nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask)))
                 ndvimin[ndvi_nan]=0
-            print 'ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')'
+            print('ndvi min into imn band',b_start,'(',np.min(ndvimin),'-',np.max(ndvimin),')')
             imn[b_start] = ndvimin
             b_start += 1
 
         if bands_ndvi_max is not None:
-            print 'tile', tile_id, 'load NDVI max'
+            print('tile', tile_id, 'load NDVI max')
             ndvi_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_ndvimax.tif'
             ndvimax, ndvigeo, ndviprj, ndvicols, ndvirows = bronco.load_geotiff(ndvi_file,dtype='float32')
             if(np.sum(np.isnan(ndvimax)) > 0):
                 ndvi_nan = np.isnan(ndvimax)
-                print 'nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask))
+                print('nan ndvi inside study area:',np.sum(np.logical_and(ndvi_nan, mask)))
                 ndvimax[ndvi_nan]=0
-            print 'ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')'
+            print('ndvi max into imn band',b_start,'(',np.min(ndvimax),'-',np.max(ndvimax),')')
             imn[b_start] = ndvimax
             b_start += 1
 
         if bands_osm_roads is not None:
-            print 'tile', tile_id, 'load OSM roads'
+            print('tile', tile_id, 'load OSM roads')
             osm_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_osm.tif'
             osm, osmgeo, osmprj, osmcols, osmrows = bronco.load_geotiff(osm_file,dtype='uint8')
             osm[osm==255] = 0
             osm = osm.astype('float32')
             osm = np.clip(osm,0.0,1.0)
-            print 'osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')'
+            print('osm roads into imn band',b_start,'(',np.min(osm),'-',np.max(osm),')')
             imn[b_start] = osm
             b_start += 1
 
-        print 'imn', imn.shape, n_features
-        print 'tile', tile_id, 'load labels'
+        print('imn', imn.shape, n_features)
+        print('tile', tile_id, 'load labels')
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'.tif'
-        print label_file
+        print(label_file)
         lb, lbgeo, lbprj, lbcols, lbrows = bronco.load_geotiff(label_file,dtype='uint8')
-        #print "NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj
+        #print("NYU AoUE labels", label_file, lbcols, lbrows, lbgeo, lbprj)
         # delete training points close to edge
         lb[0:r,:] = 255; lb[-r-1:,:] = 255
         lb[:,0:r] = 255; lb[:,-r-1:] = 255
@@ -671,33 +671,33 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
         y[6] = (lb==6)
         y[7] = (mask==1)
         y[8] = (lb!=255)
-        print 'y.shape', y.shape
+        print('y.shape', y.shape)
         for i in range(9):
-            print i, np.sum(y[i]), category_label[i] 
-        print 'tile', tile_id, 'collect data,label samples'
+            print(i, np.sum(y[i]), category_label[i])
+        print('tile', tile_id, 'collect data,label samples')
         ## unbalanced training
         n_samples = {}
         n_all_samples = 0
         for c in categories:
             n_samples[c] = np.sum(y[c])
             n_all_samples = n_all_samples + n_samples[c]
-        print "n_samples, sum", n_samples, n_all_samples
+        print("n_samples, sum", n_samples, n_all_samples)
         X_data = np.zeros((n_all_samples,d*d*n_features),dtype=imn.dtype)  # imn2
         Y_data = np.zeros((n_all_samples),dtype='uint8')
-        print "X,Y shapes", X_data.shape, Y_data.shape
+        print("X,Y shapes", X_data.shape, Y_data.shape)
         index = 0
         for ki in range(len(categories)):
             try:
                 k = categories[ki]
                 n_k = np.sum((y[k] == 1))
                 if (n_k==0):
-                    print 'WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing'
+                    print('WARNING: tile', tile_id, 'category', ki, n_k, 'no training examples, continuing')
                     continue
-                print k, categories[ki], n_k
+                print(k, categories[ki], n_k)
                 z_k = np.where((y[k]==1))
                 n_k = len(z_k[0])
                 if n_k != n_samples[k]:
-                    print "error! mismatch",n_k, n_samples[k] 
+                    print("error! mismatch",n_k, n_samples[k])
                 X_k = np.zeros((d*d*n_features,n_k),imn.dtype)  # imn2
                 for s in range(n_k):
                     w = bronco.window(imn,z_k[0][s],z_k[1][s],r) # imn2
@@ -706,28 +706,28 @@ def construct_dataset_tiles(data_path, place, tiles, label_stats, image_suffix,
 
                 X_k_nan = np.isnan(X_k)
                 if(np.sum(X_k_nan) > 0):
-                    print 'NaN in training data'
-                    print np.where(X_k_nan)
+                    print('NaN in training data')
+                    print(np.where(X_k_nan))
                 #perm = np.random.permutation(X_k.shape[0])
                 #X_k = X_k[perm[:],:]
                 Y_k = np.full((n_samples[k]), fill_value=k, dtype='uint8')
                 X_data[index:index+n_samples[k],:] = X_k[:,:]
                 Y_data[index:index+n_samples[k]] = Y_k[:]
                 index = index + n_samples[k]
-                print k, index, X_k.shape, Y_k.shape
+                print(k, index, X_k.shape, Y_k.shape)
             except:
-                print 'ERROR: tile', tile_id, 'category', ki,'error, continuing'
-        print X_data.shape, Y_data.shape, X_data.dtype
+                print('ERROR: tile', tile_id, 'category', ki,'error, continuing')
+        print(X_data.shape, Y_data.shape, X_data.dtype)
         if ((n_all_samples > 0) and (np.sum((y[0] == 1)) < 30000)):  # <<<< WARNING: HARD-WIRED LIMIT
             label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
-            print label_file
+            print(label_file)
             pickle.dump((X_data,Y_data), open(label_file, 'wb'))
         else:
-            print 'n_all_samples:', n_all_samples, 'mask true:', np.sum((y[0]==1))
-            print 'WARNING: tile', tile_id, ' defective tile', n_all_samples, np.sum((y[0] == 1)) 
+            print('n_all_samples:', n_all_samples, 'mask true:', np.sum((y[0]==1)))
+            print('WARNING: tile', tile_id, ' defective tile', n_all_samples, np.sum((y[0] == 1)))
         # del imn, X_data, Y_data
-        print 'tile', tile_id, 'done'
-        print '' #line between tiles in output for readability
+        print('tile', tile_id, 'done')
+        print('')#line between tiles in output for readability
 
 def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, stack_label):
     n_samples = 0
@@ -736,17 +736,16 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
-        #print label_file
-
+        #print(label_file)
         try:
             with open(label_file, "rb") as f:
                 Xt, Yt = pickle.load(f)
             f.close()
         except:
-            #print 'tile', str(tile_id).zfill(3), 'has no training samples'
+            #print('tile', str(tile_id).zfill(3), 'has no training samples')
             continue
 
-        print tile_id, Xt.shape, Yt.shape
+        print(tile_id, Xt.shape, Yt.shape)
         n_samples = n_samples + Yt.shape[0]
         if (n_features==0):
             n_features = Xt.shape[1]
@@ -754,40 +753,40 @@ def combine_dataset_tiles(data_path, place, tiles, label_suffix, image_suffix, s
         assert n_features==Xt.shape[1]
         assert n_dtype==Xt.dtype
 
-    print n_samples, n_features, n_dtype
+    print(n_samples, n_features, n_dtype)
 
     X_data = np.zeros((n_samples,n_features),dtype=n_dtype)
     Y_data = np.zeros((n_samples),dtype='uint8')
 
-    print X_data.shape, Y_data.shape
+    print(X_data.shape, Y_data.shape)
 
     n_start = 0
     # for tile_id in [single_tile_id]:
     for tile_id in range(len(tiles['features'])):
         label_file = data_path+place+'_tile'+str(tile_id).zfill(3)+'_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
-        # print label_file
+        # print(label_file)
 
         try:
             with open(label_file, "rb") as f:
                 Xt, Yt = pickle.load(f)
             f.close()
         except:
-            #print 'tile', str(tile_id).zfill(3), 'has no training samples'
+            #print('tile', str(tile_id).zfill(3), 'has no training samples')
             continue
 
-        # print tile_id, Xt.shape, Yt.shape
+        # print(tile_id, Xt.shape, Yt.shape)
         n_t = Yt.shape[0]
         n_end = n_start + n_t
         X_data[n_start:n_end,:] = Xt[:,:]
         Y_data[n_start:n_end] = Yt[:]
-        print n_start, n_end
+        print(n_start, n_end)
         n_start = n_end
-    print X_data.shape, Y_data.shape
+    print(X_data.shape, Y_data.shape)
     return X_data, Y_data
 
 def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
     data_file = data_path+place+'_data_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
-    print data_file
+    print(data_file)
     with open(data_file, "rb") as f:
         X_data, Y_data = pickle.load(f)
     f.close()
@@ -795,22 +794,22 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
     n_samples = Y_data.shape[0]
     
     perm_file = data_path+place+'_perm_'+label_suffix+'.pkl'
-    print perm_file
+    print(perm_file)
     try:
         with open(perm_file, "rb") as f:
             perm = pickle.load(f)
     except IOError as e:
-        print 'Unable to open file:', perm_file #Does not exist OR no read permissions
-        print 'Create permutation of length', str(n_samples)
+        print('Unable to open file:', perm_file) #Does not exist OR no read permissions
+        print('Create permutation of length', str(n_samples))
         perm = np.random.permutation(n_samples)
         pickle.dump((perm), open(perm_file, 'wb'))
         
-    print len(perm), perm
+    print(len(perm), perm)
 
     if Y_data.shape[0] != perm.shape[0]:
-        print 'Cannot use indicated permutation to generate training and validation files from data file:', data_file
-        print 'permutation has shape', perm.shape
-        print 'X_data has shape', X_data.shape
+        print('Cannot use indicated permutation to generate training and validation files from data file:', data_file)
+        print('permutation has shape', perm.shape)
+        print('X_data has shape', X_data.shape)
         return
 
         
@@ -822,7 +821,7 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
 
     n_train = int(math.floor(0.70*n_samples))
     n_valid = n_samples - n_train
-    print n_samples, n_train, n_valid
+    print(n_samples, n_train, n_valid)
 
     X_train = X_data[:n_train,:]
     X_valid = X_data[n_train:,:]
@@ -830,8 +829,8 @@ def split_dataset(data_path, place, label_suffix, stack_label, image_suffix):
     Y_train = Y_data[:n_train]
     Y_valid = Y_data[n_train:]
 
-    print X_train.shape, Y_train.shape
-    print X_valid.shape, Y_valid.shape
+    print(X_train.shape, Y_train.shape)
+    print(X_valid.shape, Y_valid.shape)
 
     train_file = data_path+place+'_train_'+label_suffix+'_'+stack_label+'_'+image_suffix+'.pkl'
     pickle.dump((X_train,Y_train), open(train_file, 'wb'))
@@ -862,8 +861,8 @@ def confusion(Yhat,Y,categories):
     for j in range(n_categories):
         for i in range(n_categories):
             confusion[j,i] = np.sum(np.logical_and((Yhat==categories[i]),(Y==categories[j])))
-            # print j,i, confusion[j,i], categories[j], categories[i] 
-        print categories[j], np.sum(confusion[j,:])
+            # print(j,i, confusion[j,i], categories[j], categories[i])
+        print(categories[j], np.sum(confusion[j,:]))
     conf_str = ''
     end_str = ''
     for j in range(n_categories):
@@ -873,10 +872,10 @@ def confusion(Yhat,Y,categories):
         conf_str += str(round(float(confusion[j,j]) / float(np.sum(confusion[j,:])),3)) + '\n'
         end_str +=  str(round(float(confusion[j,j]) / float(np.sum(confusion[:,j])),3)) + '\t'
     conf_str += end_str
-    #print np.array_str(confusion)
-    print conf_str
+    #print(np.array_str(confusion))
+    print(conf_str)
     
-    print confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum())
+    print(confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum()))
     return confusion
         
         
