@@ -12,8 +12,8 @@ def calc_confusion(Yhat,Y,categories,silent=False):
             # print(j,i, confusion[j,i], categories[j], categories[i])
         print(categories[j], np.sum(confusion[j,:]))
     if not silent:
-	    print(confusion)
-	    print(confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum()))
+        print(confusion)
+        print(confusion.sum(), confusion.trace(), confusion.trace()/float(confusion.sum()))
     return confusion
 
 
@@ -41,40 +41,40 @@ def calc_confusion_details(confusion):
     return recalls, precisions, accuracy
 
 def extract_scoring_arrays(Yhat_img, Y_img, categories, remapping=None):
-	if isinstance(Yhat_img, str):
-		Yhat_img,_,_,_,_=util_rasters.load_geotiff(Yhat_img,dtype='uint8')
-	if isinstance(Y_img, str):
-		Y_img,_,_,_,_=util_rasters.load_geotiff(Y_img,dtype='uint8')
-	# validate inputs
-	assert Y_img.ndim==2
-	# assert Y_img.dtype=='uint8'
-	assert Y_img.dtype==Yhat_img.dtype
-	assert Y_img.shape==Yhat_img.shape
-	# remap ground-truth (Y) to match output (Yhat) categories
-	if remapping is not None:
-		if isinstance(remapping, str):
-			if remapping.lower() == '3cat' or remapping.lower() == '3category':
-				remapping = {2:2,3:2,4:2,5:2}
-			elif remapping.lower()=='roads':
-				remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
-			else:
-				raise ValueError('Unrecognized remapping identifier: ',remapping)
-        assert isinstance(remapping, dict)
-        for k in sorted(remapping.iterkeys()):
-            Y_img[Y_img==k]=remapping[k]
-	# create mask for presence of ground-truth (can include/exclude certain values if desired)
-	mask = np.zeros(Y_img.shape, dtype='uint8')
-	for c in categories:
-		mask |= (Y_img == c)
+    if isinstance(Yhat_img, str):
+        Yhat_img,_,_,_,_=util_rasters.load_geotiff(Yhat_img,dtype='uint8')
+    if isinstance(Y_img, str):
+        Y_img,_,_,_,_=util_rasters.load_geotiff(Y_img,dtype='uint8')
+    # validate inputs
+    assert Y_img.ndim==2
+    # assert Y_img.dtype=='uint8'
+    assert Y_img.dtype==Yhat_img.dtype
+    assert Y_img.shape==Yhat_img.shape
+    # remap ground-truth (Y) to match output (Yhat) categories
+    if remapping is not None:
+        if isinstance(remapping, str):
+            if remapping.lower() == '3cat' or remapping.lower() == '3category':
+                remapping = {2:2,3:2,4:2,5:2}
+            elif remapping.lower()=='roads':
+                remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
+            else:
+                raise ValueError('Unrecognized remapping identifier: ',remapping)
+    assert isinstance(remapping, dict)
+    for k in sorted(remapping.iterkeys()):
+        Y_img[Y_img==k]=remapping[k]
+    # create mask for presence of ground-truth (can include/exclude certain values if desired)
+    mask = np.zeros(Y_img.shape, dtype='uint8')
+    for c in categories:
+        mask |= (Y_img == c)
     # identify and remove padding pixels
-	nonpadding = (Yhat_img!=254)
-	mask &= nonpadding
-	# convert mask into series of locations (ie coordinates)
-	locs = np.where(mask)
-	# use coordinates to pull values from input images into arrays
-	Yhat = Yhat_img[locs]
-	Y = Y_img[locs]
-	return Yhat, Y
+    nonpadding = (Yhat_img!=254)
+    mask &= nonpadding
+    # convert mask into series of locations (ie coordinates)
+    locs = np.where(mask)
+    # use coordinates to pull values from input images into arrays
+    Yhat = Yhat_img[locs]
+    Y = Y_img[locs]
+    return Yhat, Y
 
 
 def record_model_creation(
