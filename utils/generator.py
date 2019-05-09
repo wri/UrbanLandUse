@@ -163,7 +163,7 @@ class SampleGenerator(object):
         categories = list(self.rows.lulc)
         targets = np.array(categories)
         if self.remapping is not None:
-            for k in sorted(self.remapping.iterkeys()):
+            for k in sorted(self.remapping.keys()):
                 targets[targets==k] = self.remapping[k]
         if self.one_hot:
             targets = to_categorical(targets)

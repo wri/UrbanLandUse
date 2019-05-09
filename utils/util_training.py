@@ -20,7 +20,7 @@ def calc_category_counts(df,remapping='standard'):
                 raise ValueError('Unrecognized remapping identifier: ',remapping)
         assert isinstance(remapping, dict)
         recount_dict = {}
-        for k in sorted(counts_dict.iterkeys()):
+        for k in sorted(counts_dict.keys()):
             if remapping[k] not in recount_dict:
                 recount_dict[remapping[k]] = 0
             recount_dict[remapping[k]] += counts_dict[k]
@@ -31,7 +31,7 @@ def calc_category_weights(category_counts,log=False,mu=1.0):
     assert isinstance(category_counts,dict)
     n_samples = sum(category_counts.values())
     category_weights = {}
-    for k in sorted(category_counts.iterkeys()):
+    for k in sorted(category_counts.keys()):
         # for the moment skipping scenario where one or more cats have zero samples
         count = category_counts[k]
         score = n_samples / float(count)
@@ -45,7 +45,7 @@ def normalize_category_weights(category_weights,max_score=None):
     assert isinstance(category_weights,dict)
     min_weight = min(category_weights.values())
     normalized_weights = {}
-    for k in sorted(category_weights.iterkeys()):
+    for k in sorted(category_weights.keys()):
         normalized_weights[k] = category_weights[k]/min_weight
         if max_score is not None:
             normalized_weights[k] = min(max_score, normalized_weights[k])

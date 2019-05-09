@@ -60,7 +60,7 @@ def extract_scoring_arrays(Yhat_img, Y_img, categories, remapping=None):
             else:
                 raise ValueError('Unrecognized remapping identifier: ',remapping)
     assert isinstance(remapping, dict)
-    for k in sorted(remapping.iterkeys()):
+    for k in sorted(remapping.keys()):
         Y_img[Y_img==k]=remapping[k]
     # create mask for presence of ground-truth (can include/exclude certain values if desired)
     mask = np.zeros(Y_img.shape, dtype='uint8')
