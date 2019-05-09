@@ -124,7 +124,7 @@ def load_training_data(city, suffix, label_suffix, stack_label, window,data_root
 def get_category_counts(place_images,category_label,label_suffix,stack_label,window,data_root,resolution=10):
     image_names=[]
     category_counts={category_label[c]: [] for c in range(7) }
-    for city, suffixes in place_images.iteritems():
+    for city, suffixes in place_images.items():
         for suffix in suffixes:
             image_names.append("{}_{}".format(city,suffix))
             _,Y_train=load_training_data(city,suffix,label_suffix, stack_label, window,data_root,resolution=resolution)
@@ -135,7 +135,7 @@ def get_category_counts(place_images,category_label,label_suffix,stack_label,win
                 category_counts[category_label[c]].append(cnt)
     df=pd.DataFrame()
     df['image_name']=image_names
-    for cat,cnt in category_counts.iteritems():
+    for cat,cnt in category_counts.items():
         df[cat]=cnt
     return df
 
@@ -167,7 +167,7 @@ def category_weights(category_counts,mu=1.0,use_log=False,max_score=None):
 
 def image_names(place_images):
     names=[]
-    for city, suffixes in place_images.iteritems():
+    for city, suffixes in place_images.items():
         for suffix in suffixes:
             names.append("{}_{}".format(city,suffix))
     return names    

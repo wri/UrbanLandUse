@@ -100,7 +100,7 @@ def draw_tiled_area(shape, tiles, projection, lonlat_crs, highlights={0:'black'}
     ax.add_geometries([shapely.geometry.shape(shape['geometry'])],
                        lonlat_crs, color='blue', alpha=0.7)
     
-    for key, value in highlights.iteritems():
+    for key, value in highlights.items():
         tile = tiles['features'][key]
         ax.add_geometries([shapely.geometry.shape(tile['geometry'])],
                        lonlat_crs, color=value, alpha=0.5)

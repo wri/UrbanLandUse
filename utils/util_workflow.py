@@ -43,7 +43,7 @@ def build_stack_label(
         ):
     params = locals()
     #print(params)
-    for k,v in params.iteritems():
+    for k,v in params.items():
         if type(v) is list:
             for member in v:
                 assert (type(member) is str)
@@ -547,7 +547,7 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window, re
     print('calculate total size of training and validation supersets')
     t_total = 0
     v_total = 0
-    for city, suffixes in place_images.iteritems():
+    for city, suffixes in place_images.items():
         for suffix in suffixes:
             train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print(train_file)
@@ -576,7 +576,7 @@ def load_datasets(place_images, data_root, label_suffix, stack_label, window, re
     print('populate superset np arrays')
     v_start = 0
     t_start = 0
-    for city, suffixes in place_images.iteritems():
+    for city, suffixes in place_images.items():
         for suffix in suffixes:
             train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+stack_label+'_'+str(window)+'w_'+suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.pkl'
             print(train_file)
@@ -728,7 +728,7 @@ def create_training_data(data_root, place_images, tile_resolution, tile_size, ti
         raise Exception('bad resolution: '+str(resolution))
 
 
-    for place, image_suffix_list in place_images.iteritems():
+    for place, image_suffix_list in place_images.items():
         data_path = data_root + place + '/'
         place_shapefile = data_path+place.title()+"_studyAreaEPSG4326.shp"
         shape = util_vectors.load_shape(place_shapefile)
@@ -1039,7 +1039,7 @@ def chunk_training_data(data_root, place_images, label_suffix, resolution, stack
 
     t_total = 0
     v_total = 0
-    for city, suffixes in place_images.iteritems():
+    for city, suffixes in place_images.items():
         for suffix in suffixes:
             image_names.append("{}_{}".format(city,suffix))
             train_file = data_root+city+'/'+city+'_train_'+label_suffix+'_'+('' if resolution==10 else str(resolution)+'m_')+stack_label+'_'+str(window)+'w_'+suffix+'.pkl'
@@ -1201,7 +1201,7 @@ def apply_model_to_data_3category(
 
     categories = [0,1,4,6]
 
-    for city, image_suffixes in place_images.iteritems():
+    for city, image_suffixes in place_images.items():
         for suffix in image_suffixes:
             data_path = data_root + city + '/'
 
@@ -1234,7 +1234,7 @@ def apply_model_to_data_3category(
             Y_train = Y_train_raw.copy()
             Y_valid = Y_valid_raw.copy()
 
-            for k, v in cats_map.iteritems():
+            for k, v in cats_map.items():
                 Y_train[Y_train_raw==k] = v
                 Y_valid[Y_valid_raw==k] = v
                 
@@ -1349,7 +1349,7 @@ def apply_model_to_data_1vAll(
 
     categories = [0,1,4,6]
 
-    for city, image_suffixes in place_images.iteritems():
+    for city, image_suffixes in place_images.items():
         for suffix in image_suffixes:
             data_path = data_root + city + '/'
 
@@ -1382,7 +1382,7 @@ def apply_model_to_data_1vAll(
             Y_train = Y_train_raw.copy()
             Y_valid = Y_valid_raw.copy()
 
-            for k, v in cats_map.iteritems():
+            for k, v in cats_map.items():
                 Y_train[Y_train_raw==k] = v
                 Y_valid[Y_valid_raw==k] = v
 

@@ -18,7 +18,7 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
 	else:
 	    raise Exception('bad resolution: '+str(resolution))
 
-	for suffix, ids in image_dict.iteritems():
+	for suffix, ids in image_dict.items():
 	    print(suffix, ids)
 
 	    for tile_id in range(len(tiles['features'])):
