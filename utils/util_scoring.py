@@ -1,5 +1,5 @@
 import numpy as np
-import util_rasters
+import utils.util_rasters as util_rasters
 import datetime
 import csv
 
@@ -32,9 +32,14 @@ def calc_confusion_details(confusion):
         ascribed = np.sum(confusion[:,j])
         actual = np.sum(confusion[j,:])
         correct = confusion[j,j]
-        recalls[j] = float(correct)/float(actual)
-        precisions[j] = float(correct)/float(ascribed)
-
+        if actual:
+            recalls[j] = float(correct)/float(actual)
+        else:
+            recalls[j] = 1e8
+        if ascribed:
+            precisions[j] = float(correct)/float(ascribed)
+        else:
+            precisions[j] = 1e8
     # what percentage of total samples were assigned to the correct category
     accuracy = confusion.trace()/float(confusion.sum())
 

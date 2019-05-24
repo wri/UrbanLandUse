@@ -3,7 +3,7 @@ import subprocess
 import pandas as pd
 import os.path
 
-import util_rasters
+import utils.util_rasters as util_rasters
 
 
 def generate_chips(data_root, place, tiles,

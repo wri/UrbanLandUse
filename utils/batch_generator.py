@@ -7,10 +7,7 @@ import gdal
 from tensorflow.keras.utils import to_categorical
 import threading
 import tensorflow.keras as keras
-
-ULU_REPO = os.environ["ULU_REPO"]
-sys.path.append(ULU_REPO+'/utils')
-import util_rasters
+import utils.util_rasters as util_rasters
 
 # class itself
 class BatchGenerator(keras.utils.Sequence):
@@ -22,9 +19,9 @@ class BatchGenerator(keras.utils.Sequence):
                 look_window=17,
                 remapping=None,
                 one_hot=4,
-                flatten=False
+                flatten=False,
+                bands_last=True
                 ):
-
         self.batch_size=batch_size
         self.look_window=look_window
         
@@ -45,16 +42,16 @@ class BatchGenerator(keras.utils.Sequence):
         assert isinstance(one_hot, int)
         self.one_hot = one_hot
         self.flatten = flatten
+        self.bands_last=bands_last
         self._set_data(df)
         
-    def _set_data(self,
-                  df):
+    def _set_data(self,df):
         if isinstance(df,str):
             self.dataframe=pd.read_csv(data)
         else:
             self.dataframe=df
         self.size=len(self.dataframe.index)
-        self.steps=int(np.floor(self.size/self.batch_size))+1
+        self.steps=int(np.floor(self.size/self.batch_size))
         self.reset()
 
     def __len__(self):
@@ -62,11 +59,12 @@ class BatchGenerator(keras.utils.Sequence):
         # this may need to be increased by one
         return self.steps
 
+
     def reset(self):
         self.rows=None
         self.batch_index=-1
-        # randomization step (?)
         self.dataframe=self.dataframe.sample(frac=1)
+
 
     def __getitem__(self, index):
         'Generate one batch of data'
@@ -79,13 +77,9 @@ class BatchGenerator(keras.utils.Sequence):
             # remember this interval is used [,) so want size as final index (not size-1)
             end = self.size
             #print('last batch: start '+str(start)+', end '+str(end))
-
         self.rows=self.dataframe.iloc[start:end]
         inputs=self._get_inputs()
         targets=self._get_targets()
-        #print('inputs', inputs.shape)
-        #print('targets', targets.shape)
-
         return inputs, targets
 
     def _get_inputs(self):
@@ -110,11 +104,16 @@ class BatchGenerator(keras.utils.Sequence):
         #rows = obj.RasterYSize
         #im = np.zeros((rows,cols), dtype=dtype)
         im = obj.ReadAsArray().astype(dtype)
+        if self.bands_last:
+            im=im.swapaxes(0,1).swapaxes(1,2)
         return im
     
     # simple example of more customized input generator
     def _construct_sample(self, image, look_radius):
-        assert image.shape[1] == image.shape[2]
+        if self.bands_last:
+            assert image.shape[0] == image.shape[1]
+        else:
+            assert image.shape[1] == image.shape[2]
 
         # manual "rescaling" as in all previous phases
         image = image.astype('float32')
@@ -122,12 +121,20 @@ class BatchGenerator(keras.utils.Sequence):
         image = np.clip(image,0.0,1.0)
 
         # drop alpha
-        image = image[:-1,:,:]
+        if self.bands_last:
+            image = image[:,:,:-1]
+        else:
+            image = image[:-1,:,:]
 
         # grab look window
         image_side = image.shape[1]
         center = image_side/2
-        return util_rasters.window(image,center,center,look_radius,bands_first=True)
+        return util_rasters.window(
+            image,
+            center,
+            center,
+            look_radius,
+            bands_first=(not self.bands_last))
 
     def _get_targets(self):
         categories = list(self.rows.lulc)

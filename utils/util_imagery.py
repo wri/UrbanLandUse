@@ -1,5 +1,5 @@
 import descarteslabs as dl
-import util_rasters
+import utils.util_rasters as util_rasters
 import numpy as np
 from image_sample_generator import ImageSampleGenerator
 import os

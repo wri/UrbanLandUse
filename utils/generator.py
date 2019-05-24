@@ -6,11 +6,7 @@ import rasterio as rio
 import gdal
 from tensorflow.keras.utils import to_categorical
 import threading
-
-
-ULU_REPO = os.environ["ULU_REPO"]
-sys.path.append(ULU_REPO+'/utils')
-import util_rasters
+import utils.util_rasters as util_rasters
 
 # class itself
 class SampleGenerator(object):

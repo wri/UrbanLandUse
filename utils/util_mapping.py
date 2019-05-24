@@ -4,8 +4,8 @@ import os
 import gdal
 
 from image_sample_generator import ImageSampleGenerator
-import util_rasters
-import util_imagery
+import utils.util_rasters as util_rasters
+import utils.util_imagery as util_imagery
 
 def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
     assert type(tile_id) is int 

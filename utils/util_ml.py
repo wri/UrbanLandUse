@@ -24,8 +24,6 @@ import sklearn
 from sklearn.preprocessing import StandardScaler 
 from sklearn.linear_model import SGDClassifier
 
-import util_ml
-
 
 
 # DISPLAY

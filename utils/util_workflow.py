@@ -23,10 +23,9 @@ import datetime
 import csv
 #
 import descarteslabs as dl
-import util_vectors
-import util_rasters
-import util_ml
-import util_workflow
+import utils.util_vectors as util_vectors
+import utils.util_rasters as util_rasters
+import utils.util_ml as util_ml
 
 from tensorflow.keras.models import load_model
 
