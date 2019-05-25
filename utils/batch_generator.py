@@ -51,7 +51,7 @@ class BatchGenerator(keras.utils.Sequence):
         else:
             self.dataframe=df
         self.size=len(self.dataframe.index)
-        self.steps=int(np.floor(self.size/self.batch_size))
+        self.steps=int(np.ceil(self.size/self.batch_size))
         self.reset()
 
     def __len__(self):
@@ -117,7 +117,7 @@ class BatchGenerator(keras.utils.Sequence):
 
         # manual "rescaling" as in all previous phases
         image = image.astype('float32')
-        image = image/10000.
+        image = image/10000.0
         image = np.clip(image,0.0,1.0)
 
         # drop alpha
