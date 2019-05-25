@@ -75,10 +75,8 @@ def write_multiband_geotiff(outfile, img, geotrans, prj, data_type=gdal.GDT_Byte
 
 # assumes first dimension is bands
 def window(x,j,i,r,bands_first=True):
-    # ystart,yend=int(j-r),int(j+r+1)
-    # xstart,xend=int(i-r),int(i+r+1)
-    ystart,yend=int(j-r),int(j+r)
-    xstart,xend=int(i-r),int(i+r)
+    ystart,yend=int(j-r),int(j+r+1)
+    xstart,xend=int(i-r),int(i+r+1)
     if bands_first:
         w = x[:,ystart:yend,xstart:xend]
     else:

@@ -86,7 +86,7 @@ class BatchGenerator(keras.utils.Sequence):
         imgs=[]
         for path in self.rows.path:
             im = self._read_image(path)
-            im = self._construct_sample(im, self.look_window/2)
+            im = self._construct_sample(im, int(self.look_window//2))
             if self.flatten:
                 imgs.append(im.flatten())
             else:
@@ -128,7 +128,7 @@ class BatchGenerator(keras.utils.Sequence):
 
         # grab look window
         image_side = image.shape[1]
-        center = image_side/2
+        center = int(image_side//2)
         return util_rasters.window(
             image,
             center,
