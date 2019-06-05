@@ -1,13 +1,16 @@
-import os, sys
-import pandas as pd
+from __future__ import print_function
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+""" UrbanLandUse: image_sample_generator.py
+- minimal edits
+"""
 import numpy as np
-import math
-import rasterio as rio
-import gdal
-from tensorflow.keras.utils import to_categorical
-import threading
-import tensorflow.keras
-import utils.util_rasters as util_rasters
+from tensorflow.python.keras.utils import Sequence
+#
+# CONSTANTS
+#
+WINDOW_PADDING='window'
+
 
 #
 # Helpers
@@ -24,6 +27,22 @@ def preprocess(im,bands_last=False):
         im=im[:-1]
     return (im/10000.0).clip(0.0,1.0)
 
+
+def window(x,j,i,r,bands_first=True):
+    """ UrbanLandUse: utils_rasters """
+    j,i,r=int(j),int(i),int(r)
+    if bands_first:
+        w=x[:,j-r:j+r+1,i-r:i+r+1]
+    else:
+        w=x[j-r:j+r+1,i-r:i+r+1,:]
+    return w
+
+
+def get_padding(pad,window):
+    if pad==WINDOW_PADDING:
+        return int(window/2)
+    else:
+        return pad
 
 #
 # ImageSampleGenerator
@@ -96,5 +115,3 @@ class ImageSampleGenerator(Sequence):
                 bands_first=(not self.bands_last))
             samples.append(sample)
         return np.array(samples)
-
-    
