@@ -1,0 +1,160 @@
+meta:
+    model_id: 3cat_14ct_green_2017_2-img-bl
+    data_root: /data/phase_iv/
+    notes: >
+        training a 14 city multi city model 
+        using two img from each cities, 
+        3cat 5m bilinear, 
+        no processing, 
+        locale based sample distribution 
+setup:
+  window: 17
+  batch_size: 128
+  balancing: None
+  feature_count: 6
+  stack_label: vir
+  tile_resolution: 5
+  tile_size: 256
+  tile_pad: 32
+  resolution: tile_resolution  # Lx:15 S2:10
+  processing_level: None
+  source: s2
+  s2_bands: 
+    - blue
+    - green
+    - red
+    - nir
+    - swir1
+    - swir2
+    - alpha
+  s2_suffix: BGRNS1S2A  # S2, Lx
+  s1_bands:
+    - vv
+    - vh
+  s1_suffix: VVVH  
+  resampling: bilinear
+  processing: None
+categories:
+  label_suffix: aue
+  label_lot: 0
+  category_label: 
+    0: Open Space
+    1: Non-Residential
+    2: Residential Atomistic
+    3: Residential Informal Subdivision
+    4: Residential Formal Subdivision
+    5: Residential Housing Project                   
+    6: Roads
+    7: Study Area
+    8: Labeled Study Area
+    254: No Data
+    255: No Label
+  cats_map:
+    0: 0
+    1: 1
+    2: 2
+    3: 2
+    4: 2
+    5: 3
+places:
+  2img_a:
+    hindupur: 
+      - U
+      - V
+    singrauli: 
+      - O
+      - P
+    vijayawada: 
+      - H
+      - I
+    jaipur: 
+      - T
+      - U
+    hyderabad: 
+      - P
+      - Q
+    sitapur: 
+      - Q
+      - R
+    kanpur: 
+      - AH
+      - AK
+    belgaum: 
+      - P
+      - Q
+    parbhani: 
+      - T
+      - V
+    pune: 
+      - P
+      - Q
+    ahmedabad:
+      - Z
+      - V
+    malegaon:
+      - V
+      - W
+    kolkata:
+      - M
+      - N
+    mumbai: 
+      - P
+      - Q
+  2img_b:
+    hindupur: 
+      - W
+      - X
+    singrauli: 
+      - Q
+      - R
+    vijayawada: 
+      - H
+      - I
+    jaipur: 
+      - W
+      - X
+    hyderabad: 
+      - R
+      - S
+    sitapur: 
+      - T
+      - U
+    kanpur: 
+      - AH
+      - AK
+    belgaum: 
+      - R
+      - S
+    parbhani: 
+      - W
+      - X
+    pune: 
+      - U
+      - S
+    ahmedabad:
+      - W
+      - X
+    malegaon:
+      - X
+      - Y
+    kolkata:
+      - O
+      - P
+    mumbai: 
+      - R
+      - S
+
+# all image
+# [W, X, Y, Z]
+# [Q,R,S,T,U]
+# [W,X,Y,Z]
+# [R,S,T,U]
+# [T,U,V]
+# [AL, AM, AN]
+# [R,S,T]
+# [W,X,Y,Z]
+# --
+# [W, X, Y, AA]
+# [X, Y, Z]
+# [O,P,Q,R]
+# [R,S,U,V]
