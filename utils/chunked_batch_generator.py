@@ -20,7 +20,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
                 df,
                 batch_size=DEAULT_BATCH_SIZE,
                 batches_per_epoch=DEFAULT_BATCHES_PER_EPOCH,
-                epochs_per_chunck=DEFAULT_EPOCHS_PER_CHUNK,
+                epochs_per_chunk=DEFAULT_EPOCHS_PER_CHUNK,
                 look_window=17,
                 remapping=None,
                 one_hot=4,
@@ -28,7 +28,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
                 bands_last=True
                 ):
         self.batch_size=batch_size
-        self.epochs_per_chunck=epochs_per_chunck
+        self.epochs_per_chunk=epochs_per_chunk
         self.size=batch_size*batches_per_epoch
         self.steps=int(np.ceil(self.size/self.batch_size))
         self.look_window=look_window
@@ -53,18 +53,18 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         self._set_data(df)
 
 
+    def __len__(self):
+        """Denotes the number of batches per epoch"""
+        # this may need to be increased by one
+        return self.steps
+
+
     def _set_data(self,df):
         if isinstance(df,str):
             self.full_dataframe=pd.read_csv(data)
         else:
             self.full_dataframe=df
-        self.reset_chunck()
-
-
-    def __len__(self):
-        """Denotes the number of batches per epoch"""
-        # this may need to be increased by one
-        return self.steps
+        self.reset_chunk()
 
 
     def reset(self):
@@ -73,9 +73,9 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         self.batch_index=-1
 
 
-    def reset_chunck(self):
+    def reset_chunk(self):
         self.dataframe=self.full_dataframe.sample(self.epoch_size)
-        self.chunck_index=-1
+        self.chunk_index=-1
         self.reset()
 
 
@@ -90,9 +90,9 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         inputs=self._get_inputs()
         targets=self._get_targets()
         if end >= self.size:
-            self.chunck_index+=1
-            if self.chunck_index>=self.epochs_per_chunck:
-                self.reset_chunck()
+            self.chunk_index+=1
+            if self.chunk_index>=self.epochs_per_chunk:
+                self.reset_chunk()
         return inputs, targets
 
 
