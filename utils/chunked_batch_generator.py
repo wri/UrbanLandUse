@@ -19,7 +19,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
     def __init__(self,
                 df,
                 batch_size=DEAULT_BATCH_SIZE,
-                batches_per_epoch=DEFAULT_BATCHES_PER_EPOCH
+                batches_per_epoch=DEFAULT_BATCHES_PER_EPOCH,
                 epochs_per_chunck=DEFAULT_EPOCHS_PER_CHUNK,
                 look_window=17,
                 remapping=None,
