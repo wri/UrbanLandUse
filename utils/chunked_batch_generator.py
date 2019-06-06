@@ -74,7 +74,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
 
 
     def reset_chunk(self):
-        self.dataframe=self.full_dataframe.sample(self.epoch_size)
+        self.dataframe=self.full_dataframe.sample(self.size)
         self.chunk_index=-1
         self.reset()
 
