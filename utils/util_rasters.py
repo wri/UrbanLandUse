@@ -19,7 +19,6 @@ from osgeo import gdal
 import matplotlib.pyplot as plt
 #
 import descarteslabs as dl
-import utils.bronco as bronco
 
 from urllib3.exceptions import ProtocolError
 
