@@ -40,7 +40,10 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
 def s2_preprocess(im):
     # probably don't need to drop alpha..
     # drop alpha
-    im = im[:-1,:,:]
+    if bands_first:
+        im = im[:-1,:,:]
+    else:
+        im = im[:,:,:-1]
     # manual "rescaling" as in all previous phases
     im = im.astype('float32')
     im = im/10000.
