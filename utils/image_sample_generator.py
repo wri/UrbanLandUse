@@ -59,7 +59,7 @@ class ImageSampleGenerator(Sequence):
         if prep_image:
             image=preprocess(image,bands_last)
         self.image=image
-        self.pad=h.get_padding(pad,look_window)
+        self.pad=get_padding(pad,look_window)
         self.look_window=look_window
         self.bands_last=bands_last
         self._set_data(image)
@@ -108,7 +108,7 @@ class ImageSampleGenerator(Sequence):
         look_radius=self.look_window/2
         samples=[]
         for j in range(self.pad,self.image.shape[1]-self.pad):
-            sample=h.window(
+            sample=window(
                 self.image,
                 j,index+self.pad,
                 look_radius,
