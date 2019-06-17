@@ -57,7 +57,7 @@ class ImageSampleGenerator(Sequence):
                 prep_image=False,
                 bands_last=True):
         if prep_image:
-            image=preprocess(image,bands_last)
+            image=preprocess(image,bands_last=bands_last)
         self.image=image
         self.pad=get_padding(pad,look_window)
         self.look_window=look_window
