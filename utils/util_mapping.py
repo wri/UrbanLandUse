@@ -2,6 +2,7 @@ import descarteslabs as dl
 import numpy as np
 import os
 import gdal
+import time
 
 from image_sample_generator import ImageSampleGenerator
 import utils.util_rasters as util_rasters
@@ -197,6 +198,33 @@ def map_tile(dl_id, tile, tile_id, network,
         d=2
 
     return cloud_mask, cloud_scores, lulc, water_mask
+
+def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=True):
+    if zfill is None:
+        zfill = len(str(len(tiles['features'])-1))
+    for scene_id in scene_ids:
+        print(scene_id)
+        # calculate scene extent
+        for tile_id in range(len(tiles['features'])):
+    #     for tile_id in range(2000,2001):
+            fail_count=0
+            try:
+    #             print('tile #',tile_id)
+                if tile_id % 1000 == 0:
+                    print('tile #',tile_id)
+                # test if tile intersects with scene; if not, skip
+                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, zfill=zfill, store_predictions=store_predictions)
+            except Exception as e:
+                print ('Error encountered mapping tile #', tile_id)
+                print (e)
+                fail_count = fail_count + 1
+                if fail_count > 5:
+                    break
+                else:
+                    tile_id = tile_id - 1
+                    time.sleep(5)
+                    continue
+            fail_count = 0
 
 
 def prep_lulc_derivation_arrays(lulc_paths, score_paths):
