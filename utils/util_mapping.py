@@ -49,13 +49,14 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
     assert clouds.shape[0]==clouds.shape[1]
     rows = clouds.shape[0]
     cols = clouds.shape[1]
-    r = look_window / 2
+    r = math.floor(look_window / 2)
     score_map = np.zeros(clouds.shape, dtype='float32')
     for j in range(rows):
         for i in range(cols):
+            
             clouds_window = clouds[j-r:j+r+1,i-r:i+r+1]
 #             if clouds_window.shape!=(look_window, look_window):
-#                 print('bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape))
+#                 print 'bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape)
             window_score = scorer(clouds_window)
             score_map[j,i] = window_score
     if pad is not None:
