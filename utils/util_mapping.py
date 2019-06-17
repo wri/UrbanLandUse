@@ -75,6 +75,7 @@ def cloudscore_image(im, window,
 def map_tile(dl_id, tile, tile_id, network,
                     read_local=False,
                     write_local=True,
+                    store_predictions=False,
                     make_watermask=True,
                     store_cloudmask=False,
                     store_watermask=False,
@@ -110,19 +111,39 @@ def map_tile(dl_id, tile, tile_id, network,
             processing_level=processing_level,
             )
     dl_id = str(dl_id)
+    im = im.swapaxes(0,1).swapaxes(1,2)
 
     # insert test here for if imagery is empty: how else to account for 'empty' tiles?
     # will become more important/challenging as we move to generalized imagery
     # on the other hand, maybe without a cutline this isn't an issue.
     # placeholder comment for now, let's see how the application context develops
-    alpha_mask = im[-1].astype(bool)
+    
+    alpha_mask = im[:,:,-1].astype(bool)
+    if np.sum(alpha_mask) == 0:
+        return
+    
+#     print('non-empty tile: #', tile_id)
     blank_mask = np.invert(alpha_mask)
     # create cloudscore from image
-    cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad)
+    cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad, bands_first=False)
     # classify image using nn
-    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True)
+    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True, bands_last=True)
+    
+    
     predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
         use_multiprocessing=False, max_queue_size=1, workers=1,)
+    print (predictions.shape)
+    
+    if store_predictions:
+        pred_square = predictions.reshape((tile_size,tile_size,3),order='F')
+        pred = np.zeros((tile_side,tile_side,3),dtype='float32')
+        pred.fill(255)
+        pred[tile_pad:-tile_pad,tile_pad:-tile_pad,:] = pred_square[:,:,:]
+        pred[blank_mask] = 255
+        pred = pred.swapaxes(0,2)
+        pred = pred.swapaxes(1,2)
+ 
+    
     Yhat = predictions.argmax(axis=-1)
     Yhat_square = Yhat.reshape((tile_size,tile_size),order='F')
     lulc = np.zeros((tile_side,tile_side),dtype='uint8')
@@ -131,7 +152,7 @@ def map_tile(dl_id, tile, tile_id, network,
     lulc[blank_mask]=255
     # -> store output
     if make_watermask:
-        water_mask = util_imagery.calc_water_mask(im[:-1], bands_first=True)
+        water_mask = util_imagery.calc_water_mask(im[:,:,:-1], bands_first=False)
         water_mask[blank_mask] = 255
     else:
         water_mask = None
@@ -142,7 +163,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # if not, create
         scene_dir = data_root + 'scenes/' + dl_id_short
         
-        #print(scene_dir)
+#         print(scene_dir)
         try: 
             os.makedirs(scene_dir)
         except OSError:
@@ -151,7 +172,7 @@ def map_tile(dl_id, tile, tile_id, network,
         # write cloud score map (and cloud mask? water mask?) to disk
         scorepath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
-        #print(scorepath)
+        #print scorepath
         geo = tile['properties']['geotrans']
         prj = str(tile['properties']['wkt'])
         util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)
@@ -163,6 +184,10 @@ def map_tile(dl_id, tile, tile_id, network,
             waterpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
                 'tile'+str(tile_id).zfill(zfill)+'_'+'watermask'+'.tif'
             util_rasters.write_1band_geotiff(waterpath, water_mask, geo, prj, data_type=gdal.GDT_Byte)
+        if store_predictions:
+            predpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
+                'tile'+str(tile_id).zfill(zfill)+'_'+'pred'+'.tif'
+            util_rasters.write_multiband_geotiff(predpath, pred, geo, prj, data_type=gdal.GDT_Float32)
         lulcpath = scene_dir+'/'+dl_id_short+'_'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
             'tile'+str(tile_id).zfill(zfill)+'_'+'lulc'+'.tif'
         util_rasters.write_1band_geotiff(lulcpath, lulc, geo, prj, data_type=gdal.GDT_Byte)
