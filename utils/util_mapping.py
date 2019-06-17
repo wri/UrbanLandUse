@@ -65,9 +65,10 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
 
 def cloudscore_image(im, window,
                     tile_pad=32,
+                    bands_first=True
                     ):
-    image = util_imagery.s2_preprocess(im)
-    Y, key = util_imagery.s2_cloud_mask(image,get_rgb=False,bands_first=True)
+    image = util_imagery.s2_preprocess(im, bands_first=bands_first)
+    Y, key = util_imagery.s2_cloud_mask(image,get_rgb=False,bands_first=bands_first)
     cloud_mask = (Y==4)
     cloud_scores = map_cloud_scores(cloud_mask, window, pad=tile_pad)
     return cloud_mask, cloud_scores
