@@ -109,7 +109,7 @@ def map_tile(dl_id, tile, tile_id, network,
             resampler=resampler,
             data_type='UInt16',
             #cutline=shape['geometry'], 
-            order='gdal',
+            order='gdal', # should change this to give order we actually want (parameter?) rather than swapping
             dltile=tile,
             processing_level=processing_level,
             )
