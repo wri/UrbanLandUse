@@ -6,6 +6,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 """
 import numpy as np
 from tensorflow.python.keras.utils import Sequence
+
+import util_imagery
 #
 # CONSTANTS
 #
@@ -15,20 +17,8 @@ WINDOW_PADDING='window'
 #
 # Helpers
 #
-def preprocess(im,bands_last=False):
-    """
-    - drop alpha
-    - rescale
-    - clip: 0,1
-    """
-    if bands_last:
-        im=im[:,:,:-1]
-    else:
-        im=im[:-1]
-    return (im/10000.0).clip(0.0,1.0)
 
-
-def window(x,j,i,r,bands_first=True):
+def window(x,j,i,r,bands_last=True):
     """ UrbanLandUse: utils_rasters """
     j,i,r=int(j),int(i),int(r)
     if bands_first:
@@ -55,9 +45,12 @@ class ImageSampleGenerator(Sequence):
                 pad=WINDOW_PADDING,
                 look_window=17,
                 prep_image=False,
-                bands_last=True):
+                bands_last=True,
+                preprocess=util_imagery.s2_preprocess):
+        assert image.ndim==3
+        self.preprocess=preprocess
         if prep_image:
-            image=preprocess(image,bands_last=bands_last)
+            image=self.preprocess(image,bands_last=bands_last)
         self.image=image
         self.pad=get_padding(pad,look_window)
         self.look_window=look_window
