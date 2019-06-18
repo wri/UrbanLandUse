@@ -1,9 +1,8 @@
 from __future__ import print_function
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-""" UrbanLandUse: image_sample_generator.py
-- minimal edits
-"""
+
+
 import numpy as np
 from tensorflow.python.keras.utils import Sequence
 
@@ -26,9 +25,9 @@ def get_padding(pad,window):
         return pad
 
 #
-# ImageSampleGenerator
+# ImageGenerator
 #
-class ImageSampleGenerator(Sequence):
+class ImageGenerator(Sequence):
     
     # constructor stuff
     def __init__(self,
