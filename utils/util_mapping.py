@@ -4,7 +4,7 @@ import os
 import gdal
 import time
 
-from image_sample_generator import ImageSampleGenerator
+from image_generator import ImageGenerator
 import utils.util_rasters as util_rasters
 import utils.util_imagery as util_imagery
 
@@ -65,14 +65,14 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
         score_map[:,:pad] = -1.0; score_map[:,-pad:] = -1.0
     return score_map
 
-def cloudscore_image(im, window,
+def cloudscore_image(im, look_window,
                     tile_pad=32,
                     bands_first=True
                     ):
     image = util_imagery.s2_preprocess(im, bands_first=bands_first)
     Y, key = util_imagery.s2_cloud_mask(image,get_rgb=False,bands_first=bands_first)
     cloud_mask = (Y==4)
-    cloud_scores = map_cloud_scores(cloud_mask, window, pad=tile_pad)
+    cloud_scores = map_cloud_scores(cloud_mask, look_window, pad=tile_pad)
     return cloud_mask, cloud_scores
 
 def map_tile(dl_id, tile, tile_id, network,
@@ -98,10 +98,13 @@ def map_tile(dl_id, tile, tile_id, network,
     tile_side = tile_size+(2*tile_pad)
 
     if read_local: # read file on local machine
-        d=2
+        pass
         # tilepath = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
         #     place+'_'+source+'_'+image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(tile_pad)+'_'+\
         #     'tile'+str(tile_id).zfill(zfill)+'.tif'
+
+        #if loaded from file via gdal, will be bands_first, so swap
+        #im = im.swapaxes(0,1).swapaxes(1,2)
     else: # read from dl
         im, metadata = dl.raster.ndarray(
             dl_id,
@@ -109,12 +112,11 @@ def map_tile(dl_id, tile, tile_id, network,
             resampler=resampler,
             data_type='UInt16',
             #cutline=shape['geometry'], 
-            order='gdal', # should change this to give order we actually want (parameter?) rather than swapping
+            order='image', # 'image' returns arrays as (row, column, band) while 'gdal' returns arrays as (band, row, column)
             dltile=tile,
             processing_level=processing_level,
             )
     dl_id = str(dl_id)
-    im = im.swapaxes(0,1).swapaxes(1,2)
 
     # insert test here for if imagery is empty: how else to account for 'empty' tiles?
     # will become more important/challenging as we move to generalized imagery
@@ -130,13 +132,12 @@ def map_tile(dl_id, tile, tile_id, network,
     # create cloudscore from image
     cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad, bands_first=False)
     # classify image using nn
-    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True, bands_last=True)
+    generator = ImageGenerator(im, pad=tile_pad, look_window=17, bands_first=False)
     
     
     predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
         use_multiprocessing=False, max_queue_size=1, workers=1,)
-    print (predictions.shape)
-    
+        
     if store_predictions:
         pred_square = predictions.reshape((tile_size,tile_size,3),order='F')
         pred = np.zeros((tile_side,tile_side,3),dtype='float32')
@@ -195,7 +196,7 @@ def map_tile(dl_id, tile, tile_id, network,
             'tile'+str(tile_id).zfill(zfill)+'_'+'lulc'+'.tif'
         util_rasters.write_1band_geotiff(lulcpath, lulc, geo, prj, data_type=gdal.GDT_Byte)
     else: #write to dl catalog
-        d=2
+        pass
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
