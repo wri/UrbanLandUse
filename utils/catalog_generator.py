@@ -25,6 +25,7 @@ class CatalogGenerator(keras.utils.Sequence):
                 ):
         self.batch_size=batch_size
         self.look_window=look_window
+        self.look_radius=int(look_window//2)
         
         if remapping is None:
             self.remapping = remapping
@@ -87,7 +88,7 @@ class CatalogGenerator(keras.utils.Sequence):
         imgs=[]
         for path in self.rows.path:
             im = self._read_image(path)
-            im = self._construct_sample(im, int(self.look_window//2))
+            im = self._construct_sample(im)
             if self.flatten:
                 imgs.append(im.flatten())
             else:
@@ -110,7 +111,8 @@ class CatalogGenerator(keras.utils.Sequence):
         return im
     
     # simple example of more customized input generator
-    def _construct_sample(self, image, look_radius):
+    def _construct_sample(self, image):
+
         if self.bands_first:
             assert image.shape[0] == image.shape[1]
         else:
