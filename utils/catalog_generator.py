@@ -8,6 +8,7 @@ from tensorflow.keras.utils import to_categorical
 import threading
 import tensorflow.keras as keras
 import utils.util_rasters as util_rasters
+import util_imagery
 
 # class itself
 class CatalogGenerator(keras.utils.Sequence):
@@ -20,7 +21,7 @@ class CatalogGenerator(keras.utils.Sequence):
                 remapping=None,
                 one_hot=4,
                 flatten=False,
-                bands_last=True
+                bands_first=False
                 ):
         self.batch_size=batch_size
         self.look_window=look_window
@@ -42,7 +43,7 @@ class CatalogGenerator(keras.utils.Sequence):
         assert isinstance(one_hot, int)
         self.one_hot = one_hot
         self.flatten = flatten
-        self.bands_last=bands_last
+        self.bands_first=bands_first
         self._set_data(df)
         
     def _set_data(self,df):
@@ -104,27 +105,18 @@ class CatalogGenerator(keras.utils.Sequence):
         #rows = obj.RasterYSize
         #im = np.zeros((rows,cols), dtype=dtype)
         im = obj.ReadAsArray().astype(dtype)
-        if self.bands_last:
+        if not self.bands_first:
             im=im.swapaxes(0,1).swapaxes(1,2)
         return im
     
     # simple example of more customized input generator
     def _construct_sample(self, image, look_radius):
-        if self.bands_last:
+        if self.bands_first:
             assert image.shape[0] == image.shape[1]
         else:
             assert image.shape[1] == image.shape[2]
 
-        # manual "rescaling" as in all previous phases
-        image = image.astype('float32')
-        image = image/10000.0
-        image = np.clip(image,0.0,1.0)
-
-        # drop alpha
-        if self.bands_last:
-            image = image[:,:,:-1]
-        else:
-            image = image[:-1,:,:]
+        image = util_imagery.s2_preprocess(image, bands_first=self.bands_first)
 
         # grab look window
         image_side = image.shape[1]
@@ -134,7 +126,7 @@ class CatalogGenerator(keras.utils.Sequence):
             center,
             center,
             look_radius,
-            bands_first=(not self.bands_last))
+            bands_first=self.bands_first)
 
     def _get_targets(self):
         categories = list(self.rows.lulc)
