@@ -37,7 +37,7 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
                 save=True,
                 outfile_basename=basename)
 
-def s2_preprocess(im, bands_first=True):
+def s2_preprocess(im, bands_first=False):
     # probably don't need to drop alpha..
     # drop alpha
     if bands_first:
