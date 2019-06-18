@@ -4,7 +4,7 @@ import os
 import gdal
 import time
 
-from image_sample_generator import ImageSampleGenerator
+from image_generator import ImageGenerator
 import utils.util_rasters as util_rasters
 import utils.util_imagery as util_imagery
 
@@ -98,10 +98,13 @@ def map_tile(dl_id, tile, tile_id, network,
     tile_side = tile_size+(2*tile_pad)
 
     if read_local: # read file on local machine
-        d=2
+        pass
         # tilepath = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
         #     place+'_'+source+'_'+image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(tile_pad)+'_'+\
         #     'tile'+str(tile_id).zfill(zfill)+'.tif'
+
+        #if loaded from file via gdal, will be bands_first, so swap
+        #im = im.swapaxes(0,1).swapaxes(1,2)
     else: # read from dl
         im, metadata = dl.raster.ndarray(
             dl_id,
@@ -109,12 +112,11 @@ def map_tile(dl_id, tile, tile_id, network,
             resampler=resampler,
             data_type='UInt16',
             #cutline=shape['geometry'], 
-            order='gdal', # should change this to give order we actually want (parameter?) rather than swapping
+            order='image', # 'image' returns arrays as (row, column, band) while 'gdal' returns arrays as (band, row, column)
             dltile=tile,
             processing_level=processing_level,
             )
     dl_id = str(dl_id)
-    im = im.swapaxes(0,1).swapaxes(1,2)
 
     # insert test here for if imagery is empty: how else to account for 'empty' tiles?
     # will become more important/challenging as we move to generalized imagery
