@@ -438,13 +438,13 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
         score_map[:,:pad] = -1.0; score_map[:,-pad:] = -1.0
     return score_map
 
-def cloudscore_image(im, look_window,
+def cloudscore_image(im, window,
                     tile_pad=32,
                     ):
     image = s2_preprocess(im)
     Y, key = s2_cloud_mask(image,get_rgb=False,bands_first=True)
     cloud_mask = (Y==4)
-    score_map = map_cloud_scores(cloud_mask, look_window, pad=tile_pad)
+    score_map = map_cloud_scores(cloud_mask, window, pad=tile_pad)
     return cloud_mask, score_map
 
 def map_tile(dl_id, tile, tile_id, network,
