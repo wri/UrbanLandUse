@@ -132,13 +132,12 @@ def map_tile(dl_id, tile, tile_id, network,
     # create cloudscore from image
     cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad, bands_first=False)
     # classify image using nn
-    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True, bands_last=True)
+    generator = ImageGenerator(im, pad=tile_pad, look_window=17, bands_first=False)
     
     
     predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
         use_multiprocessing=False, max_queue_size=1, workers=1,)
-    print (predictions.shape)
-    
+        
     if store_predictions:
         pred_square = predictions.reshape((tile_size,tile_size,3),order='F')
         pred = np.zeros((tile_side,tile_side,3),dtype='float32')
@@ -197,7 +196,7 @@ def map_tile(dl_id, tile, tile_id, network,
             'tile'+str(tile_id).zfill(zfill)+'_'+'lulc'+'.tif'
         util_rasters.write_1band_geotiff(lulcpath, lulc, geo, prj, data_type=gdal.GDT_Byte)
     else: #write to dl catalog
-        d=2
+        pass
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
