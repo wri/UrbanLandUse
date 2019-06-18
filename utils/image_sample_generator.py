@@ -18,7 +18,7 @@ WINDOW_PADDING='window'
 # Helpers
 #
 
-def window(x,j,i,r,bands_last=True):
+def window(x,j,i,r,input_bands_first=True):
     """ UrbanLandUse: utils_rasters """
     j,i,r=int(j),int(i),int(r)
     if bands_first:
@@ -45,16 +45,16 @@ class ImageSampleGenerator(Sequence):
                 pad=WINDOW_PADDING,
                 look_window=17,
                 prep_image=False,
-                bands_last=True,
+                input_bands_first=False,
                 preprocess=util_imagery.s2_preprocess):
         assert image.ndim==3
         self.preprocess=preprocess
         if prep_image:
-            image=self.preprocess(image,bands_last=bands_last)
+            image=self.preprocess(image,bands_first=input_bands_first)
         self.image=image
         self.pad=get_padding(pad,look_window)
         self.look_window=look_window
-        self.bands_last=bands_last
+        self.input_bands_first=input_bands_first
         self._set_data(image)
     
     # eventually this should all be happening beforehand
@@ -67,7 +67,7 @@ class ImageSampleGenerator(Sequence):
         assert isinstance(image,np.ndarray)
         # can relax conditions later
         assert image.ndim==3
-        if self.bands_last:
+        if self.input_bands_first:
             assert image.shape[0]==image.shape[1]
         else:
             assert image.shape[1]==image.shape[2]
@@ -105,6 +105,6 @@ class ImageSampleGenerator(Sequence):
                 self.image,
                 j,index+self.pad,
                 look_radius,
-                bands_first=(not self.bands_last))
+                bands_first=(not self.input_bands_first))
             samples.append(sample)
         return np.array(samples)
