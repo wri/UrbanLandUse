@@ -35,7 +35,6 @@ class ImageGenerator(Sequence):
                 pad=WINDOW_PADDING,
                 look_window=17,
                 bands_first=False,
-                output_bands_first=False,
                 preprocess=util_imagery.s2_preprocess):
         assert image.ndim==3
         self.preprocess=preprocess
