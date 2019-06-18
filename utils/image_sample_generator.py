@@ -44,12 +44,12 @@ class ImageSampleGenerator(Sequence):
                 image,
                 pad=WINDOW_PADDING,
                 look_window=17,
-                prep_image=False,
                 input_bands_first=False,
+                output_bands_first=False,
                 preprocess=util_imagery.s2_preprocess):
         assert image.ndim==3
         self.preprocess=preprocess
-        if prep_image:
+        if preprocess is not None:
             image=self.preprocess(image,bands_first=input_bands_first)
         self.image=image
         self.pad=get_padding(pad,look_window)
