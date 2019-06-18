@@ -8,6 +8,7 @@ import numpy as np
 from tensorflow.python.keras.utils import Sequence
 
 import util_imagery
+import util_raster
 #
 # CONSTANTS
 #
@@ -17,16 +18,6 @@ WINDOW_PADDING='window'
 #
 # Helpers
 #
-
-def window(x,j,i,r,input_bands_first=True):
-    """ UrbanLandUse: utils_rasters """
-    j,i,r=int(j),int(i),int(r)
-    if bands_first:
-        w=x[:,j-r:j+r+1,i-r:i+r+1]
-    else:
-        w=x[j-r:j+r+1,i-r:i+r+1,:]
-    return w
-
 
 def get_padding(pad,window):
     if pad==WINDOW_PADDING:
@@ -54,6 +45,7 @@ class ImageSampleGenerator(Sequence):
         self.image=image
         self.pad=get_padding(pad,look_window)
         self.look_window=look_window
+        self.look_radius=int(look_window/2)
         self.input_bands_first=input_bands_first
         self._set_data(image)
     
@@ -66,11 +58,10 @@ class ImageSampleGenerator(Sequence):
     def _set_data(self,image):
         assert isinstance(image,np.ndarray)
         # can relax conditions later
-        assert image.ndim==3
         if self.input_bands_first:
-            assert image.shape[0]==image.shape[1]
-        else:
             assert image.shape[1]==image.shape[2]
+        else:
+            assert image.shape[0]==image.shape[1]
         self.batch_size=(image.shape[1]-self.pad-self.pad)
         self.size=self.batch_size^2
         # for starters, will make columns into batches/steps
@@ -98,13 +89,12 @@ class ImageSampleGenerator(Sequence):
 
 
     def _get_inputs(self, index):
-        look_radius=self.look_window/2
         samples=[]
         for j in range(self.pad,self.image.shape[1]-self.pad):
-            sample=window(
+            sample=util_raster.window(
                 self.image,
                 j,index+self.pad,
-                look_radius,
-                bands_first=(not self.input_bands_first))
+                self.look_radius,
+                bands_first=(self.input_bands_first))
             samples.append(sample)
         return np.array(samples)
