@@ -10,7 +10,7 @@ import tensorflow.keras as keras
 import utils.util_rasters as util_rasters
 
 # class itself
-class BatchGenerator(keras.utils.Sequence):
+class CatalogGenerator(keras.utils.Sequence):
     
     # constructor stuff
     def __init__(self,
