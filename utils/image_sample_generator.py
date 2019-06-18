@@ -35,18 +35,18 @@ class ImageSampleGenerator(Sequence):
                 image,
                 pad=WINDOW_PADDING,
                 look_window=17,
-                input_bands_first=False,
+                bands_first=False,
                 output_bands_first=False,
                 preprocess=util_imagery.s2_preprocess):
         assert image.ndim==3
         self.preprocess=preprocess
         if preprocess is not None:
-            image=self.preprocess(image,bands_first=input_bands_first)
+            image=self.preprocess(image,bands_first=bands_first)
         self.image=image
         self.pad=get_padding(pad,look_window)
         self.look_window=look_window
         self.look_radius=int(look_window/2)
-        self.input_bands_first=input_bands_first
+        self.bands_first=bands_first
         self._set_data(image)
     
     # eventually this should all be happening beforehand
@@ -58,7 +58,7 @@ class ImageSampleGenerator(Sequence):
     def _set_data(self,image):
         assert isinstance(image,np.ndarray)
         # can relax conditions later
-        if self.input_bands_first:
+        if self.bands_first:
             assert image.shape[1]==image.shape[2]
         else:
             assert image.shape[0]==image.shape[1]
@@ -95,6 +95,6 @@ class ImageSampleGenerator(Sequence):
                 self.image,
                 j,index+self.pad,
                 self.look_radius,
-                bands_first=(self.input_bands_first))
+                bands_first=(self.bands_first))
             samples.append(sample)
         return np.array(samples)
