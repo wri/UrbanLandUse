@@ -65,6 +65,7 @@ def spectral_index(img,a,b,tol=1e-6,bands_first=False):
     a_plus_b = None
     return y
 
+#needs bands_first update if to be used in future
 def ls_haze_removal(img,nodata,thresh=2):
     #
     # based on https://github.com/descarteslabs/hedj/blob/master/crops/ml_exp/lacid.py
