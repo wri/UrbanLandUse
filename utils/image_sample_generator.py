@@ -48,11 +48,6 @@ class ImageSampleGenerator(Sequence):
         self.look_radius=int(look_window/2)
         self.bands_first=bands_first
         self._set_data(image)
-    
-    # eventually this should all be happening beforehand
-    # want to just pass the prepared, fused input_stack to generator constructor
-    def _prep_image(self,image):
-      return 
 
 
     def _set_data(self,image):
