@@ -6,8 +6,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 import numpy as np
 from tensorflow.python.keras.utils import Sequence
 
-import util_imagery
-import util_raster
+import utils.util_imagery as util_imagery
+import utils.util_rasters as util_rasters
 #
 # CONSTANTS
 #

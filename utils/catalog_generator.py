@@ -8,7 +8,7 @@ from tensorflow.keras.utils import to_categorical
 import threading
 import tensorflow.keras as keras
 import utils.util_rasters as util_rasters
-import util_imagery
+import utils.util_imagery as util_imagery
 
 # class itself
 class CatalogGenerator(keras.utils.Sequence):
