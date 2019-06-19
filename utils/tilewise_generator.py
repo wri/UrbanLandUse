@@ -52,7 +52,7 @@ class TilewiseGenerator(keras.utils.Sequence):
 
         self.look_window=look_window
 
-        self.look_radius = look_window / 2
+        self.look_radius = look_window//2
 
         # simply the number of tiles
         self.steps = len(tiles['features'])
