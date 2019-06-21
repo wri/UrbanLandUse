@@ -88,6 +88,7 @@ def map_tile(dl_id, tile, tile_id, network,
                     processing_level=None,
                     window=17,
                     data_root='/data/phase_iv/',
+                    place,
                     zfill=4
                     ):
     dl_id = str(dl_id)
@@ -165,7 +166,7 @@ def map_tile(dl_id, tile, tile_id, network,
     if write_local: # write to file on local machine
         # check if corresponding directory exists
         # if not, create
-        scene_dir = data_root + 'scenes/' + dl_id_short
+        scene_dir = data_root + 'scenes/' + place + '/' + dl_id_short
         
 #         print(scene_dir)
         try: 
