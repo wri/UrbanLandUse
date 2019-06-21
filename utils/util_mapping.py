@@ -75,7 +75,7 @@ def cloudscore_image(im, look_window,
     cloud_scores = map_cloud_scores(cloud_mask, look_window, pad=tile_pad)
     return cloud_mask, cloud_scores
 
-def map_tile(dl_id, tile, tile_id, network,
+def map_tile(dl_id, tile, tile_id, network, place,
                     read_local=False,
                     write_local=True,
                     store_predictions=False,
@@ -88,7 +88,6 @@ def map_tile(dl_id, tile, tile_id, network,
                     processing_level=None,
                     window=17,
                     data_root='/data/phase_iv/',
-                    place,
                     zfill=4
                     ):
     dl_id = str(dl_id)
