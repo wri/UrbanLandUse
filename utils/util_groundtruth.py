@@ -65,7 +65,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
 
     #!gdal_rasterize -a "Land_use" -l $ZCOMPLETE $ZCOMPLETESHP $ZLABELS
     #command = 'gdal_rasterize -a Land_use -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels)
-    command = 'gdal_rasterize -a {3} -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels,burn_attribute)
+    command = 'gdal_rasterize -a {3} -l {1} {2}'.format(zcompleteshp,zlabels,burn_attribute)
     print('>>>',command)
     try:
         s=0
@@ -79,7 +79,7 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     if cat > 255 or cat < 0:
         raise ValueError('Illegal touch_category passed to make_label_raster: '+touch_category)
         return
-    command = 'gdal_rasterize -a {4} -l {0} -where {4}=\'{3}\' -at {1} {2}'.format(zcomplete,zcompleteshp,zlabels,cat,burn_attribute)
+    command = 'gdal_rasterize -a {4} -l -where {4}=\'{3}\' -at {1} {2}'.format(zcompleteshp,zlabels,cat,burn_attribute)
     print('>>>',command,'\n')
     try:
         s=0
