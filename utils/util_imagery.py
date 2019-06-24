@@ -1,7 +1,6 @@
 import descarteslabs as dl
 import utils.util_rasters as util_rasters
 import numpy as np
-from image_generator import ImageGenerator
 import os
 import gdal
 
