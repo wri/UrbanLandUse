@@ -8,7 +8,6 @@ from tensorflow.python.keras.utils import Sequence
 
 import utils.util_imagery as util_imagery
 import utils.util_rasters as util_rasters
-#
 # CONSTANTS
 #
 WINDOW_PADDING='window'
@@ -84,7 +83,7 @@ class ImageGenerator(Sequence):
     def _get_inputs(self, index):
         samples=[]
         for j in range(self.pad,self.image.shape[1]-self.pad):
-            sample=util_raster.window(
+            sample=util_rasters.window(
                 self.image,
                 j,index+self.pad,
                 self.look_radius,
