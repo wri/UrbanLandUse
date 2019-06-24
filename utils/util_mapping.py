@@ -50,7 +50,7 @@ def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=3
     assert clouds.shape[0]==clouds.shape[1]
     rows = clouds.shape[0]
     cols = clouds.shape[1]
-    r = math.floor(look_window / 2)
+    r = (look_window // 2)
     score_map = np.zeros(clouds.shape, dtype='float32')
     for j in range(rows):
         for i in range(cols):
@@ -75,7 +75,7 @@ def cloudscore_image(im, look_window,
     cloud_scores = map_cloud_scores(cloud_mask, look_window, pad=tile_pad)
     return cloud_mask, cloud_scores
 
-def map_tile(dl_id, tile, tile_id, network,
+def map_tile(dl_id, tile, tile_id, network, place,
                     read_local=False,
                     write_local=True,
                     store_predictions=False,
@@ -165,7 +165,7 @@ def map_tile(dl_id, tile, tile_id, network,
     if write_local: # write to file on local machine
         # check if corresponding directory exists
         # if not, create
-        scene_dir = data_root + 'scenes/' + dl_id_short
+        scene_dir = data_root + 'scenes/' + place + '/' + dl_id_short
         
 #         print(scene_dir)
         try: 
