@@ -91,7 +91,7 @@ def map_tile(dl_id, tile, tile_id, network,
                     window=17,
                     data_root='/data/phase_iv/',
                     zfill=4,
-                    map_id = None,
+                    map_id=None,
                     ):
     dl_id = str(dl_id)
     dl_id_short = dl_id[str.rfind(dl_id,':')+1:]
@@ -168,10 +168,10 @@ def map_tile(dl_id, tile, tile_id, network,
     if write_local: # write to file on local machine
         # check if corresponding directory exists
         # if not, create
-        if map_id is None:
+        if map_id is not None:
             scene_dir = data_root + 'scenes/' + map_id + '/' + dl_id_short
         else:
-            scene_dir = data_root + 'scenes/' + '/' + dl_id_short
+            scene_dir = data_root + 'scenes/' + dl_id_short
         
 #         print(scene_dir)
         try: 
@@ -220,7 +220,10 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
                 if tile_id % 1000 == 0:
                     print('tile #',tile_id)
                 # test if tile intersects with scene; if not, skip
-                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, zfill=zfill, store_predictions=store_predictions, map_id=map_id)
+                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, 
+                    zfill=zfill, 
+                    store_predictions=store_predictions,
+                    map_id=map_id)
             except ResponseError as e:
                 # this should be more specific, so other errors rightfully get raised
                 # target error:
