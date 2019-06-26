@@ -77,7 +77,7 @@ def cloudscore_image(im, look_window,
     cloud_scores = map_cloud_scores(cloud_mask, look_window, pad=tile_pad)
     return cloud_mask, cloud_scores
 
-def map_tile(dl_id, tile, tile_id, network, 
+def map_tile(dl_id, tile, tile_id, network,
                     read_local=False,
                     write_local=True,
                     store_predictions=False,
@@ -91,7 +91,7 @@ def map_tile(dl_id, tile, tile_id, network,
                     window=17,
                     data_root='/data/phase_iv/',
                     zfill=4,
-                    map_id = None
+                    map_id = None,
                     ):
     dl_id = str(dl_id)
     dl_id_short = dl_id[str.rfind(dl_id,':')+1:]
@@ -168,7 +168,10 @@ def map_tile(dl_id, tile, tile_id, network,
     if write_local: # write to file on local machine
         # check if corresponding directory exists
         # if not, create
-        scene_dir = data_root + 'scenes/' + map_id + '/' + dl_id_short
+        if map_id is None:
+            scene_dir = data_root + 'scenes/' + map_id + '/' + dl_id_short
+        else:
+            scene_dir = data_root + 'scenes/' + '/' + dl_id_short
         
 #         print(scene_dir)
         try: 
@@ -203,7 +206,7 @@ def map_tile(dl_id, tile, tile_id, network,
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
-def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=True):
+def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=True, map_id=None):
     if zfill is None:
         zfill = len(str(len(tiles['features'])-1))
     for scene_id in scene_ids:
@@ -217,7 +220,7 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
                 if tile_id % 1000 == 0:
                     print('tile #',tile_id)
                 # test if tile intersects with scene; if not, skip
-                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, zfill=zfill, store_predictions=store_predictions)
+                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, zfill=zfill, store_predictions=store_predictions, map_id=map_id)
             except ResponseError as e:
                 # this should be more specific, so other errors rightfully get raised
                 # target error:
