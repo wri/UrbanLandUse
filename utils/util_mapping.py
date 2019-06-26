@@ -3,10 +3,12 @@ import numpy as np
 import os
 import gdal
 import time
+from urllib3.exceptions import ResponseError
 
 from image_generator import ImageGenerator
 import utils.util_rasters as util_rasters
 import utils.util_imagery as util_imagery
+
 
 def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
     assert type(tile_id) is int 
@@ -216,7 +218,10 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
                     print('tile #',tile_id)
                 # test if tile intersects with scene; if not, skip
                 map_tile(scene_id, tiles['features'][tile_id], tile_id, network, zfill=zfill, store_predictions=store_predictions)
-            except Exception as e:
+            except ResponseError as e:
+                # this should be more specific, so other errors rightfully get raised
+                # target error:
+                # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
                 print ('Error encountered mapping tile #', tile_id)
                 print (e)
                 fail_count = fail_count + 1
