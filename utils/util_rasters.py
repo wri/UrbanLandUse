@@ -24,6 +24,8 @@ from urllib3.exceptions import ProtocolError
 
 import subprocess
 
+import util_imagery
+
 
 # FILE READ/WRITE
 
@@ -108,7 +110,7 @@ def stats_byte_raster(y,
             print(c, yd[c], category_label[c] if c in category_label else '')
     if(show):
         if lulc:
-            rgb = rgb_lulc_result(y)
+            rgb = util_imagery.rgb_lulc_result(y)
             plt.figure(figsize=[8,8])
             plt.imshow(rgb)
         else:
