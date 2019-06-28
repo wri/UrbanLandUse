@@ -127,7 +127,7 @@ class CatalogGenerator(keras.utils.Sequence):
             image,
             center,
             center,
-            look_radius,
+            self.look_radius,
             bands_first=self.bands_first)
 
     def _get_targets(self):
