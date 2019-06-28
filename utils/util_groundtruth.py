@@ -66,10 +66,10 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
     #!gdal_rasterize -a "Land_use" -l $ZCOMPLETE $ZCOMPLETESHP $ZLABELS
     #command = 'gdal_rasterize -a Land_use -l {0} {1} {2}'.format(zcomplete,zcompleteshp,zlabels)
     command = 'gdal_rasterize -a {2} {0} {1}'.format(zcompleteshp,zlabels,burn_attribute)
-    print('>>>',command,'\n')
+    print('>>>',command)
     try:
         s=0
-        print(subprocess.check_output(command.split(), shell=False))
+        print(subprocess.check_output(command.split(), shell=False),'\n')
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     
@@ -80,9 +80,9 @@ def make_label_raster(data_path, place, tile_id, tile, vir_ids, shape,
         raise ValueError('Illegal touch_category passed to make_label_raster: '+touch_category)
         return
     command = 'gdal_rasterize -a {3} -where {3}=\'{2}\' -at {0} {1}'.format(zcompleteshp,zlabels,cat,burn_attribute)
-    print('>>>',command,'\n')
+    print('>>>',command)
     try:
         s=0
-        print(subprocess.check_output(command.split(), shell=False))
+        print(subprocess.check_output(command.split(), shell=False),'\n')
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
