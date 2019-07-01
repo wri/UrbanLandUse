@@ -24,9 +24,6 @@ from urllib3.exceptions import ProtocolError
 
 import subprocess
 
-import util_imagery
-
-
 # FILE READ/WRITE
 
 def load_geotiff(tif,dtype='uint16'):
@@ -96,7 +93,7 @@ def stats_byte_raster(y,
                    2:'Residential Atomistic',3:'Residential Informal Subdivision',\
                    4:'Residential Formal Subdivision',5:'Residential Housing Project',\
                    6:'Roads',7:'Study Area',8:'Labeled Study Area',254:'No Data',255:'No Label'},
-        lulc=True, show=False, band_index=0):
+        band_index=0):
     if isinstance(y,str):
             y,_,_,_,_=load_geotiff(y,dtype='uint8')
     if y.dtype != 'uint8':
@@ -108,15 +105,6 @@ def stats_byte_raster(y,
         if np.sum((y == c))>0:
             yd[c] = np.sum((y == c))
             print(c, yd[c], category_label[c] if c in category_label else '')
-    if(show):
-        if lulc:
-            rgb = util_imagery.rgb_lulc_result(y)
-            plt.figure(figsize=[8,8])
-            plt.imshow(rgb)
-        else:
-            y2 = y.copy()
-            plt.figure(figsize=[8,8])
-            plt.imshow(y2)
     return yd
 
 def stats_byte_tiles(data_path, place, tiles, label_suffix, 
