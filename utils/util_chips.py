@@ -183,3 +183,20 @@ def mask_locales(df, place_locales):
         mask_v = mask_v | submask_v
 
     return df[mask_t], df[mask_v]
+
+def create_subcatalogs(df):
+    relevant_cols = ['city','image','locale']
+    df_uniques = df.drop_duplicates(subset=relevant_cols)[relevant_cols].sort_values(relevant_cols)
+    
+    catalog_dict = {}
+    df_cities = df_uniques.drop_duplicates(subset=['city'])
+    for city in df_cities['city']:
+        catalog_dict[city] = {}
+        df_images = df_uniques[df_uniques['city']==city].drop_duplicates(subset=['image'])
+        for image in df_images['image']:
+            catalog_dict[city][image] = {}
+            df_locales = df_uniques[(df_uniques['city']==city) & (df_uniques['image']==image)].drop_duplicates(subset=['locale'])
+            for locale in df_locales['locale']:
+                catalog_dict[city][image][locale] = df[(df['city']==city) & (df['image']==image) & (df['locale']==locale)]
+                # print(city, image, locale, ':', len(catalog_dict[city][image][locale]))
+    return catalog_dict
