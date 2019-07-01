@@ -26,6 +26,7 @@ import descarteslabs as dl
 import utils.util_vectors as util_vectors
 import utils.util_rasters as util_rasters
 import utils.util_ml as util_ml
+import utils.util_imagery as util_imagery
 
 from tensorflow.keras.models import load_model
 
@@ -948,7 +949,7 @@ def view_results_tile(data_path, place, tiles, tile_id, model_id, image_suffix,
     result[result==2] = 4
     result[result==3] = 6
 
-    rgb = util_rasters.rgb_lulc_result(result)
+    rgb = util_imagery.rgb_lulc_result(result)
     fig = plt.figure(figsize=(16,16))
     plt.imshow(rgb)
     print
@@ -987,7 +988,7 @@ def view_results_overlay(data_path, place, tiles, tile_id, model_id, image_suffi
     result[result==2] = 4
     result[result==3] = 6
 
-    rgb = util_rasters.rgb_lulc_result(result)
+    rgb = util_imagery.rgb_lulc_result(result)
 
 
     img_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'

@@ -113,7 +113,7 @@ class CatalogGenerator(keras.utils.Sequence):
     # simple example of more customized input generator
     def _construct_sample(self, image):
 
-        if self.bands_first:
+        if not self.bands_first:
             assert image.shape[0] == image.shape[1]
         else:
             assert image.shape[1] == image.shape[2]
@@ -127,7 +127,7 @@ class CatalogGenerator(keras.utils.Sequence):
             image,
             center,
             center,
-            look_radius,
+            self.look_radius,
             bands_first=self.bands_first)
 
     def _get_targets(self):
