@@ -16,7 +16,7 @@ scorecards_vm_to_bucket(){
 
 jup_start(){ 
 	pushd $ULU_REPO; 
-	jupyter notebook --certfile=/home/Peter.Kerins/mycert.pem --keyfile /home/Peter.Kerins/mykey.key --ip=0.0.0.0 --port=8888 --no-browser & 
+	jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser & 
 	popd
 }
 jup_stop(){ 
