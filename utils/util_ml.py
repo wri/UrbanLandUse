@@ -200,12 +200,11 @@ def make_binary(Y, category, silent=True):
         print(Y_bin[0:20])
     return Y_bin
 
-def balance_binary(X, Y, max_ratio=3.0, silent=True):
-    where_false = np.where(Y==0)
-    where_true = np.where(Y==1)
-
-    n_false = len(where_false[0])
-    n_true = len(where_true[0])
+def balance_binary(Y, max_ratio=3.0, silent=True):
+    
+    count_series = Y['lulc'].value_counts()
+    n_false = count_series[0] # no. of open
+    n_true = count_series[1] # no. of roads        
 
     n_array = np.array([n_false,n_true])
     arg_min = np.argmin(n_array)
@@ -214,46 +213,32 @@ def balance_binary(X, Y, max_ratio=3.0, silent=True):
     n_max = n_array[arg_max]
 
     if not silent:
-        print('min:', n_min, '; max:', n_max)
+        print ('min:', n_min, '; max:', n_max)
     if (int(max_ratio * n_min) > n_max):
+        print('no balancing needed')
         # no balancing necessary; proportions already within acceptable range
-        return X, Y
+        return Y
 
     n_special = int(max_ratio * n_min)
     n_balanced = n_min + n_special
+    print ('n_special:', n_special, '; n_balanced:', n_balanced)
 
-    X_balanced_shape = (n_balanced,)+ X.shape[1:]
-    if not silent: 
-        print(X_balanced_shape)
-
-    X_balanced = np.zeros(X_balanced_shape,dtype=X.dtype)
-    Y_balanced = np.zeros((n_balanced),dtype=Y.dtype)
-
-    perm_false = np.random.permutation(n_false)
-    perm_true = np.random.permutation(n_true)
-
-    false_samples = where_false[0][perm_false[:]]
-    true_samples = where_true[0][perm_true[:]]
+    false_samples = Y.loc[Y['lulc']==0]
+    false_samples = false_samples.sample(frac=1).reset_index(drop=True)
+    
+    true_samples = Y.loc[Y['lulc']==1]
+    true_samples = true_samples.sample(frac=1).reset_index(drop=True)
 
     if arg_min==0: # more true samples than false
-        X_balanced[:n_min] = X[(false_samples,)]
-        Y_balanced[:n_min] = Y[(false_samples,)]
-        X_balanced[n_min:] = X[(true_samples[:n_special],)]
-        Y_balanced[n_min:] = Y[(true_samples[:n_special],)]
+        Y_balanced = false_samples
+        true_samples = true_samples[:n_special]
+        Y_balanced = Y_balanced.append(true_samples)
+        Y_balanced = Y_balanced.sample(frac=1).reset_index(drop=True) #shuffle the dataframe in-place and reset the index
     else:
-        X_balanced[:n_min] = X[(true_samples,)]
-        Y_balanced[:n_min] = Y[(true_samples,)]
-        X_balanced[n_min:] = X[(false_samples[:n_special],)]
-        Y_balanced[n_min:] = Y[(false_samples[:n_special],)]
+        Y_balanced = true_samples
+        false_samples = false_samples[:n_special]
+        Y_balanced = Y_balanced.append(false_samples)
+        Y_balanced = Y_balanced.sample(frac=1).reset_index(drop=True)
 
-    perm_balanced = np.random.permutation(n_balanced)
-    X_balanced = X_balanced[perm_balanced]
-    Y_balanced = Y_balanced[perm_balanced]
-
-    if not silent:
-        print(np.sum(Y_balanced==0),np.sum(Y_balanced!=0))
-        print(Y_balanced.shape)
-        print(Y_balanced[0:20])
-
-    return X_balanced, Y_balanced
+    return Y_balanced
 
