@@ -422,50 +422,27 @@ def rgb_clouds(Y,BIP=True):
         rgb = tmp
     return rgb
 
-def rgb_lulc_result(Y,BIP=True):
+def rgb_lulc_result(Y,BIP=True,
+                    color_scheme={
+                        0:"b2df8a", # open space
+                        1:"fb9a99", # non-residential
+                        2:"ff7f00", # residential - atomistic
+                        3:"fdbf6f", # residential - informal
+                        4:"1f78b4", # residential - formal
+                        5:"a6cee3", # residential - projects
+                        6:"e31a1c", # roads
+                        9:"003366", # water
+                        254:"000000", # outside study area
+                        255:"f3f3f3", # no data
+                    },
+                    ):
     rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
-    # open space
-    rgb[0][(Y==0)] = int("b2", 16)
-    rgb[1][(Y==0)] = int("df", 16)
-    rgb[2][(Y==0)] = int("8a", 16)
-    # non-residential
-    rgb[0][(Y==1)] = int("fb", 16)
-    rgb[1][(Y==1)] = int("9a", 16)
-    rgb[2][(Y==1)] = int("99", 16)
-    # residential - atomistic
-    rgb[0][(Y==2)] = int("ff", 16)
-    rgb[1][(Y==2)] = int("7f", 16)
-    rgb[2][(Y==2)] = int("00", 16)
-    # residential - informal
-    rgb[0][(Y==3)] = int("fd", 16)
-    rgb[1][(Y==3)] = int("bf", 16)
-    rgb[2][(Y==3)] = int("6f", 16)
-    # residential - formal
-    rgb[0][(Y==4)] = int("1f", 16)
-    rgb[1][(Y==4)] = int("78", 16)
-    rgb[2][(Y==4)] = int("b4", 16)
-    # residential - projects
-    rgb[0][(Y==5)] = int("a6", 16)
-    rgb[1][(Y==5)] = int("ce", 16)
-    rgb[2][(Y==5)] = int("e3", 16)
-    # roads
-    rgb[0][(Y==6)] = int("e3", 16)
-    rgb[1][(Y==6)] = int("1a", 16)
-    rgb[2][(Y==6)] = int("1c", 16)
-    # water
-    rgb[0][(Y==9)] = int("00", 16)
-    rgb[1][(Y==9)] = int("33", 16)
-    rgb[2][(Y==9)] = int("66", 16)
-    # outside study area
-    rgb[0][(Y==254)] = int("00", 16)
-    rgb[1][(Y==254)] = int("00", 16)
-    rgb[2][(Y==254)] = int("00", 16)
-    # no data
-    rgb[0][(Y==255)] = int("f3", 16)
-    rgb[1][(Y==255)] = int("f3", 16)
-    rgb[2][(Y==255)] = int("f3", 16)
-    #
-    if (BIP==True):
+    for k, v in color_scheme.items():
+        rgb[0][(Y==k)] = int(v[0:2], 16)
+        rgb[1][(Y==k)] = int(v[2:4], 16)
+        rgb[2][(Y==k)] = int(v[4:6], 16)
+    
+    if (BIP==True): # flips axes; don't know what BIP stands for
         tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
         for b in range(3):
             tmp[:,:,b] = rgb[b][:,:]
