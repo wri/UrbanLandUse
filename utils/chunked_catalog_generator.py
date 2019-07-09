@@ -25,7 +25,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
                 remapping=None,
                 one_hot=4,
                 flatten=False,
-                bands_last=True
+                bands_first=False,
                 ):
         self.batch_size=batch_size
         self.epochs_per_chunk=epochs_per_chunk
