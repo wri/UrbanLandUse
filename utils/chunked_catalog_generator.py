@@ -9,7 +9,7 @@ import threading
 import tensorflow.keras as keras
 import utils.util_rasters as util_rasters
 
-DEAULT_BATCH_SIZE=64
+DEFAULT_BATCH_SIZE=64
 DEFAULT_BATCHES_PER_EPOCH=200
 DEFAULT_EPOCHS_PER_CHUNK=25
 
@@ -18,7 +18,7 @@ class ChunkedCatalogGenerator(keras.utils.Sequence):
     # constructor stuff
     def __init__(self,
                 df,
-                batch_size=DEAULT_BATCH_SIZE,
+                batch_size=DEFAULT_BATCH_SIZE,
                 batches_per_epoch=DEFAULT_BATCHES_PER_EPOCH,
                 epochs_per_chunk=DEFAULT_EPOCHS_PER_CHUNK,
                 look_window=17,
