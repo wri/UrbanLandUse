@@ -14,7 +14,7 @@ DEFAULT_BATCHES_PER_EPOCH=200
 DEFAULT_EPOCHS_PER_CHUNK=25
 
 # class itself
-class ChunkedBatchGenerator(keras.utils.Sequence):
+class ChunkedCatalogGenerator(keras.utils.Sequence):
     # constructor stuff
     def __init__(self,
                 df,
@@ -49,7 +49,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         assert isinstance(one_hot, int)
         self.one_hot = one_hot
         self.flatten = flatten
-        self.bands_last=bands_last
+        self.bands_first=bands_first
         self._set_data(df)
 
 
@@ -119,14 +119,14 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         #rows = obj.RasterYSize
         #im = np.zeros((rows,cols), dtype=dtype)
         im = obj.ReadAsArray().astype(dtype)
-        if self.bands_last:
+        if not self.bands_first:
             im=im.swapaxes(0,1).swapaxes(1,2)
         return im
 
 
     # simple example of more customized input generator
     def _construct_sample(self, image, look_radius):
-        if self.bands_last:
+        if not self.bands_first:
             assert image.shape[0] == image.shape[1]
         else:
             assert image.shape[1] == image.shape[2]
@@ -137,7 +137,7 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
         image = np.clip(image,0.0,1.0)
 
         # drop alpha
-        if self.bands_last:
+        if not self.bands_first:
             image = image[:,:,:-1]
         else:
             image = image[:-1,:,:]
@@ -150,7 +150,8 @@ class ChunkedBatchGenerator(keras.utils.Sequence):
             center,
             center,
             look_radius,
-            bands_first=(not self.bands_last))
+            bands_first=(self.bands_first),
+            )
 
 
     def _get_targets(self):
