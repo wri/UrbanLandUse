@@ -241,12 +241,14 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
             fail_count = 0
 
 
-def prep_lulc_derivation_arrays(lulc_paths, score_paths):
+def prep_lulc_derivation_arrays(lulc_paths, score_paths, pred_paths, num_cats):
     assert len(lulc_paths)==len(score_paths)
+    assert len(lulc_paths)==len(pred_paths)
     img, geo, prj, cols, rows = util_rasters.load_geotiff(lulc_paths[0],dtype='uint8')
     assert img.ndim==2
     lulcs = np.zeros((len(lulc_paths),)+img.shape, dtype='uint8')
     scores = np.zeros((len(lulc_paths),)+img.shape, dtype='float32')
+    preds = np.zeros((len(lulc_paths),num_cats)+img.shape, dtype='float32')
     for i in range(len(lulc_paths)):
         lulc_img, lulc_geo, lulc_prj, lulc_cols, lulc_rows = util_rasters.load_geotiff(lulc_paths[i],dtype='uint8')
         assert img.shape==lulc_img.shape
@@ -260,9 +262,15 @@ def prep_lulc_derivation_arrays(lulc_paths, score_paths):
         assert prj==scores_prj
         assert cols==scores_cols
         assert rows==scores_rows
+        preds_img, preds_geo, preds_prj, preds_cols, preds_rows = util_rasters.load_geotiff(pred_paths[i],dtype='float32')
+        assert geo==preds_geo
+        assert prj==preds_prj
+        assert cols==preds_cols
+        assert rows==preds_rows
         lulcs[i]=lulc_img
         scores[i]=scores_img
-    return lulcs, scores
+        preds[i]=preds_img
+    return lulcs, scores, preds
 
 # lulcs and scores are already numpy stacks of 2d maps
 def derive_lulc_map_binary(lulcs, scores, categories=[0,1,2], threshold=0.05):
@@ -324,4 +332,129 @@ def derive_lulc_map_weighted(lulcs, scores, categories=[0,1,2], threshold=0.5, s
     lulc_derived[nodata_mask]=255
 #     print(winner_indices)
 #     print(lulc_derived)
+    return lulc_derived
+
+def derive_lulc_map_predweighted_simple(lulcs, scores, preds, categories=[0,1,2], threshold=0.5, stretch=False):
+
+    array_shape = lulcs[0].shape
+    cats = list(categories)
+    cats.append(255)
+    votes = np.zeros(((len(cats),)+array_shape), dtype='float32')
+    valid_masks = (scores<=threshold)
+
+    if stretch:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), np.divide(scores, threshold))
+    else:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), scores) # 1 - scores
+
+    for i in range(len(cats)):
+        c = cats[i]
+        cat_masks = (lulcs==c)
+        full_masks = (cat_masks & valid_masks)
+        if i < 3:
+            pred_disag = preds[:,i] 
+            votes_stack = np.multiply(full_masks, pred_disag, reverse_scores)
+        else:
+            pred_disag = 1 
+            votes_stack = np.multiply(full_masks, pred_disag, reverse_scores)
+        votes[i] = np.sum(votes_stack, axis=0)
+
+    cat_votes = np.sum(votes[:-1], axis=0)
+    nodata_mask = (cat_votes==0)
+    winner_indices = np.argmax(votes[:-1], axis=0)
+
+    lulc_derived = np.zeros(array_shape, dtype='uint8')
+
+    for i in range(len(cats)):
+        mask = (winner_indices==i)
+        lulc_derived[mask] = cats[i]
+    lulc_derived[nodata_mask]=255
+    return lulc_derived
+
+def linear_scale(val,in_a,in_b,out_a,out_b,scale=1.0):
+    mn,mx=sorted([in_a,in_b])
+    val=np.clip(val,mn,mx)
+    slope=(out_b-out_a)/(in_b-in_a)
+    return scale * ( (val-in_a)*slope + out_a )
+
+def cloud_scale(
+        score,
+        min_score=0.05,
+        max_score=0.9,
+        min_value=0.1,
+        max_value=1.1,
+        scale=1.0):
+    return linear_scale(
+        val=score,
+        in_a=max_score,
+        in_b=min_score,
+        out_a=min_value,
+        out_b=max_value,
+        scale=scale)
+
+def pred_scale(
+        pred,
+        min_pred=0.6,
+        max_pred=0.99,
+        min_value=0.7,
+        max_value=1.0,
+        scale=1.0):
+    return linear_scale(
+        val=pred,
+        in_a=min_pred,
+        in_b=max_pred,
+        out_a=min_value,
+        out_b=max_value,
+        scale=scale)
+
+def weight(pred,cloud_score):
+    return pred_scale(pred)+cloud_scale(cloud_score)
+
+def get_scores(cpc,classes=range(4)):
+    scores={}
+    for c in classes:
+        scores[c]=0
+        pred_clouds=cpc[cpc[:,0]==c][:,1:]
+        for pc in pred_clouds:
+            scores[c]+=weight(*pc)
+    return scores
+
+
+def derive_lulc_map_predweighted_scaled(lulcs, scores, preds, categories=[0,1,2], threshold=0.5, stretch=False):
+
+    array_shape = lulcs[0].shape
+    cats = list(categories)
+    cats.append(255)
+    votes = np.zeros(((len(cats),)+array_shape), dtype='float32')
+    valid_masks = (scores<=threshold)
+
+    if stretch:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), np.divide(scores, threshold))
+    else:
+        reverse_scores = np.subtract(np.ones(scores.shape, dtype='float32'), scores) # 1 - scores
+
+    for i in range(len(cats)):
+        c = cats[i]
+        cat_masks = (lulcs==c)
+        full_masks = (cat_masks & valid_masks)
+        if i < 3:
+            pred_disag = preds[:,i] 
+            scaled_weight = weight(pred_disag, scores)
+            votes_stack = np.multiply(full_masks, scaled_weight)
+        else:
+            pred_disag = 1 
+            scaled_weight = weight(pred_disag, scores)
+            votes_stack = np.multiply(full_masks, scaled_weight)
+        votes[i] = np.sum(votes_stack, axis=0)
+
+    cat_votes = np.sum(votes[:-1], axis=0)
+    nodata_mask = (cat_votes==0)
+    winner_indices = np.argmax(votes[:-1], axis=0)
+
+    lulc_derived = np.zeros(array_shape, dtype='uint8')
+
+    for i in range(len(cats)):
+        mask = (winner_indices==i)
+        lulc_derived[mask] = cats[i]
+    lulc_derived[nodata_mask]=255
     return lulc_derived
