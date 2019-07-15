@@ -28,6 +28,7 @@ class ChunkedCatalogGenerator(keras.utils.Sequence):
                 bands_first=False,
                 ):
         self.batch_size=batch_size
+        self.batches_per_epoch=batches_per_epoch
         self.epochs_per_chunk=epochs_per_chunk
         self.size=batch_size*batches_per_epoch
         self.steps=int(np.ceil(self.size/self.batch_size))
