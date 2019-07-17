@@ -225,7 +225,7 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
                     store_predictions=store_predictions,
                     map_id=map_id)
             # except ResponseError as e:
-            except Exception as e
+            except Exception as e:
                 # this should be more specific, so other errors rightfully get raised
                 # target error:
                 # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
