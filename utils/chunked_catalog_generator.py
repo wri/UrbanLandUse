@@ -9,7 +9,7 @@ import threading
 import tensorflow.keras as keras
 import utils.util_rasters as util_rasters
 
-DEFAULT_BATCH_SIZE=64
+DEFAULT_BATCH_SIZE=128
 DEFAULT_BATCHES_PER_EPOCH=200
 DEFAULT_EPOCHS_PER_CHUNK=25
 
