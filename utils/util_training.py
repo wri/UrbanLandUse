@@ -16,6 +16,8 @@ def calc_category_counts(df,remapping='standard'):
         if isinstance(remapping, str):
             if remapping.lower() == 'standard' or remapping.lower() == 'residential':
                 remapping = {0:0,1:1,2:2,3:2,4:2,5:2,6:6}
+            elif remapping.lower() == 'roads':
+                remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
             else:
                 raise ValueError('Unrecognized remapping identifier: ',remapping)
         assert isinstance(remapping, dict)
