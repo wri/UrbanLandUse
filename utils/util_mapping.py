@@ -137,13 +137,14 @@ def map_tile(dl_id, tile, tile_id, network,
     # classify image using nn
     generator = ImageGenerator(im, pad=tile_pad, look_window=17, bands_first=False)
     
+    n_cats = network.outputs[0]._shape_val[1]._value
     
     predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
         use_multiprocessing=False, max_queue_size=1, workers=1,)
         
     if store_predictions:
-        pred_square = predictions.reshape((tile_size,tile_size,3),order='F')
-        pred = np.zeros((tile_side,tile_side,3),dtype='float32')
+        pred_square = predictions.reshape((tile_size,tile_size,n_cats),order='F')
+        pred = np.zeros((tile_side,tile_side,n_cats),dtype='float32')
         pred.fill(255)
         pred[tile_pad:-tile_pad,tile_pad:-tile_pad,:] = pred_square[:,:,:]
         pred[blank_mask] = 255
