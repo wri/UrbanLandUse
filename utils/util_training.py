@@ -14,9 +14,10 @@ def calc_category_counts(df,remapping='standard'):
         return counts_dict
     else:
         if isinstance(remapping, str):
-            if remapping.lower() == 'standard' or remapping.lower() == 'residential':
+            remapping_lower = remapping.lower()
+            if remapping_lower in ['standard','residential','3cat','3category']:
                 remapping = {0:0,1:1,2:2,3:2,4:2,5:2,6:6}
-            elif remapping.lower() == 'roads':
+            elif remapping_lower == 'roads':
                 remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
             else:
                 raise ValueError('Unrecognized remapping identifier: ',remapping)

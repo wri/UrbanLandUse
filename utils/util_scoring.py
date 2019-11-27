@@ -58,9 +58,10 @@ def extract_scoring_arrays(Yhat_img, Y_img, categories, remapping=None):
     # remap ground-truth (Y) to match output (Yhat) categories
     if remapping is not None:
         if isinstance(remapping, str):
-            if remapping.lower() == '3cat' or remapping.lower() == '3category':
-                remapping = {2:2,3:2,4:2,5:2}
-            elif remapping.lower()=='roads':
+            remapping_lower = remapping.lower()
+            if remapping_lower in ['standard','residential','3cat','3category']:
+                remapping = {0:0,1:1,2:2,3:2,4:2,5:2,6:6}
+            elif remapping_lower == 'roads':
                 remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
             else:
                 raise ValueError('Unrecognized remapping identifier: ',remapping)

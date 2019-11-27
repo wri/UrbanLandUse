@@ -31,12 +31,11 @@ class CatalogGenerator(keras.utils.Sequence):
             self.remapping = remapping
         else:
             if isinstance(remapping, dict):
-                self.remapping = remapping
-            elif isinstance(remapping, str):
-                if remapping.lower() == '3cat' or remapping.lower() == '3category':
-                    self.remapping = {0:0,1:1,2:2,3:2,4:2,5:2,6:3}
-                elif remapping.lower() == 'roads':
-                    self.remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
+                remapping_lower = remapping.lower()
+                if remapping_lower in ['standard','residential','3cat','3category']:
+                    remapping = {0:0,1:1,2:2,3:2,4:2,5:2,6:6}
+                elif remapping_lower == 'roads':
+                    remapping = {0:0,1:0,2:0,3:0,4:0,5:0,6:1}
                 else:
                     raise ValueError('Unrecognized remapping identifier: ',remapping)
             else:
