@@ -11,8 +11,9 @@ Several parts of the workflow utilize the `descarteslabs` package for imagery re
 
 ## Workflow
 ### 1.	Prepare Atlas of Urban Expansion files (executed in QGIS)  
--	Step-by-step instructions  
--	Helper PyQGIS scripts  
+-	Step-by-step [instructions](aue-preprocessing/aue-preprocessing_instructions.docx) (Word document)  
+-	Helper [PyQGIS scripts](aue-preprocessing)  
+- Note that preprocessing instructions and scripts are written for QGIS 2.x (2.18.13 recommended), and may not work with QGIS 3.x.
 -	For a given city in the AUE, create the critical geospatial file that contains all essential LULC information. Ingest and integrate the information encoded across a number of separate AUE files into a single, unified geojson archive, using a combination of manual interaction and scripted processing routines.  
 ### 2.	Create ground-truth by rasterizing AUE vector data  
 -	Notebook [core_prepare-ground-truth.ipynb](notebooks/core_prepare-ground-truth.ipynb)  
