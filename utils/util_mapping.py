@@ -207,7 +207,7 @@ def map_tile(dl_id, tile, tile_id, network,
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
-def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=True, map_id=None):
+def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_predictions=True, map_id=None):
     if zfill is None:
         zfill = len(str(len(tiles['features'])-1))
     for scene_id in scene_ids:
@@ -222,6 +222,7 @@ def map_scenes_simple(scene_ids, tiles, network, zfill=None, store_predictions=T
                     print('tile #',tile_id)
                 # test if tile intersects with scene; if not, skip
                 map_tile(scene_id, tiles['features'][tile_id], tile_id, network, 
+                    window=window,
                     zfill=zfill, 
                     store_predictions=store_predictions,
                     map_id=map_id)
