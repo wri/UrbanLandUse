@@ -110,7 +110,7 @@ def record_model_creation(
 def record_model_application(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, 
         confusion, recalls, precisions, accuracy, 
-        f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
+        f_scores, f_score_average,
         datetime=datetime.datetime.now(),
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_runs.csv'):
     with open(scorecard_file, mode='a') as scorecard:
@@ -118,8 +118,12 @@ def record_model_application(
 
         score_writer.writerow([
             model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map,
-            confusion, recalls[0], recalls[1], recalls[2], recalls[3], precisions[0], precisions[1], precisions[2], precisions[3], accuracy, 
-            f_score_open, f_score_nonres, f_score_res, f_score_roads, f_score_average,
+            confusion, 
+            recalls[0], recalls[1], recalls[2], recalls[3], recalls[4], recalls[5], recalls[6], 
+            precisions[0], precisions[1], precisions[2], precisions[3], precisions[4], precisions[5], precisions[6],
+            accuracy,
+            f_scores[0], f_scores[1], f_scores[2], f_scores[3], f_scores[4], f_scores[5], f_scores[6],  
+            f_score_average,
             ])
     print('run scorecard updated')
     return
