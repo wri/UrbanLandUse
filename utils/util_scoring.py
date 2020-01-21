@@ -87,9 +87,9 @@ def record_model_creation(
         model_id, notes, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
         model_summary, epochs, batch_size,
         train_confusion, train_recalls, train_precisions, train_accuracy, 
-        train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
+        train_f_scores, train_f_score_average,
         valid_confusion, valid_recalls, valid_precisions, valid_accuracy,
-        valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
+        valid_f_scores, valid_f_score_average,
         datetime=datetime.datetime.now(),
         scorecard_file='/data/phase_iv/models/scorecard_phase_iv_models.csv'):
     
@@ -99,10 +99,18 @@ def record_model_creation(
         score_writer.writerow([
             model_id, notes, datetime, place_images, ground_truth, resolution, stack_label, feature_count, window, category_map, balancing, 
             model_summary, epochs, batch_size,
-            train_confusion, train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_accuracy, 
-            train_f_score_open, train_f_score_nonres, train_f_score_res, train_f_score_roads, train_f_score_average,
-            valid_confusion, valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_accuracy, 
-            valid_f_score_open, valid_f_score_nonres, valid_f_score_res, valid_f_score_roads, valid_f_score_average,
+            train_confusion, 
+            train_recalls[0], train_recalls[1], train_recalls[2], train_recalls[3], train_recalls[4], train_recalls[5], train_recalls[6], 
+            train_precisions[0], train_precisions[1], train_precisions[2], train_precisions[3], train_precisions[4], train_precisions[5], train_precisions[6], 
+            train_accuracy,
+            train_f_scores[0], train_f_scores[1], train_f_scores[2], train_f_scores[3], train_f_scores[4], train_f_scores[5], train_f_scores[6], 
+            train_f_score_average,
+            valid_confusion, 
+            valid_recalls[0], valid_recalls[1], valid_recalls[2], valid_recalls[3], valid_recalls[4], valid_recalls[5], valid_recalls[6], 
+            valid_precisions[0], valid_precisions[1], valid_precisions[2], valid_precisions[3], valid_precisions[4], valid_precisions[5], valid_precisions[6], 
+            valid_accuracy,
+            valid_f_scores[0], valid_f_scores[1], valid_f_scores[2], valid_f_scores[3], valid_f_scores[4], valid_f_scores[5], valid_f_scores[6], 
+            valid_f_score_average,
             ])
     print('model scorecard updated')
     return
