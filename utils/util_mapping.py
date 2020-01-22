@@ -234,6 +234,8 @@ def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_pr
                 # this should be more specific, so other errors rightfully get raised
                 # target error:
                 # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
+                # also observed
+                # {"message":"Unknown band requested red","status_code":400}
                 print ('Error encountered mapping tile #', tile_id)
                 print (e)
                 time.sleep(5)
