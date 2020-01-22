@@ -213,9 +213,10 @@ def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_pr
     for scene_id in scene_ids:
         print(scene_id)
         # calculate scene extent
-        for tile_id in range(len(tiles['features'])):
-    #     for tile_id in range(2000,2001):
-            fail_count=0
+        tile_id = 0
+        nattempts = 0
+        while tile_id < len(tiles['features']):
+            nattempts += 1
             try:
     #             print('tile #',tile_id)
                 if tile_id % 1000 == 0:
@@ -226,6 +227,8 @@ def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_pr
                     zfill=zfill, 
                     store_predictions=store_predictions,
                     map_id=map_id)
+                nattempts = 0
+                tile_id += 1
             # except ResponseError as e:
             except Exception as e:
                 # this should be more specific, so other errors rightfully get raised
@@ -233,15 +236,11 @@ def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_pr
                 # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
                 print ('Error encountered mapping tile #', tile_id)
                 print (e)
-                fail_count = fail_count + 1
-                if fail_count > 5:
-                    break
-                else:
-                    tile_id = tile_id - 1
-                    time.sleep(5)
-                    continue
-            fail_count = 0
-
+                time.sleep(5)
+                if nattempts > 5:
+                    print ('Failed to map tile #', tile_id, '; continuing to next')
+                    nattempts = 0
+                    tile_id += 1
 
 def prep_lulc_derivation_arrays(lulc_paths, score_paths, pred_paths, num_cats):
     assert len(lulc_paths)==len(score_paths)
