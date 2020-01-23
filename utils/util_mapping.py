@@ -207,7 +207,7 @@ def map_tile(dl_id, tile, tile_id, network,
 
     return cloud_mask, cloud_scores, lulc, water_mask
 
-def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_predictions=True, map_id=None):
+def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_predictions=True, map_id=None, tile_list=None):
     if zfill is None:
         zfill = len(str(len(tiles['features'])-1))
     for scene_id in scene_ids:
@@ -215,34 +215,54 @@ def map_scenes_simple(scene_ids, tiles, network, window=17, zfill=None, store_pr
         # calculate scene extent
         tile_id = 0
         nattempts = 0
-        while tile_id < len(tiles['features']):
-            nattempts += 1
-            try:
-    #             print('tile #',tile_id)
-                if tile_id % 1000 == 0:
-                    print('tile #',tile_id)
-                # test if tile intersects with scene; if not, skip
-                map_tile(scene_id, tiles['features'][tile_id], tile_id, network, 
-                    window=window,
-                    zfill=zfill, 
-                    store_predictions=store_predictions,
-                    map_id=map_id)
-                nattempts = 0
-                tile_id += 1
-            # except ResponseError as e:
-            except Exception as e:
-                # this should be more specific, so other errors rightfully get raised
-                # target error:
-                # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
-                # also observed
-                # {"message":"Unknown band requested red","status_code":400}
-                print ('Error encountered mapping tile #', tile_id)
-                print (e)
-                time.sleep(5)
-                if nattempts > 5:
-                    print ('Failed to map tile #', tile_id, '; continuing to next')
+        if tile_list is None:
+            while tile_id < len(tiles['features']):
+                nattempts += 1
+                try:
+        #             print('tile #',tile_id)
+                    if tile_id % 1000 == 0:
+                        print('tile #',tile_id)
+                    # test if tile intersects with scene; if not, skip
+                    map_tile(scene_id, tiles['features'][tile_id], tile_id, network, 
+                        window=window,
+                        zfill=zfill, 
+                        store_predictions=store_predictions,
+                        map_id=map_id)
                     nattempts = 0
                     tile_id += 1
+                # except ResponseError as e:
+                except Exception as e:
+                    # this should be more specific, so other errors rightfully get raised
+                    # target error:
+                    # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
+                    # also observed
+                    # {"message":"Unknown band requested red","status_code":400}
+                    print ('Error encountered mapping tile #', tile_id)
+                    print (e)
+                    time.sleep(5)
+                    if nattempts > 5:
+                        print ('Failed to map tile #', tile_id, '; continuing to next')
+                        nattempts = 0
+                        tile_id += 1
+        else:
+            for tile_id in tile_list:
+                try:
+                    print('tile #',tile_id)
+                    
+                    map_tile(scene_id, tiles['features'][tile_id], tile_id, network, 
+                        window=window,
+                        zfill=zfill, 
+                        store_predictions=store_predictions,
+                        map_id=map_id)
+                # except ResponseError as e:
+                except Exception as e:
+                    # this should be more specific, so other errors rightfully get raised
+                    # target error:
+                    # HTTPSConnectionPool(host='platform.descarteslabs.com', port=443): Max retries exceeded with url: /raster/v1/npz (Caused by ResponseError('too many 503 error responses',))
+                    # also observed
+                    # {"message":"Unknown band requested red","status_code":400}
+                    print ('Error encountered mapping tile #', tile_id)
+                    print (e)
 
 def prep_lulc_derivation_arrays(lulc_paths, score_paths, pred_paths, num_cats):
     assert len(lulc_paths)==len(score_paths)
