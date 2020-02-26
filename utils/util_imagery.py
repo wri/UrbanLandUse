@@ -1,7 +1,6 @@
 import descarteslabs as dl
-import util_rasters
+import utils.util_rasters as util_rasters
 import numpy as np
-from image_sample_generator import ImageSampleGenerator
 import os
 import gdal
 
@@ -18,14 +17,14 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
 	else:
 	    raise Exception('bad resolution: '+str(resolution))
 
-	for suffix, ids in image_dict.iteritems():
-	    print suffix, ids
+	for suffix, ids in image_dict.items():
+	    print(suffix, ids)
 
 	    for tile_id in range(len(tiles['features'])):
 	        tile = tiles['features'][tile_id]
 	        basename = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
 	        	place+'_'+source+'_'+suffix+'_'+str(resolution)+'m'+'_'+'p'+str(pad)+'_'+'tile'+str(tile_id).zfill(zfill)
-	        print 'downloading tile'+str(tile_id).zfill(zfill)+':', basename+'.tif'
+	        print('downloading tile'+str(tile_id).zfill(zfill)+':', basename+'.tif')
 	        vir = dl.raster.raster(
                 ids,
                 bands=bands,
@@ -37,15 +36,18 @@ def download_imagery(data_root, place, source, bands, shape, tiles, image_dict,
                 save=True,
                 outfile_basename=basename)
 
-def s2_preprocess(im):
+def s2_preprocess(im, bands_first=False):
     # probably don't need to drop alpha..
     # drop alpha
-    im = im[:-1,:,:]
+    if bands_first:
+        im = im[:-1,:,:]
+    else:
+        im = im[:,:,:-1]
     # manual "rescaling" as in all previous phases
     im = im.astype('float32')
     im = im/10000.
     im = np.clip(im,0.0,1.0)
-    #print 'im prepped'
+    #print('im prepped')
     return im
 
 def spectral_index(img,a,b,tol=1e-6,bands_first=False):
@@ -62,6 +64,7 @@ def spectral_index(img,a,b,tol=1e-6,bands_first=False):
     a_plus_b = None
     return y
 
+#needs bands_first update if to be used in future
 def ls_haze_removal(img,nodata,thresh=2):
     #
     # based on https://github.com/descarteslabs/hedj/blob/master/crops/ml_exp/lacid.py
@@ -86,7 +89,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     #
     # check that we have enough pixels to work with
     if ((valid_fraction<0.01) | (n_dark_pix<100)):
-        print "not enough dark pixels for haze correction"
+        print("not enough dark pixels for haze correction")
         return img, refl_offsets
     #
     if n_dark_pix>1e5:
@@ -94,7 +97,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     else:
         ds = 1.
     n_dark_pix /= ds
-    print 'n_dark_pixels: %i' % n_dark_pix
+    print('n_dark_pixels: %i' % n_dark_pix)
     #
     # iterate over bands, measure haze offsets
     offsets = np.zeros(n_bands,dtype=np.float32)
@@ -118,7 +121,7 @@ def ls_haze_removal(img,nodata,thresh=2):
     for b in range(n_bands):
         corrected_img[b][:,:] = img[b][:,:] - refl_offsets[b]
         corrected_img[b] = np.clip(corrected_img[b],0.0,1.5)
-        print b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max() 
+        print(b, offsets[b], refl_offsets[b], img[b].min(), corrected_img[b].min(), corrected_img[b].max())
     #
     return corrected_img, refl_offsets
 
@@ -299,6 +302,7 @@ def ls_cloud_mask(X,T,get_rgb=False,
     #
     return Y,key
 
+# bands first/last irrelevant, since returns stack of 2D arrays
 def calc_index_minmax(ids, tiles, shape, band_a, band_b,
                     bands=['blue','green','red','nir','swir1','swir2','alpha']):
     ntiles = len(tiles['features'])
@@ -308,10 +312,10 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
     min_tiles = np.full([ntiles, tilepixels, tilepixels], np.nan, dtype='float32')
 
     for j in range(len(ids)):
-        print 'image', j
+        print('image', j)
         for tile_id in range(ntiles):
             if(tile_id % 50 == 0):
-               print '    tile', tile_id
+               print('    tile', tile_id)
             tile = tiles['features'][tile_id]
 
             vir, vir_meta = dl.raster.ndarray(
@@ -321,7 +325,7 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
                 dltile=tile,
                 #cutline=shape['geometry'] # removing to try to sidestep nan issue
             )
-            #print vir.shape
+            #print(vir.shape)
             vir = vir.astype('float32')
             vir = vir/10000.
             vir = np.clip(vir,0.0,1.0)
@@ -340,14 +344,14 @@ def calc_index_minmax(ids, tiles, shape, band_a, band_b,
             np.fmax(ndvi_j, max_tiles[tile_id], out=max_tiles[tile_id], where=goodpixels_j)
             np.fmin(ndvi_j, min_tiles[tile_id], out=min_tiles[tile_id], where=goodpixels_j)
 
-    print 'done'
+    print('done')
     return min_tiles, max_tiles
 
 
 def show_vir(file,
             bands_first=True):
     img, geo, prj, cols, rows = util_rasters.load_geotiff(file)
-
+    assert img.ndims==3
     if bands_first:
         img = np.transpose(img, (1,2,0))
     img = img[:,:,0:3]
@@ -359,7 +363,7 @@ def show_vir(file,
     viz = np.clip(viz,0,255)
     viz = viz.astype('uint8')
     for b in range(img.shape[2]):
-        print b, np.min(viz[:,:,b]), np.max(viz[:,:,b])
+        print(b, np.min(viz[:,:,b]), np.max(viz[:,:,b]))
     plt.figure(figsize=[16,16])
     plt.imshow(viz)
 
@@ -376,160 +380,6 @@ def calc_water_mask(vir, idx_green=1, idx_nir=3, threshold=0.15, bands_first=Fal
     water = ndwi > threshold
 
     return water
-
-def make_water_mask_tile(data_path, place, tile_id, tiles, image_suffix, threshold):
-    assert type(tile_id) is int 
-    assert tile_id < len(tiles['features'])
-    tile = tiles['features'][tile_id]
-    resolution = int(tile['properties']['resolution'])
-
-    #print 'tile', tile_id, 'load VIR image'
-    # assert resolution==10 or resolution==5
-    if resolution==10:
-        zfill = 3
-    elif resolution==5:
-        zfill = 4
-    elif resolution==2:
-        zfill=5
-    else:
-        raise Exception('bad resolution: '+str(resolution))
-    vir_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_vir_'+image_suffix+('' if resolution==10 else '_'+str(resolution)+'m')+'.tif'
-
-    #print vir_file
-    vir, virgeo, virprj, vircols, virrows = util_rasters.load_geotiff(vir_file,dtype='uint16')
-    #print 'vir shape:',vir.shape
-
-    water = calc_water_mask(vir[0:6], threshold=threshold, bands_first=True)
-    water_file = data_path+place+'_tile'+str(tile_id).zfill(zfill)+'_water_'+image_suffix+'.tif'
-    print water_file
-    util_rasters.write_1band_geotiff(water_file, water, virgeo, virprj, data_type=gdal.GDT_Byte)
-    return water
-
-
-# CLOUDS
-
-def calc_cloud_score_default(clouds_window):
-    assert len(clouds_window.shape)==2
-    n_pixels = clouds_window.shape[0] * clouds_window.shape[1] * 1.0
-    rating_sum = np.sum(clouds_window)
-    return rating_sum / n_pixels
-
-def map_cloud_scores(clouds, look_window, scorer=calc_cloud_score_default, pad=32):
-    assert len(clouds.shape)==2
-    assert clouds.shape[0]==clouds.shape[1]
-    rows = clouds.shape[0]
-    cols = clouds.shape[1]
-    r = look_window / 2
-    score_map = np.zeros(clouds.shape, dtype='float32')
-    for j in range(rows):
-        for i in range(cols):
-            clouds_window = clouds[j-r:j+r+1,i-r:i+r+1]
-#             if clouds_window.shape!=(look_window, look_window):
-#                 print 'bad shape at '+str(j)+','+str(i)+': '+str(clouds_window.shape)
-            window_score = scorer(clouds_window)
-            score_map[j,i] = window_score
-    if pad is not None:
-        score_map[:pad,:] = -1.0; score_map[-pad:,:] = -1.0
-        score_map[:,:pad] = -1.0; score_map[:,-pad:] = -1.0
-    return score_map
-
-def cloudscore_image(im, window,
-                    tile_pad=32,
-                    ):
-    image = s2_preprocess(im)
-    Y, key = s2_cloud_mask(image,get_rgb=False,bands_first=True)
-    cloud_mask = (Y==4)
-    score_map = map_cloud_scores(cloud_mask, window, pad=tile_pad)
-    return cloud_mask, score_map
-
-def map_tile(dl_id, tile, tile_id, network,
-                    read_local=False,
-                    write_local=True,
-                    make_watermask=True,
-                    store_cloudmask=False,
-                    store_watermask=False,
-                    bands=['blue','green','red','nir','swir1','swir2','alpha'],
-                    resampler='bilinear',
-                    #cutline=shape['geometry'], #cut or no?
-                    processing_level=None,
-                    window=17,
-                    data_root='/data/phase_iv/',
-                    zfill=4
-                    ):
-    dl_id_cleaned = dl_id.replace(':','^')
-    tile_size = tile['properties']['tilesize']
-    tile_pad = tile['properties']['pad']
-    tile_res = int(tile['properties']['resolution'])
-    tile_side = tile_size+(2*tile_pad)
-
-    if read_local: # read file on local machine
-        d=2
-        # tilepath = data_root+place+'/imagery/'+str(processing_level).lower()+'/'+\
-        #     place+'_'+source+'_'+image_suffix+'_'+str(resolution)+'m'+'_'+'p'+str(tile_pad)+'_'+\
-        #     'tile'+str(tile_id).zfill(zfill)+'.tif'
-    else: # read from dl
-        im, metadata = dl.raster.ndarray(
-            dl_id,
-            bands=bands,
-            resampler=resampler,
-            data_type='UInt16',
-            #cutline=shape['geometry'], 
-            order='gdal',
-            dltile=tile,
-            processing_level=processing_level,
-            )
-    # insert test here for if imagery is empty: how else to account for 'empty' tiles?
-    # will become more important/challenging as we move to generalized imagery
-    # on the other hand, maybe without a cutline this isn't an issue.
-    # placeholder comment for now, let's see how the application context develops
-
-    # create cloudscore from image
-    cloud_mask, cloud_scores = cloudscore_image(im, window, tile_pad=tile_pad)
-    # classify image using nn
-    generator = ImageSampleGenerator(im,pad=tile_pad,look_window=17,prep_image=True)
-    predictions = network.predict_generator(generator, steps=generator.steps, verbose=0,
-        use_multiprocessing=False, max_queue_size=1, workers=1,)
-    Yhat = predictions.argmax(axis=-1)
-    Yhat_square = Yhat.reshape((tile_size,tile_size),order='F')
-    lulc = np.zeros((tile_side,tile_side),dtype='uint8')
-    lulc.fill(255)
-    lulc[tile_pad:-tile_pad,tile_pad:-tile_pad] = Yhat_square[:,:]
-    # -> store output
-    if make_watermask:
-        water_mask = calc_water_mask(im[:-1], bands_first=True)
-    else:
-        water_mask = None
-
-    # -> store output
-    if write_local: # write to file on local machine
-        # check if corresponding directory exists
-        # if not, create
-        scene_dir = data_root + 'scenes/' + dl_id_cleaned
-        #print scene_dir
-        try: 
-            os.makedirs(scene_dir)
-        except OSError:
-            if not os.path.isdir(scene_dir):
-                raise
-        # write cloud score map (and cloud mask? water mask?) to disk
-        scorepath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
-            'tile'+str(tile_id).zfill(zfill)+'_'+'cloudscore'+'.tif'
-        #print scorepath
-        geo = tile['properties']['geotrans']
-        prj = str(tile['properties']['wkt'])
-        util_rasters.write_1band_geotiff(scorepath, cloud_scores, geo, prj, data_type=gdal.GDT_Float32)
-        if store_cloudmask:
-            cloudpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
-            'tile'+str(tile_id).zfill(zfill)+'_'+'cloudmask'+'.tif'
-            util_rasters.write_1band_geotiff(cloudpath, cloud_mask, geo, prj, data_type=gdal.GDT_Byte)
-        if store_watermask and make_watermask:
-            waterpath = scene_dir+'/'+str(tile_res)+'m'+'_'+'p'+str(tile_pad)+'_'+\
-                'tile'+str(tile_id).zfill(zfill)+'_'+'watermask'+'.tif'
-            util_rasters.write_1band_geotiff(waterpath, water_mask, geo, prj, data_type=gdal.GDT_Byte)
-    else: #write to dl catalog
-        d=2
-
-    return cloud_mask, cloud_scores, lulc, water_mask
 
 
 # RGP REMAPPING
@@ -572,50 +422,27 @@ def rgb_clouds(Y,BIP=True):
         rgb = tmp
     return rgb
 
-def rgb_lulc_result(Y,BIP=True):
+def rgb_lulc_result(Y,BIP=True,
+                    color_scheme={
+                        0:"b2df8a", # open space
+                        1:"fb9a99", # non-residential
+                        2:"ff7f00", # residential - atomistic
+                        3:"fdbf6f", # residential - informal
+                        4:"1f78b4", # residential - formal
+                        5:"a6cee3", # residential - projects
+                        6:"e31a1c", # roads
+                        9:"003366", # water
+                        254:"000000", # outside study area
+                        255:"f3f3f3", # no data
+                    },
+                    ):
     rgb = np.zeros((3,Y.shape[0],Y.shape[1]),dtype='uint8')
-    # open space
-    rgb[0][(Y==0)] = int("b2", 16)
-    rgb[1][(Y==0)] = int("df", 16)
-    rgb[2][(Y==0)] = int("8a", 16)
-    # non-residential
-    rgb[0][(Y==1)] = int("fb", 16)
-    rgb[1][(Y==1)] = int("9a", 16)
-    rgb[2][(Y==1)] = int("99", 16)
-    # residential - atomistic
-    rgb[0][(Y==2)] = int("ff", 16)
-    rgb[1][(Y==2)] = int("7f", 16)
-    rgb[2][(Y==2)] = int("00", 16)
-    # residential - informal
-    rgb[0][(Y==3)] = int("fd", 16)
-    rgb[1][(Y==3)] = int("bf", 16)
-    rgb[2][(Y==3)] = int("6f", 16)
-    # residential - formal
-    rgb[0][(Y==4)] = int("1f", 16)
-    rgb[1][(Y==4)] = int("78", 16)
-    rgb[2][(Y==4)] = int("b4", 16)
-    # residential - projects
-    rgb[0][(Y==5)] = int("a6", 16)
-    rgb[1][(Y==5)] = int("ce", 16)
-    rgb[2][(Y==5)] = int("e3", 16)
-    # roads
-    rgb[0][(Y==6)] = int("e3", 16)
-    rgb[1][(Y==6)] = int("1a", 16)
-    rgb[2][(Y==6)] = int("1c", 16)
-    # water
-    rgb[0][(Y==9)] = int("00", 16)
-    rgb[1][(Y==9)] = int("33", 16)
-    rgb[2][(Y==9)] = int("66", 16)
-    # outside study area
-    rgb[0][(Y==254)] = int("00", 16)
-    rgb[1][(Y==254)] = int("00", 16)
-    rgb[2][(Y==254)] = int("00", 16)
-    # no data
-    rgb[0][(Y==255)] = int("f3", 16)
-    rgb[1][(Y==255)] = int("f3", 16)
-    rgb[2][(Y==255)] = int("f3", 16)
-    #
-    if (BIP==True):
+    for k, v in color_scheme.items():
+        rgb[0][(Y==k)] = int(v[0:2], 16)
+        rgb[1][(Y==k)] = int(v[2:4], 16)
+        rgb[2][(Y==k)] = int(v[4:6], 16)
+    
+    if (BIP==True): # flips axes; don't know what BIP stands for
         tmp = np.zeros((Y.shape[0],Y.shape[1],3),dtype='uint8')
         for b in range(3):
             tmp[:,:,b] = rgb[b][:,:]

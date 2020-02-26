@@ -8,15 +8,16 @@
 ### for tracking code to be added to ~/.bashrc
 
 export ULU_REPO=$HOME/UrbanLandUse
+export JUP_PORT=8888
 
 # call with function name, no parentheses or brackets
 scorecards_vm_to_bucket(){ 
-	gsutil cp /data/phase_iii/models/scorecard_phase_iii_*.csv gs://wri-bronco/transfer ; 
+	gsutil cp /data/phase_iv/models/scorecard_phase_iv_*.csv gs://wri-bronco/transfer ; 
 }
 
 jup_start(){ 
 	pushd $ULU_REPO; 
-	jupyter notebook --certfile=/home/Peter.Kerins/mycert.pem --keyfile /home/Peter.Kerins/mykey.key --ip=0.0.0.0 --port=8888 --no-browser & 
+	jupyter notebook --ip=0.0.0.0 --port=$JUP_PORT --no-browser & 
 	popd
 }
 jup_stop(){ 
