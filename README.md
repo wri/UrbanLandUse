@@ -47,3 +47,9 @@ Utilizing a self-contained conda environment can help avoid versioning complicat
 #### Auxiliary: Inspect model output
 - Notebook [helper_inspect-model-output.ipynb](archive/phase_iv/final/helper_inspect-model-output.ipynb)
 - Directly inspect model output within a notebook, without needing to load an image file within dedicated GIS software.
+### 8. Apply trained model to generate maps _at scale_ (external)
+- Applying a trained model in order to map large areas is an important capability of the project. However, deploying mapping tasks to the Descartes Labs cloud infrastructure falls outside the scope of this repository. Instead, it is treated in [ulu_pixelwise_tasks](https://github.com/wri/ulu_pixelwise_tasks), which also relies on [dl_jobs](https://github.com/wri/dl_jobs).
+- These repositories cover on-the-fly application of a trained model to imagery to generate maps. Additionally, these direct model outputs can be combined into a composite, "mode" product.
+#### Auxiliary: Score performance of map product
+- Notebook [dev_score-composite.ipynb](archive/phase_iv/final/dev_score-composite.ipynb)
+- Compare map product within the Descartes Labs Catalog to ground-truth rasters stored locally, in order to calculate and record performance statistics.
