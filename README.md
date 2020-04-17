@@ -25,8 +25,8 @@ Several parts of the workflow utilize the `descarteslabs` package for imagery re
 -	Notebook [core_build-training-data.ipynb](notebooks/core_build-training-data.ipynb)  
 -	Combine the rasterized ground-truth data with coterminous imagery rasters to generate training samples: pairs of imagery input and corresponding LULC output, represented numerically and stored within NumPy arrays. These samples are automatically divided into training and validation tranches.  
 ### 5.	Create and train model, with 3-category model and roads model treated separately   
--	Notebook [core_train-model-3category.ipynb](notebooks/core_apply-model-3category.ipynb)  
--	Notebook [core_train-model-1vsAll.ipynb](notebooks/core_apply-model-1vAll.ipynb)  
+-	Notebook [core_train-model-3category.ipynb](notebooks/core_train-model-3category.ipynb)  
+-	Notebook [core_train-model-1vsAll.ipynb](notebooks/core_train-model-1vAll.ipynb)  
 -	Load selected samples—potentially from multiple images and/or multiple cities—from file into memory, and combine them into unified training and validation tranches. Create a new model and train it using the loaded samples. Calculate and store model performance statistics.   
 ### 6.	Apply trained model to score performance and generate maps, with the two model types again receiving slightly different treatment  
 -	Notebook [core_apply-model-3category.ipynb](notebooks/core_apply-model-3category.ipynb)  
