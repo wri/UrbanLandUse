@@ -2,7 +2,7 @@
 Characterizing urban land use with machine learning
 
 ## Summary
-This repository contains a comprehensive set of instructions for creating and applying models that characterize land use / land cover (LULC) in urban areas using machine learning. The context and motivation for the project are described in detail in WRI technical note "Spatial Characterization of Urban Land Use through Machine Learning" (forthcoming in Q1 2020). The code presented here belongs to the revised and expanded methodology described in an addendum to that technical note (also forthcoming Q1 2020).  
+This repository contains a comprehensive set of instructions for creating and applying models that characterize land use / land cover (LULC) in urban areas using machine learning. The context and motivation for the project are described in detail in [WRI technical note "Spatial Characterization of Urban Land Use through Machine Learning"](https://www.wri.org/publication/spatial-characterization-urban-land-use). The code presented here belongs to the revised and expanded methodology described in a successor technical note (estimated publication date October 2020).  
 
 The core workflow is encapsulated within and best understood via a sequence of Jupyter notebooks. These notebooks import and utilize a number of accompanying modules, which are simple `.py` files stored in the `utils` folder. There is also one precursor step for processing the ground-truth data from the Atlas of Urban Expansion (AUE); this was executed in QGIS via manual interaction in concert with a sequence of short Python scripts.
 
